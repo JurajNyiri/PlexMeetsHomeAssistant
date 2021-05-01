@@ -20,9 +20,9 @@ class ContentCardExample extends HTMLElement {
       this.appendChild(card);
       this.content.innerHTML = "";
       var count = 0;
-      var maxCount = 20;
+      var maxCount = false;
       this.data.Movies.some((movieData) => {
-        if (count < maxCount) {
+        if (count < maxCount || !maxCount) {
           count++;
           this.content.appendChild(
             this.getMovieElement(movieData, hass, this.data.server_id)
