@@ -5,14 +5,8 @@ class ContentCardExample extends HTMLElement {
     if (!this.content) {
       this.loadCustomStyles();
 
-      //todo: replace this with a proper integration
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.open("GET", "/local/plexData.json", false); // false for synchronous request
-      xmlHttp.send(null);
-      this.data = JSON.parse(xmlHttp.responseText);
-
       const card = document.createElement("ha-card");
-      card.header = "Movies";
+      card.header = this.config.libraryName;
       this.content = document.createElement("div");
       this.content.style.padding = "0 16px 16px";
       this.content.style.cursor = "pointer";
@@ -21,7 +15,8 @@ class ContentCardExample extends HTMLElement {
       this.content.innerHTML = "";
       var count = 0;
       var maxCount = false;
-      this.data.Movies.some((movieData) => {
+
+      this.data[this.config.libraryName].some((movieData) => {
         if (count < maxCount || !maxCount) {
           count++;
           this.content.appendChild(
@@ -195,20 +190,33 @@ class ContentCardExample extends HTMLElement {
 
   setConfig(config) {
     if (!config.entity_id) {
-      throw new Error("You need to define an entity ID");
+      throw new Error("You need to define an entity_id");
     }
     if (!config.plexToken) {
-      throw new Error("You need to define an plex token");
+      throw new Error("You need to define a plexToken");
     }
     if (!config.plexIP) {
-      throw new Error("You need to define an plex IP");
+      throw new Error("You need to define a plexIP");
     }
     if (!config.plexPort) {
-      throw new Error("You need to define an plex port");
+      throw new Error("You need to define a plexPort");
+    }
+    if (!config.libraryName) {
+      throw new Error("You need to define a libraryName");
     }
     this.config = config;
 
-    //this.data =
+    //todo: replace this with a proper integration
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", "/local/plexData.json", false); // false for synchronous request
+    xmlHttp.send(null);
+    this.data = JSON.parse(xmlHttp.responseText);
+
+    if (this.data[this.config.libraryName] === undefined) {
+      throw new Error(
+        "Library name " + this.config.libraryName + " does not exist."
+      );
+    }
   }
 
   // The height of your card. Home Assistant uses this to automatically
