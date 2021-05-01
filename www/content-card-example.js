@@ -71,9 +71,9 @@ class ContentCardExample extends HTMLElement {
         "/com.plexapp.plugins.library/library/metadata/" +
         movieID +
         "'";
-      console.log(command);
+      var entity_id = this.config.entity_id;
       hass.callService("androidtv", "adb_command", {
-        entity_id: "media_player.living_room_nvidia_shield",
+        entity_id,
         command,
       });
     });
@@ -81,6 +81,9 @@ class ContentCardExample extends HTMLElement {
   };
 
   setConfig(config) {
+    if (!config.entity_id) {
+      throw new Error("You need to define an entity ID");
+    }
     if (!config.plexToken) {
       throw new Error("You need to define an plex token");
     }
@@ -91,6 +94,8 @@ class ContentCardExample extends HTMLElement {
       throw new Error("You need to define an plex port");
     }
     this.config = config;
+
+    //this.data =
   }
 
   // The height of your card. Home Assistant uses this to automatically
