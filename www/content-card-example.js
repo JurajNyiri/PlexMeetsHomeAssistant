@@ -20,7 +20,7 @@ class ContentCardExample extends HTMLElement {
       this.appendChild(card);
       this.content.innerHTML = "";
       var count = 0;
-      var maxCount = 10;
+      var maxCount = 20;
       this.data.Movies.some((movieData) => {
         if (count < maxCount) {
           count++;
@@ -38,38 +38,40 @@ class ContentCardExample extends HTMLElement {
   }
 
   getMovieElement = (data, hass, server_id) => {
+    const width = 138;
+    const height = 206;
     const thumbURL =
       "http://" +
       this.config.plexIP +
       ":" +
       this.config.plexPort +
-      data.thumb +
-      "?X-Plex-Token=" +
-      this.config.plexToken;
-    const thumbSmall =
-      "http://" +
-      this.config.plexIP +
-      ":" +
-      this.config.plexPort +
-      "/photo/:/transcode?width=138&height=206&minSize=1&upscale=1&url=" +
+      "/photo/:/transcode?width=" +
+      width +
+      "&height=" +
+      height +
+      "&minSize=1&upscale=1&url=" +
       data.thumb +
       "%3FX-Plex-Token%3DRbdSQWgKZ_3NqxzZnRwk&X-Plex-Token=RbdSQWgKZ_3NqxzZnRwk";
-    //const thumbElem = document.createElement("img");
-    //thumbElem.src = thumbURL;
-    //thumbElem.style = "width:100%;";
+
+    const container = document.createElement("div");
+    container.style.float = "left";
+    container.style.width = width + "px";
+    container.style["margin-bottom"] = "20px";
+    container.style["margin-right"] = "10px";
+
     const movieElem = document.createElement("div");
-    //movieElem.appendChild(thumbElem);
     movieElem.style =
-      "float:left; width:138px; height:206px; margin-right:10px; margin-bottom:10px; background-image: url('" +
-      thumbSmall +
-      "'); background-repeat: no-repeat; background-size: contain;";
+      "width:" +
+      width +
+      "px; height:" +
+      height +
+      "px; margin-bottom:5px; background-image: url('" +
+      thumbURL +
+      "'); background-repeat: no-repeat; background-size: contain; border-radius: 5px;";
 
     const playButton = this.getPlayButton();
-    const titleElem = document.createElement("div");
-    titleElem.innerHTML = data.title;
     const interactiveArea = document.createElement("div");
     interactiveArea.className = "interactiveArea";
-    //interactiveArea.append(titleElem);
     interactiveArea.append(playButton);
 
     movieElem.append(interactiveArea);
@@ -90,7 +92,21 @@ class ContentCardExample extends HTMLElement {
         command,
       });
     });
-    return movieElem;
+
+    const titleElem = document.createElement("div");
+    titleElem.innerHTML = data.title;
+    titleElem.style =
+      "text-overflow: ellipsis; white-space: nowrap; overflow: hidden;";
+
+    const yearElem = document.createElement("div");
+    yearElem.innerHTML = data.year;
+    yearElem.style = "color:hsla(0,0%,100%,.45);";
+
+    container.appendChild(movieElem);
+    container.appendChild(titleElem);
+    container.appendChild(yearElem);
+
+    return container;
   };
 
   loadCustomStyles = () => {
