@@ -62,6 +62,7 @@ class ContentCardExample extends HTMLElement {
       thumbSmall +
       "'); background-repeat: no-repeat; background-size: contain;";
     movieElem.innerHTML = data.title;
+    const _this = this;
     movieElem.addEventListener("click", function (event) {
       var keyParts = data.key.split("/");
       var movieID = keyParts[keyParts.length - 1];
@@ -71,7 +72,7 @@ class ContentCardExample extends HTMLElement {
         "/com.plexapp.plugins.library/library/metadata/" +
         movieID +
         "'";
-      var entity_id = this.config.entity_id;
+      var entity_id = _this.config.entity_id;
       hass.callService("androidtv", "adb_command", {
         entity_id,
         command,
