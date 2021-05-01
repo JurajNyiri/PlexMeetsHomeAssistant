@@ -3,6 +3,8 @@ class ContentCardExample extends HTMLElement {
 
   set hass(hass) {
     if (!this.content) {
+      this.loadCustomStyles();
+
       //todo: replace this with a proper integration
       var xmlHttp = new XMLHttpRequest();
       xmlHttp.open("GET", "/local/plexData.json", false); // false for synchronous request
@@ -18,7 +20,7 @@ class ContentCardExample extends HTMLElement {
       this.appendChild(card);
       this.content.innerHTML = "";
       var count = 0;
-      var maxCount = 10000;
+      var maxCount = 10;
       this.data.Movies.some((movieData) => {
         if (count < maxCount) {
           count++;
@@ -62,6 +64,10 @@ class ContentCardExample extends HTMLElement {
       thumbSmall +
       "'); background-repeat: no-repeat; background-size: contain;";
     movieElem.innerHTML = data.title;
+
+    const playButton = this.getPlayButton();
+    movieElem.append(playButton);
+
     const _this = this;
     movieElem.addEventListener("click", function (event) {
       var keyParts = data.key.split("/");
@@ -79,6 +85,46 @@ class ContentCardExample extends HTMLElement {
       });
     });
     return movieElem;
+  };
+
+  loadCustomStyles = () => {
+    let style = document.createElement("style");
+
+    style.textContent = `
+      button[name="playButton"] {
+        width: 50px;
+        height: 50px;
+        background: red;
+        border: none;
+        border-radius: 100%;
+        margin: auto;
+        cursor: pointer;
+      }
+      button[name="playButton"]:focus {
+        outline: 0;
+        border: 1px solid hsl(210, 58%, 69%);
+        box-shadow: 0 0 0 3px hsla(210, 76%, 57%, 0.5);
+      }
+      
+      button[name="playButton"]::after {
+        content: '';
+        display: inline-block;
+        position: relative;
+        top: 1px;
+        left: 3px;
+        border-style: solid;
+        border-width: 10px 0 10px 20px;
+        border-color: transparent transparent transparent white;
+      }`;
+
+    this.appendChild(style);
+  };
+
+  getPlayButton = () => {
+    const playButton = document.createElement("button");
+    playButton.name = "playButton";
+
+    return playButton;
   };
 
   setConfig(config) {
