@@ -77,7 +77,7 @@ class ContentCardExample extends HTMLElement {
     movieElem.append(interactiveArea);
 
     const _this = this;
-    movieElem.addEventListener("click", function (event) {
+    playButton.addEventListener("click", function (event) {
       var keyParts = data.key.split("/");
       var movieID = keyParts[keyParts.length - 1];
       var command =
@@ -141,8 +141,9 @@ class ContentCardExample extends HTMLElement {
       }
       button[name="playButton"]:focus {
         outline: 0;
-        border: 1px solid hsl(210, 58%, 69%);
-        box-shadow: 0 0 0 3px hsla(210, 76%, 57%, 0.5);
+        background: orange;
+        border: 2px solid orange;
+        box-shadow: 0 0 0 3px orange;
       }
       
       button[name="playButton"]::after {
@@ -158,6 +159,10 @@ class ContentCardExample extends HTMLElement {
       }
   
       button[name="playButton"]:hover:after {
+        border-color: transparent transparent transparent black;
+      }
+  
+      button[name="playButton"]:focus:after {
         border-color: transparent transparent transparent black;
       }`;
 
