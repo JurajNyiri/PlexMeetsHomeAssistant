@@ -63,10 +63,16 @@ class ContentCardExample extends HTMLElement {
       "float:left; width:138px; height:206px; margin-right:10px; margin-bottom:10px; background-image: url('" +
       thumbSmall +
       "'); background-repeat: no-repeat; background-size: contain;";
-    movieElem.innerHTML = data.title;
 
     const playButton = this.getPlayButton();
-    movieElem.append(playButton);
+    const titleElem = document.createElement("div");
+    titleElem.innerHTML = data.title;
+    const interactiveArea = document.createElement("div");
+    interactiveArea.className = "interactiveArea";
+    //interactiveArea.append(titleElem);
+    interactiveArea.append(playButton);
+
+    movieElem.append(interactiveArea);
 
     const _this = this;
     movieElem.addEventListener("click", function (event) {
@@ -91,14 +97,31 @@ class ContentCardExample extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+      .interactiveArea {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: 0.5s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .interactiveArea:hover {
+        background: rgba(0,0,0,0.3);
+      }
       button[name="playButton"] {
-        width: 50px;
-        height: 50px;
-        background: red;
-        border: none;
+        width: 40px;
+        height: 40px;
+        background: rgba(0,0,0,0.4);
+        border: 2px solid white;
         border-radius: 100%;
         margin: auto;
         cursor: pointer;
+        transition: 0.2s;
+      }
+      button[name="playButton"]:hover {
+        background: orange;
+        border: 2px solid orange;
       }
       button[name="playButton"]:focus {
         outline: 0;
@@ -111,10 +134,15 @@ class ContentCardExample extends HTMLElement {
         display: inline-block;
         position: relative;
         top: 1px;
-        left: 3px;
+        left: 2px;
         border-style: solid;
-        border-width: 10px 0 10px 20px;
+        border-width: 6px 0 6px 12px;
         border-color: transparent transparent transparent white;
+        transition: 0.2s;
+      }
+  
+      button[name="playButton"]:hover:after {
+        border-color: transparent transparent transparent black;
       }`;
 
     this.appendChild(style);
