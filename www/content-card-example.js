@@ -113,58 +113,75 @@ class ContentCardExample extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
-      .interactiveArea {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        transition: 0.5s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .interactiveArea:hover {
-        background: rgba(0,0,0,0.3);
-      }
-      button[name="playButton"] {
-        width: 40px;
-        height: 40px;
-        background: rgba(0,0,0,0.4);
-        border: 2px solid white;
-        border-radius: 100%;
-        margin: auto;
-        cursor: pointer;
-        transition: 0.2s;
-      }
-      button[name="playButton"]:hover {
-        background: orange;
-        border: 2px solid orange;
-      }
-      button[name="playButton"]:focus {
-        outline: 0;
-        background: orange;
-        border: 2px solid orange;
-        box-shadow: 0 0 0 3px orange;
-      }
-      
-      button[name="playButton"]::after {
-        content: '';
-        display: inline-block;
-        position: relative;
-        top: 1px;
-        left: 2px;
-        border-style: solid;
-        border-width: 6px 0 6px 12px;
-        border-color: transparent transparent transparent white;
-        transition: 0.2s;
-      }
+        .interactiveArea {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transition: 0.5s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .interactiveArea:hover {
+          background: rgba(0,0,0,0.3);
+        }
+        button[name="playButton"] {
+          width: 40px;
+          height: 40px;
+          border: 2px solid white;
+          border-radius: 100%;
+          margin: auto;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+        button[name="playButton"]:hover {
+          background: orange !important;
+          border: 2px solid orange !important;
+        }
+        button[name="playButton"]:focus {
+          outline: 0;
+          background: orange !important;
+          border: 2px solid orange !important;
+          box-shadow: 0 0 0 3px orange !important;
+        }
+        
+        button[name="playButton"]::after {
+          content: '';
+          display: inline-block;
+          position: relative;
+          top: 1px;
+          left: 2px;
+          border-style: solid;
+          border-width: 6px 0 6px 12px;
+          border-color: transparent transparent transparent white;
+          transition: 0.2s;
+        }
   
-      button[name="playButton"]:hover:after {
-        border-color: transparent transparent transparent black;
-      }
+        .interactiveArea button[name="playButton"] {
+          background: rgba(0,0,0,0.0);
+          border: 2px solid rgba(255,255,255,0.0);
+        }
   
-      button[name="playButton"]:focus:after {
-        border-color: transparent transparent transparent black;
-      }`;
+        .interactiveArea:hover button[name="playButton"] {
+          background: rgba(0,0,0,0.4);
+          border: 2px solid rgba(255,255,255,1);
+        }
+  
+        .interactiveArea button[name="playButton"]:after {
+          border-color: transparent transparent transparent rgba(255,255,255,0);
+        }
+  
+        .interactiveArea:hover button[name="playButton"]:after {
+          border-color: transparent transparent transparent rgba(255,255,255,1);
+        }
+    
+        button[name="playButton"]:hover:after {
+          border-color: transparent transparent transparent black !important;
+        }
+    
+        button[name="playButton"]:focus:after {
+          border-color: transparent transparent transparent black !important;
+        }`;
 
     this.appendChild(style);
   };
