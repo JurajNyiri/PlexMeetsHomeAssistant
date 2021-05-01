@@ -1,0 +1,1 @@
+/Users/jurajnyiri/.homeassistant/www/content-card-example.js
