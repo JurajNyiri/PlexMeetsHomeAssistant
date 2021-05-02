@@ -6,15 +6,18 @@ class ContentCardExample extends HTMLElement {
       this.loadCustomStyles();
 
       const card = document.createElement("ha-card");
-      card.header = this.config.libraryName;
+      //card.header = this.config.libraryName;
       this.content = document.createElement("div");
-      this.content.style.padding = "0 16px 16px";
-      this.content.style.cursor = "pointer";
+      this.content.style.padding = "16px 16px 100px";
       card.appendChild(this.content);
       this.appendChild(card);
       this.content.innerHTML = "";
       var count = 0;
       var maxCount = false;
+
+      const contentbg = document.createElement("div");
+      contentbg.className = "contentbg";
+      this.content.appendChild(contentbg);
 
       this.data[this.config.libraryName].some((movieData) => {
         if (count < maxCount || !maxCount) {
@@ -29,12 +32,29 @@ class ContentCardExample extends HTMLElement {
       const endElem = document.createElement("div");
       endElem.style = "clear:both;";
       this.content.appendChild(endElem);
+
+      this.calculatePositions();
     }
   }
+
+  //todo: run also on resize
+  calculatePositions = () => {
+    const _this = this;
+    //todo: figure out why timeout is needed here and do it properly
+    setTimeout(function () {
+      _this.movieElems = _this.getElementsByClassName("movieElem");
+      for (let i = 0; i < _this.movieElems.length; i++) {
+        _this.movieElems[i].style.left = _this.movieElems[i].offsetLeft + "px";
+        _this.movieElems[i].dataset.left = _this.movieElems[i].offsetLeft;
+      }
+    }, 1);
+  };
 
   getMovieElement = (data, hass, server_id) => {
     const width = 138;
     const height = 206;
+    const expandedWidth = 220;
+    const expandedHeight = 324;
     const thumbURL =
       this.plexProtocol +
       "://" +
@@ -42,29 +62,66 @@ class ContentCardExample extends HTMLElement {
       ":" +
       this.config.port +
       "/photo/:/transcode?width=" +
-      width +
+      expandedWidth +
       "&height=" +
-      height +
+      expandedHeight +
       "&minSize=1&upscale=1&url=" +
       data.thumb +
       "&X-Plex-Token=" +
       this.config.token;
 
     const container = document.createElement("div");
-    container.style.float = "left";
+    container.className = "container";
     container.style.width = width + "px";
-    container.style["margin-bottom"] = "20px";
-    container.style["margin-right"] = "10px";
+    container.style.height = height + 30 + "px";
 
     const movieElem = document.createElement("div");
+    movieElem.className = "movieElem";
     movieElem.style =
       "width:" +
       width +
       "px; height:" +
       height +
-      "px; margin-bottom:5px; background-image: url('" +
+      "px; background-image: url('" +
       thumbURL +
-      "'); background-repeat: no-repeat; background-size: contain; border-radius: 5px;";
+      "'); ";
+
+    movieElem.addEventListener("click", function (event) {
+      if (this.dataset.clicked === "true") {
+        this.style.width = width + "px";
+        this.style.height = height + "px";
+        this.style["z-index"] = 1;
+        this.style.position = "absolute";
+        this.style.left = this.dataset.left + "px";
+        this.dataset.clicked = false;
+
+        const contentbg = _this.getElementsByClassName("contentbg");
+        contentbg[0].style["z-index"] = 1;
+        contentbg[0].style["background-color"] = "rgba(0,0,0,0)";
+      } else {
+        for (let i = 0; i < _this.movieElems.length; i++) {
+          if (_this.movieElems[i].dataset.clicked === "true") {
+            _this.movieElems[i].style.width = width + "px";
+            _this.movieElems[i].style.height = height + "px";
+            _this.movieElems[i].style["z-index"] = 1;
+            _this.movieElems[i].style.position = "absolute";
+            _this.movieElems[i].style.left =
+              _this.movieElems[i].dataset.left + "px";
+            _this.movieElems[i].dataset.clicked = false;
+          }
+        }
+        this.style.width = expandedWidth + "px";
+        this.style.height = expandedHeight + "px";
+        this.style["z-index"] = 3;
+        this.style.position = "fixed";
+        this.style.left = "16px";
+        this.dataset.clicked = true;
+
+        const contentbg = _this.getElementsByClassName("contentbg");
+        contentbg[0].style["z-index"] = 2;
+        contentbg[0].style["background-color"] = "rgba(0,0,0,0.9)";
+      }
+    });
 
     const playButton = this.getPlayButton();
     const interactiveArea = document.createElement("div");
@@ -92,12 +149,12 @@ class ContentCardExample extends HTMLElement {
 
     const titleElem = document.createElement("div");
     titleElem.innerHTML = data.title;
-    titleElem.style =
-      "text-overflow: ellipsis; white-space: nowrap; overflow: hidden;";
+    titleElem.className = "titleElem";
+    titleElem.style["margin-top"] = height + "px";
 
     const yearElem = document.createElement("div");
     yearElem.innerHTML = data.year;
-    yearElem.style = "color:hsla(0,0%,100%,.45);";
+    yearElem.className = "yearElem";
 
     container.appendChild(movieElem);
     container.appendChild(titleElem);
@@ -110,6 +167,42 @@ class ContentCardExample extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+        .contentbg {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0,0,0,0);
+          z-index: 0;
+          transition: 0.5s;
+          left: 0;
+          top: 0;
+        }
+        .yearElem {
+          color:hsla(0,0%,100%,.45);
+          position: relative;
+        }
+        .titleElem {
+          text-overflow: ellipsis; 
+          white-space: nowrap; 
+          overflow: hidden;
+          position: relative;
+        }
+        .movieElem {
+          margin-bottom:5px;
+          background-repeat: no-repeat; 
+          background-size: contain; 
+          border-radius: 5px;
+          transition: 0.5s;
+          position: absolute;
+          z-index: 1;
+        }
+        .container {
+          z-index: 1;
+          float:left;
+          margin-bottom: 20px;
+          margin-right: 10px;
+          transition: 0.5s;
+        }
         .interactiveArea {
           position: relative;
           width: 100%;
