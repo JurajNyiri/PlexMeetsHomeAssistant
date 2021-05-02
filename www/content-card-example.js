@@ -36,17 +36,19 @@ class ContentCardExample extends HTMLElement {
     const width = 138;
     const height = 206;
     const thumbURL =
-      "http://" +
-      this.config.plexIP +
+      this.plexProtocol +
+      "://" +
+      this.config.ip +
       ":" +
-      this.config.plexPort +
+      this.config.port +
       "/photo/:/transcode?width=" +
       width +
       "&height=" +
       height +
       "&minSize=1&upscale=1&url=" +
       data.thumb +
-      "%3FX-Plex-Token%3DRbdSQWgKZ_3NqxzZnRwk&X-Plex-Token=RbdSQWgKZ_3NqxzZnRwk";
+      "&X-Plex-Token=" +
+      this.config.token;
 
     const container = document.createElement("div");
     container.style.float = "left";
@@ -189,22 +191,26 @@ class ContentCardExample extends HTMLElement {
   };
 
   setConfig(config) {
+    this.plexProtocol = "http";
     if (!config.entity_id) {
       throw new Error("You need to define an entity_id");
     }
-    if (!config.plexToken) {
-      throw new Error("You need to define a plexToken");
+    if (!config.token) {
+      throw new Error("You need to define a token");
     }
-    if (!config.plexIP) {
-      throw new Error("You need to define a plexIP");
+    if (!config.ip) {
+      throw new Error("You need to define a ip");
     }
-    if (!config.plexPort) {
-      throw new Error("You need to define a plexPort");
+    if (!config.port) {
+      throw new Error("You need to define a port");
     }
     if (!config.libraryName) {
       throw new Error("You need to define a libraryName");
     }
     this.config = config;
+    if (config.protocol) {
+      this.plexProtocol = config.protocol;
+    }
 
     //todo: replace this with a proper integration
     var xmlHttp = new XMLHttpRequest();
