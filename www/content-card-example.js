@@ -5,49 +5,84 @@ class ContentCardExample extends HTMLElement {
   height = 206;
   expandedWidth = 220;
   expandedHeight = 324;
+  movieElems = [];
+
+  renderPage = (hass) => {
+    const _this = this;
+    if (this) this.innerHTML = "";
+    const card = document.createElement("ha-card");
+    //card.header = this.config.libraryName;
+    this.content = document.createElement("div");
+    this.content.style.padding = "16px 16px 100px";
+    card.appendChild(this.content);
+    this.appendChild(card);
+    this.content.innerHTML = "";
+    var count = 0;
+    var maxCount = false;
+
+    const contentbg = document.createElement("div");
+    contentbg.className = "contentbg";
+    this.content.appendChild(contentbg);
+
+    //todo: figure out why timeout is needed here and do it properly
+    setTimeout(function () {
+      contentbg.addEventListener("click", function (event) {
+        _this.hideBackground();
+        _this.minimizeAll();
+      });
+    }, 1);
+
+    this.data[this.config.libraryName].some((movieData) => {
+      if (count < maxCount || !maxCount) {
+        count++;
+        this.content.appendChild(
+          this.getMovieElement(movieData, hass, this.data.server_id)
+        );
+      } else {
+        return true;
+      }
+    });
+    const endElem = document.createElement("div");
+    endElem.style = "clear:both;";
+    this.content.appendChild(endElem);
+
+    this.calculatePositions();
+    this.loadCustomStyles();
+  };
 
   set hass(hass) {
     if (!this.content) {
-      this.loadCustomStyles();
-
-      const card = document.createElement("ha-card");
-      //card.header = this.config.libraryName;
-      this.content = document.createElement("div");
-      this.content.style.padding = "16px 16px 100px";
-      card.appendChild(this.content);
-      this.appendChild(card);
-      this.content.innerHTML = "";
-      var count = 0;
-      var maxCount = false;
-
-      const contentbg = document.createElement("div");
-      contentbg.className = "contentbg";
-      this.content.appendChild(contentbg);
-
-      //todo: figure out why timeout is needed here and do it properly
       const _this = this;
-      setTimeout(function () {
-        contentbg.addEventListener("click", function (event) {
-          _this.hideBackground();
-          _this.minimizeAll();
-        });
-      }, 1);
+      this.previousPositions = [];
 
-      this.data[this.config.libraryName].some((movieData) => {
-        if (count < maxCount || !maxCount) {
-          count++;
-          this.content.appendChild(
-            this.getMovieElement(movieData, hass, this.data.server_id)
-          );
-        } else {
-          return true;
+      //todo: find a better way to detect resize...
+      setInterval(() => {
+        if (_this.movieElems.length > 0) {
+          if (_this.previousPositions.length === 0) {
+            for (let i = 0; i < _this.movieElems.length; i++) {
+              _this.previousPositions[i] = {};
+              _this.previousPositions[i]["top"] = _this.movieElems[i].offsetTop;
+              _this.previousPositions[i]["left"] =
+                _this.movieElems[i].offsetLeft;
+            }
+          }
+          for (let i = 0; i < _this.movieElems.length; i++) {
+            if (
+              _this.previousPositions[i] &&
+              _this.movieElems[i].dataset.clicked !== "true" &&
+              (_this.previousPositions[i]["top"] !==
+                _this.movieElems[i].offsetTop ||
+                _this.previousPositions[i]["left"] !==
+                  _this.movieElems[i].offsetLeft)
+            ) {
+              console.log("CHANGE");
+              _this.renderPage(hass);
+              _this.previousPositions = [];
+            }
+          }
         }
-      });
-      const endElem = document.createElement("div");
-      endElem.style = "clear:both;";
-      this.content.appendChild(endElem);
-
-      this.calculatePositions();
+      }, 100);
+      this.renderPage(hass);
     }
   }
 
@@ -77,7 +112,10 @@ class ContentCardExample extends HTMLElement {
         this.movieElems[i].style["z-index"] = 1;
         this.movieElems[i].style.position = "absolute";
         this.movieElems[i].style.left = this.movieElems[i].dataset.left + "px";
-        this.movieElems[i].dataset.clicked = false;
+        const __this = this;
+        setTimeout(function () {
+          __this.movieElems[i].dataset.clicked = false;
+        }, 500);
       }
     }
   };
@@ -134,7 +172,11 @@ class ContentCardExample extends HTMLElement {
         this.style["z-index"] = 1;
         this.style.position = "absolute";
         this.style.left = this.dataset.left + "px";
-        this.dataset.clicked = false;
+
+        const __this = this;
+        setTimeout(function () {
+          __this.dataset.clicked = false;
+        }, 500);
 
         _this.hideBackground();
       } else {
