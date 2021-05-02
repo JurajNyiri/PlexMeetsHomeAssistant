@@ -204,6 +204,7 @@ class ContentCardExample extends HTMLElement {
     movieElem.append(interactiveArea);
 
     playButton.addEventListener("click", function (event) {
+      event.stopPropagation();
       var keyParts = data.key.split("/");
       var movieID = keyParts[keyParts.length - 1];
       var command =
