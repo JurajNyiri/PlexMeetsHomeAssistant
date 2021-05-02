@@ -8,6 +8,7 @@ class ContentCardExample extends HTMLElement {
   movieElems = [];
 
   renderPage = (hass) => {
+    console.log(hass);
     const _this = this;
     if (this) this.innerHTML = "";
     const card = document.createElement("ha-card");
@@ -100,6 +101,8 @@ class ContentCardExample extends HTMLElement {
         }
         _this.movieElems[i].style.left = _this.movieElems[i].offsetLeft + "px";
         _this.movieElems[i].dataset.left = _this.movieElems[i].offsetLeft;
+        _this.movieElems[i].style.top = _this.movieElems[i].offsetTop + "px";
+        _this.movieElems[i].dataset.top = _this.movieElems[i].offsetTop;
       }
     }, 10);
   };
@@ -112,6 +115,7 @@ class ContentCardExample extends HTMLElement {
         this.movieElems[i].style["z-index"] = 1;
         this.movieElems[i].style.position = "absolute";
         this.movieElems[i].style.left = this.movieElems[i].dataset.left + "px";
+        this.movieElems[i].style.top = this.movieElems[i].dataset.top + "px";
         const __this = this;
         setTimeout(function () {
           __this.movieElems[i].dataset.clicked = false;
@@ -170,7 +174,7 @@ class ContentCardExample extends HTMLElement {
         this.style.width = _this.width + "px";
         this.style.height = _this.height + "px";
         this.style["z-index"] = 1;
-        this.style.position = "absolute";
+        this.style.top = this.dataset.top + "px";
         this.style.left = this.dataset.left + "px";
 
         const __this = this;
@@ -180,13 +184,18 @@ class ContentCardExample extends HTMLElement {
 
         _this.hideBackground();
       } else {
+        const doc = document.documentElement;
+        const top =
+          (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+        console.log(this.parentElement);
+        console.log(top);
         _this.minimizeAll();
         _this.showBackground();
         this.style.width = _this.expandedWidth + "px";
         this.style.height = _this.expandedHeight + "px";
         this.style["z-index"] = 3;
-        this.style.position = "fixed";
         this.style.left = "16px";
+        this.style.top = top + 16 + "px";
         this.dataset.clicked = true;
       }
     });
