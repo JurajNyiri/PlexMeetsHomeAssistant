@@ -1,6 +1,11 @@
 class ContentCardExample extends HTMLElement {
   data = {}; // placeholder
 
+  width = 138;
+  height = 206;
+  expandedWidth = 220;
+  expandedHeight = 324;
+
   set hass(hass) {
     if (!this.content) {
       this.loadCustomStyles();
@@ -18,6 +23,15 @@ class ContentCardExample extends HTMLElement {
       const contentbg = document.createElement("div");
       contentbg.className = "contentbg";
       this.content.appendChild(contentbg);
+
+      //todo: figure out why timeout is needed here and do it properly
+      const _this = this;
+      setTimeout(function () {
+        contentbg.addEventListener("click", function (event) {
+          _this.hideBackground();
+          _this.minimizeAll();
+        });
+      }, 1);
 
       this.data[this.config.libraryName].some((movieData) => {
         if (count < maxCount || !maxCount) {
@@ -50,11 +64,33 @@ class ContentCardExample extends HTMLElement {
     }, 1);
   };
 
+  minimizeAll = () => {
+    for (let i = 0; i < this.movieElems.length; i++) {
+      if (this.movieElems[i].dataset.clicked === "true") {
+        this.movieElems[i].style.width = this.width + "px";
+        this.movieElems[i].style.height = this.height + "px";
+        this.movieElems[i].style["z-index"] = 1;
+        this.movieElems[i].style.position = "absolute";
+        this.movieElems[i].style.left = this.movieElems[i].dataset.left + "px";
+        this.movieElems[i].dataset.clicked = false;
+      }
+    }
+  };
+
+  showBackground = () => {
+    const contentbg = this.getElementsByClassName("contentbg");
+    contentbg[0].style["z-index"] = 2;
+    contentbg[0].style["background-color"] = "rgba(0,0,0,0.9)";
+  };
+
+  hideBackground = () => {
+    const contentbg = this.getElementsByClassName("contentbg");
+    contentbg[0].style["z-index"] = 1;
+    contentbg[0].style["background-color"] = "rgba(0,0,0,0)";
+  };
+
   getMovieElement = (data, hass, server_id) => {
-    const width = 138;
-    const height = 206;
-    const expandedWidth = 220;
-    const expandedHeight = 324;
+    const _this = this;
     const thumbURL =
       this.plexProtocol +
       "://" +
@@ -62,9 +98,9 @@ class ContentCardExample extends HTMLElement {
       ":" +
       this.config.port +
       "/photo/:/transcode?width=" +
-      expandedWidth +
+      this.expandedWidth +
       "&height=" +
-      expandedHeight +
+      this.expandedHeight +
       "&minSize=1&upscale=1&url=" +
       data.thumb +
       "&X-Plex-Token=" +
@@ -72,54 +108,39 @@ class ContentCardExample extends HTMLElement {
 
     const container = document.createElement("div");
     container.className = "container";
-    container.style.width = width + "px";
-    container.style.height = height + 30 + "px";
+    container.style.width = this.width + "px";
+    container.style.height = this.height + 30 + "px";
 
     const movieElem = document.createElement("div");
     movieElem.className = "movieElem";
     movieElem.style =
       "width:" +
-      width +
+      this.width +
       "px; height:" +
-      height +
+      this.height +
       "px; background-image: url('" +
       thumbURL +
       "'); ";
 
     movieElem.addEventListener("click", function (event) {
       if (this.dataset.clicked === "true") {
-        this.style.width = width + "px";
-        this.style.height = height + "px";
+        this.style.width = _this.width + "px";
+        this.style.height = _this.height + "px";
         this.style["z-index"] = 1;
         this.style.position = "absolute";
         this.style.left = this.dataset.left + "px";
         this.dataset.clicked = false;
 
-        const contentbg = _this.getElementsByClassName("contentbg");
-        contentbg[0].style["z-index"] = 1;
-        contentbg[0].style["background-color"] = "rgba(0,0,0,0)";
+        _this.hideBackground();
       } else {
-        for (let i = 0; i < _this.movieElems.length; i++) {
-          if (_this.movieElems[i].dataset.clicked === "true") {
-            _this.movieElems[i].style.width = width + "px";
-            _this.movieElems[i].style.height = height + "px";
-            _this.movieElems[i].style["z-index"] = 1;
-            _this.movieElems[i].style.position = "absolute";
-            _this.movieElems[i].style.left =
-              _this.movieElems[i].dataset.left + "px";
-            _this.movieElems[i].dataset.clicked = false;
-          }
-        }
-        this.style.width = expandedWidth + "px";
-        this.style.height = expandedHeight + "px";
+        _this.minimizeAll();
+        _this.showBackground();
+        this.style.width = _this.expandedWidth + "px";
+        this.style.height = _this.expandedHeight + "px";
         this.style["z-index"] = 3;
         this.style.position = "fixed";
         this.style.left = "16px";
         this.dataset.clicked = true;
-
-        const contentbg = _this.getElementsByClassName("contentbg");
-        contentbg[0].style["z-index"] = 2;
-        contentbg[0].style["background-color"] = "rgba(0,0,0,0.9)";
       }
     });
 
@@ -130,7 +151,6 @@ class ContentCardExample extends HTMLElement {
 
     movieElem.append(interactiveArea);
 
-    const _this = this;
     playButton.addEventListener("click", function (event) {
       var keyParts = data.key.split("/");
       var movieID = keyParts[keyParts.length - 1];
@@ -150,7 +170,7 @@ class ContentCardExample extends HTMLElement {
     const titleElem = document.createElement("div");
     titleElem.innerHTML = data.title;
     titleElem.className = "titleElem";
-    titleElem.style["margin-top"] = height + "px";
+    titleElem.style["margin-top"] = this.height + "px";
 
     const yearElem = document.createElement("div");
     yearElem.innerHTML = data.year;
