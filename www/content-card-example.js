@@ -8,7 +8,6 @@ class ContentCardExample extends HTMLElement {
   movieElems = [];
 
   renderPage = (hass) => {
-    console.log(hass);
     const _this = this;
     if (this) this.innerHTML = "";
     const card = document.createElement("ha-card");
@@ -76,7 +75,6 @@ class ContentCardExample extends HTMLElement {
                 _this.previousPositions[i]["left"] !==
                   _this.movieElems[i].offsetLeft)
             ) {
-              console.log("CHANGE");
               _this.renderPage(hass);
               _this.previousPositions = [];
             }
@@ -187,8 +185,6 @@ class ContentCardExample extends HTMLElement {
         const doc = document.documentElement;
         const top =
           (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-        console.log(this.parentElement);
-        console.log(top);
         _this.minimizeAll();
         _this.showBackground();
         this.style.width = _this.expandedWidth + "px";
