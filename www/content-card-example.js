@@ -54,14 +54,19 @@ class ContentCardExample extends HTMLElement {
   //todo: run also on resize
   calculatePositions = () => {
     const _this = this;
-    //todo: figure out why timeout is needed here and do it properly
-    setTimeout(function () {
+    //todo: figure out why loop is needed here and do it properly
+    const setLeftOffsetsInterval = setInterval(() => {
       _this.movieElems = _this.getElementsByClassName("movieElem");
       for (let i = 0; i < _this.movieElems.length; i++) {
+        if (_this.movieElems[i].offsetLeft === 0) {
+          break;
+        } else {
+          clearInterval(setLeftOffsetsInterval);
+        }
         _this.movieElems[i].style.left = _this.movieElems[i].offsetLeft + "px";
         _this.movieElems[i].dataset.left = _this.movieElems[i].offsetLeft;
       }
-    }, 1);
+    }, 10);
   };
 
   minimizeAll = () => {
