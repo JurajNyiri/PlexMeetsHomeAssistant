@@ -61,9 +61,10 @@ class ContentCardExample extends HTMLElement {
           if (_this.previousPositions.length === 0) {
             for (let i = 0; i < _this.movieElems.length; i++) {
               _this.previousPositions[i] = {};
-              _this.previousPositions[i]["top"] = _this.movieElems[i].offsetTop;
+              _this.previousPositions[i]["top"] =
+                _this.movieElems[i].parentElement.offsetTop;
               _this.previousPositions[i]["left"] =
-                _this.movieElems[i].offsetLeft;
+                _this.movieElems[i].parentElement.offsetLeft;
             }
           }
           for (let i = 0; i < _this.movieElems.length; i++) {
@@ -71,9 +72,9 @@ class ContentCardExample extends HTMLElement {
               _this.previousPositions[i] &&
               _this.movieElems[i].dataset.clicked !== "true" &&
               (_this.previousPositions[i]["top"] !==
-                _this.movieElems[i].offsetTop ||
+                _this.movieElems[i].parentElement.offsetTop ||
                 _this.previousPositions[i]["left"] !==
-                  _this.movieElems[i].offsetLeft)
+                  _this.movieElems[i].parentElement.offsetLeft)
             ) {
               _this.renderPage(hass);
               _this.previousPositions = [];
