@@ -24,12 +24,12 @@ maxCount: Optional - maximum number of items to display
 
 If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.
 
+## Ask for help or help development
+
+Join [Discord](https://discord.gg/5W9Ttp2R) or [Home Assistant Community](https://community.home-assistant.io/t/custom-component-card-plex-meets-home-assistant/304349).
+
 ## Images
 
 ![View without hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/1.png)
 
 ![View with hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/2.png)
-
-## Ask for help or help development
-
-Join [Discord](https://discord.gg/5W9Ttp2R) or [Home Assistant Community](https://community.home-assistant.io/t/custom-component-card-plex-meets-home-assistant/304349).
