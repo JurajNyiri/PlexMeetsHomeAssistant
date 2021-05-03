@@ -30,6 +30,11 @@ for section in sections:
     sectionType = section.attrib.get("type")
     results[sectionTitle] = []
     print("Getting section " + sectionKey + "...")
+    print(
+        "http://{}:{}/library/sections/{}/all?X-Plex-Token={}".format(
+            ip, port, sectionKey, plextoken
+        )
+    )
     titles = ET.fromstring(
         requests.get(
             "http://{}:{}/library/sections/{}/all?X-Plex-Token={}".format(
@@ -46,6 +51,7 @@ for section in sections:
     for title in titles:
         movieObj = {
             "title": title.attrib.get("title"),
+            "summary": title.attrib.get("summary"),
             "key": title.attrib.get("key"),
             "guid": title.attrib.get("guid"),
             "rating": title.attrib.get("rating"),

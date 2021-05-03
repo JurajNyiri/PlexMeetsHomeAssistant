@@ -6,6 +6,7 @@ class ContentCardExample extends HTMLElement {
   expandedWidth = 220;
   expandedHeight = 324;
   movieElems = [];
+  detailElem = undefined;
 
   renderPage = (hass) => {
     const _this = this;
@@ -23,6 +24,11 @@ class ContentCardExample extends HTMLElement {
     const contentbg = document.createElement("div");
     contentbg.className = "contentbg";
     this.content.appendChild(contentbg);
+
+    this.detailElem = document.createElement("div");
+    this.detailElem.className = "detail";
+    this.detailElem.innerHTML = "<h1></h1><span class='detailDesc'></span>";
+    this.content.appendChild(this.detailElem);
 
     //todo: figure out why timeout is needed here and do it properly
     setTimeout(function () {
@@ -121,6 +127,19 @@ class ContentCardExample extends HTMLElement {
         }, 500);
       }
     }
+    this.hideDetails();
+  };
+
+  hideDetails = () => {
+    this.detailElem.style.color = "rgba(255,255,255,0)";
+    this.detailElem.style["z-index"] = "0";
+  };
+
+  showDetails = (data) => {
+    this.detailElem.children[0].innerHTML = data.title;
+    this.detailElem.children[1].innerHTML = data.summary;
+    this.detailElem.style.color = "rgba(255,255,255,1)";
+    this.detailElem.style["z-index"] = "4";
   };
 
   showBackground = () => {
@@ -169,7 +188,9 @@ class ContentCardExample extends HTMLElement {
       "'); ";
 
     movieElem.addEventListener("click", function (event) {
+      console.log(data);
       if (this.dataset.clicked === "true") {
+        _this.hideDetails();
         this.style.width = _this.width + "px";
         this.style.height = _this.height + "px";
         this.style["z-index"] = 1;
@@ -183,10 +204,11 @@ class ContentCardExample extends HTMLElement {
 
         _this.hideBackground();
       } else {
+        _this.minimizeAll();
+        _this.showDetails(data);
         const doc = document.documentElement;
         const top =
           (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-        _this.minimizeAll();
         _this.showBackground();
         this.style.width = _this.expandedWidth + "px";
         this.style.height = _this.expandedHeight + "px";
@@ -207,13 +229,15 @@ class ContentCardExample extends HTMLElement {
     playButton.addEventListener("click", function (event) {
       event.stopPropagation();
       var keyParts = data.key.split("/");
-      var movieID = keyParts[keyParts.length - 1];
+      var movieID = keyParts[3];
       var command =
         "am start -a android.intent.action.VIEW 'plex://server://" +
         server_id +
         "/com.plexapp.plugins.library/library/metadata/" +
         movieID +
         "'";
+
+      console.log(command);
       var entity_id = _this.config.entity_id;
       hass.callService("androidtv", "adb_command", {
         entity_id,
@@ -241,6 +265,17 @@ class ContentCardExample extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+        .detailDesc {
+  
+        }
+        .detail {
+          position: absolute;
+          left: 247px;
+          width: calc(100% - 267px);
+          z-index: 4;
+          transition: 0.5s;
+          color: rgba(255,255,255,0);
+        }
         .contentbg {
           position: absolute;
           width: 100%;
@@ -380,10 +415,7 @@ class ContentCardExample extends HTMLElement {
     }
 
     //todo: replace this with a proper integration
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", "/local/plexData.json", false); // false for synchronous request
-    xmlHttp.send(null);
-    this.data = JSON.parse(xmlHttp.responseText);
+    this.data = JSON.parse(this.getData("/local/plexData.json"));
 
     if (this.data[this.config.libraryName] === undefined) {
       throw new Error(
@@ -391,6 +423,13 @@ class ContentCardExample extends HTMLElement {
       );
     }
   }
+
+  getData = (url) => {
+    const xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", url, false); // false for synchronous request
+    xmlHttp.send(null);
+    return xmlHttp.responseText;
+  };
 
   // The height of your card. Home Assistant uses this to automatically
   // distribute all cards over the available columns.
