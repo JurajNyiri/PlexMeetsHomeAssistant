@@ -26,9 +26,9 @@ If you are using Home Assistant via HTTPS, you need to specify port `https` for 
 
 ## Images
 
-![View without hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/1.png)
+![View without hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/1.png | width=200)
 
-![View with hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/2.png)
+![View with hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/2.png | width=200)
 
 ## Ask for help or help development
 
