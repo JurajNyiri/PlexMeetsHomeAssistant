@@ -415,6 +415,13 @@ class ContentCardExample extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+        .detail h1 {
+          text-overflow: ellipsis; 
+          white-space: nowrap; 
+          overflow: hidden;
+          position: relative;
+          padding: 5px 0px;
+        }
         .detailDesc {
   
         }
