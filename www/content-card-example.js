@@ -10,6 +10,7 @@ class ContentCardExample extends HTMLElement {
   data = {};
   requestTimeout = 1000;
   loading = false;
+  maxCount = false;
 
   renderPage = (hass) => {
     const _this = this;
@@ -29,14 +30,15 @@ class ContentCardExample extends HTMLElement {
       this.content.innerHTML =
         "Library " + this.config.libraryName + " has no items.";
     } else if (this.loading) {
-      this.content.innerHTML = "Loading...";
+      this.content.style.padding = "16px 16px 16px";
+      this.content.innerHTML =
+        '<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>'; //ttmp
     }
 
     card.appendChild(this.content);
     this.appendChild(card);
 
     var count = 0;
-    var maxCount = false;
 
     const contentbg = document.createElement("div");
     contentbg.className = "contentbg";
@@ -54,10 +56,9 @@ class ContentCardExample extends HTMLElement {
         _this.minimizeAll();
       });
     }, 1);
-
     if (this.data[this.config.libraryName]) {
       this.data[this.config.libraryName].some((movieData) => {
-        if (count < maxCount || !maxCount) {
+        if (count < this.maxCount || !this.maxCount) {
           count++;
           this.content.appendChild(
             this.getMovieElement(movieData, hass, this.data.server_id)
@@ -419,6 +420,41 @@ class ContentCardExample extends HTMLElement {
         .detailDesc {
   
         }
+        .lds-ring {
+          display: inline-block;
+          position: relative;
+          width: 80px;
+          height: 80px;
+        }
+        .lds-ring div {
+          box-sizing: border-box;
+          display: block;
+          position: absolute;
+          width: 64px;
+          height: 64px;
+          margin: 8px;
+          border: 8px solid orange;
+          border-radius: 50%;
+          animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+          border-color: orange transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+          animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+          animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+          animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }      
         .detail {
           position: absolute;
           left: 247px;
@@ -563,6 +599,9 @@ class ContentCardExample extends HTMLElement {
     this.config = config;
     if (config.protocol) {
       this.plexProtocol = config.protocol;
+    }
+    if (config.maxCount) {
+      this.maxCount = config.maxCount;
     }
   }
 
