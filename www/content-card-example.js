@@ -281,15 +281,27 @@ class ContentCardExample extends HTMLElement {
   };
 
   hideDetails = () => {
+    this.detailElem.style.top = "0px";
     this.detailElem.style.color = "rgba(255,255,255,0)";
     this.detailElem.style["z-index"] = "0";
   };
 
   showDetails = (data) => {
-    this.detailElem.children[0].innerHTML = data.title;
-    this.detailElem.children[1].innerHTML = data.summary;
-    this.detailElem.style.color = "rgba(255,255,255,1)";
-    this.detailElem.style["z-index"] = "4";
+    const _this = this;
+    const doc = document.documentElement;
+    const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+    this.detailElem.style["transition"] = "0s";
+    this.detailElem.style.top = top - 1000 + "px";
+
+    setTimeout(function () {
+      _this.detailElem.style["transition"] = "0.7s";
+      _this.detailElem.style.top = top + "px";
+
+      _this.detailElem.children[0].innerHTML = data.title;
+      _this.detailElem.children[1].innerHTML = data.summary;
+      _this.detailElem.style.color = "rgba(255,255,255,1)";
+      _this.detailElem.style["z-index"] = "4";
+    }, 1);
   };
 
   showBackground = () => {
