@@ -82,7 +82,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
       });
     }
     const endElem = document.createElement("div");
-    endElem.style = "clear:both;";
+    endElem.className = "clear";
     this.content.appendChild(endElem);
 
     this.calculatePositions();
@@ -324,7 +324,24 @@ class PlexMeetsHomeAssistant extends HTMLElement {
       _this.detailElem.children[0].innerHTML = _this.escapeHtml(data.title);
       _this.detailElem.children[1].innerHTML = _this.escapeHtml(data.year);
       _this.detailElem.children[2].innerHTML =
-        _this.escapeHtml(data.duration) / 60 / 1000 + " min";
+        (data.duration !== undefined
+          ? "<span class='minutesDetail'>" +
+            Math.round(_this.escapeHtml(data.duration) / 60 / 1000) +
+            " min</span>"
+          : "") +
+        (data.contentRating !== undefined
+          ? "<span class='contentRatingDetail'>" +
+            _this.escapeHtml(data.contentRating) +
+            "</span>"
+          : "") +
+        (data.rating !== undefined
+          ? "<span class='ratingDetail'>" +
+            (data.rating < 5 ? "&#128465;" : "&#11088;") +
+            "&nbsp;" +
+            _this.escapeHtml(data.rating) +
+            "</span>"
+          : "") +
+        "<div class='clear'></div>";
       _this.detailElem.children[3].innerHTML = _this.escapeHtml(data.summary);
       _this.detailElem.style.color = "rgba(255,255,255,1)";
       _this.detailElem.style["z-index"] = "4";
@@ -460,8 +477,29 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+          .ratingDetail {
+            background: #ffffff24;
+            padding: 5px 10px;
+            border-radius: 5px;
+          }
+          .contentRatingDetail {
+            background: #ffffff24;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-right: 10px;
+          }
+          .clear {
+            clear:both;
+          }
+          .minutesDetail {
+            background: #ffffff24;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-right: 10px;
+          }
           .detail .metaInfo {
             display: block;
+            margin-bottom: 15px;
           }
           .detail h2 {
             text-overflow: ellipsis; 
