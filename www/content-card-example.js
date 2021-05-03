@@ -8,7 +8,7 @@ class ContentCardExample extends HTMLElement {
   movieElems = [];
   detailElem = undefined;
   data = {};
-  requestTimeout = 1000;
+  requestTimeout = 3000;
   loading = false;
   maxCount = false;
 
@@ -226,7 +226,6 @@ class ContentCardExample extends HTMLElement {
             this.render(hass);
           })
           .catch((err) => {
-            console.log("err!");
             this.error =
               "Plex sections requests did not respond within " +
               this.requestTimeout / 1000 +
@@ -235,7 +234,6 @@ class ContentCardExample extends HTMLElement {
           });
       })
       .catch((err) => {
-        console.log("err!!!");
         this.error =
           "Plex server did not respond within " +
           this.requestTimeout / 1000 +
