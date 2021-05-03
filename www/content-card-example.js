@@ -7,6 +7,7 @@ class ContentCardExample extends HTMLElement {
   expandedHeight = 324;
   movieElems = [];
   detailElem = undefined;
+  data = {};
 
   renderPage = (hass) => {
     const _this = this;
@@ -414,8 +415,93 @@ class ContentCardExample extends HTMLElement {
       this.plexProtocol = config.protocol;
     }
 
+    const serverRequest = this.getData(
+      this.plexProtocol +
+        "://" +
+        this.config.ip +
+        ":" +
+        this.config.port +
+        "/?X-Plex-Token=" +
+        this.config.token
+    );
+
+    const sectionsRequest = this.getData(
+      this.plexProtocol +
+        "://" +
+        this.config.ip +
+        ":" +
+        this.config.port +
+        "/library/sections?X-Plex-Token=" +
+        this.config.token
+    );
+
     //todo: replace this with a proper integration
-    this.data = JSON.parse(this.getData("/local/plexData.json"));
+    const parser = new DOMParser();
+    const serverData = parser.parseFromString(serverRequest, "text/xml");
+    const sectionsData = parser.parseFromString(sectionsRequest, "text/xml");
+    const directories = sectionsData.getElementsByTagName("Directory");
+
+    Array.from(directories).some((directory) => {
+      const sectionID = directory.attributes.key.textContent;
+      const sectionTitle = directory.attributes.title.textContent;
+      const sectionType = directory.attributes.type.textContent;
+      this.data[sectionTitle] = [];
+      const sectionRequest = this.getData(
+        this.plexProtocol +
+          "://" +
+          this.config.ip +
+          ":" +
+          this.config.port +
+          "/library/sections/" +
+          sectionID +
+          "/all?X-Plex-Token=" +
+          this.config.token
+      );
+      const sectionData = parser.parseFromString(sectionRequest, "text/xml");
+      let titles = [];
+      if (sectionType == "movie") {
+        titles = sectionData.getElementsByTagName("Video");
+      } else if (sectionType == "show") {
+        titles = sectionData.getElementsByTagName("Directory");
+      } else {
+        //todo
+      }
+      Array.from(titles).some((title) => {
+        this.data[sectionTitle].push({
+          title: title.attributes.title
+            ? title.attributes.title.textContent
+            : undefined,
+          summary: title.attributes.summary
+            ? title.attributes.summary.textContent
+            : undefined,
+          key: title.attributes.key
+            ? title.attributes.key.textContent
+            : undefined,
+          guid: title.attributes.guid
+            ? title.attributes.guid.textContent
+            : undefined,
+          rating: title.attributes.rating
+            ? title.attributes.rating.textContent
+            : undefined,
+          audienceRating: title.attributes.audienceRating
+            ? title.attributes.audienceRating.textContent
+            : undefined,
+          year: title.attributes.year
+            ? title.attributes.year.textContent
+            : undefined,
+          thumb: title.attributes.thumb
+            ? title.attributes.thumb.textContent
+            : undefined,
+          art: title.attributes.art
+            ? title.attributes.art.textContent
+            : undefined,
+        });
+      });
+    });
+
+    this.data.server_id = serverData.getElementsByTagName(
+      "MediaContainer"
+    )[0].attributes.machineIdentifier.textContent;
 
     if (this.data[this.config.libraryName] === undefined) {
       throw new Error(
