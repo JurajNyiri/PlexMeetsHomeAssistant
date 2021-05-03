@@ -11,6 +11,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
   requestTimeout = 3000;
   loading = false;
   maxCount = false;
+  playSupported = false;
 
   escapeHtml = (unsafe) => {
     return unsafe
@@ -58,7 +59,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     this.detailElem = document.createElement("div");
     this.detailElem.className = "detail";
     this.detailElem.innerHTML =
-      "<h1></h1><h2></h2><span class='detailDesc'></span>";
+      "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span>";
     this.content.appendChild(this.detailElem);
 
     //todo: figure out why timeout is needed here and do it properly
@@ -90,6 +91,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
   set hass(hass) {
     if (!this.content) {
+      this.playSupported =
+        hass.states[this.config.entity_id] &&
+        hass.states[this.config.entity_id].attributes &&
+        hass.states[this.config.entity_id].attributes.adb_response !==
+          undefined;
+
       const _this = this;
       this.error = "";
       if (!this.loading) {
@@ -225,6 +232,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                   art: title.attributes.art
                     ? title.attributes.art.textContent
                     : undefined,
+                  contentRating: title.attributes.contentRating
+                    ? title.attributes.contentRating.textContent
+                    : undefined,
+                  duration: title.attributes.duration
+                    ? title.attributes.duration.textContent
+                    : undefined,
                 });
               });
             });
@@ -310,7 +323,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
       _this.detailElem.children[0].innerHTML = _this.escapeHtml(data.title);
       _this.detailElem.children[1].innerHTML = _this.escapeHtml(data.year);
-      _this.detailElem.children[2].innerHTML = _this.escapeHtml(data.summary);
+      _this.detailElem.children[2].innerHTML =
+        _this.escapeHtml(data.duration) / 60 / 1000 + " min";
+      _this.detailElem.children[3].innerHTML = _this.escapeHtml(data.summary);
       _this.detailElem.style.color = "rgba(255,255,255,1)";
       _this.detailElem.style["z-index"] = "4";
     }, 1);
@@ -352,6 +367,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
     const movieElem = document.createElement("div");
     movieElem.className = "movieElem";
+
     movieElem.style =
       "width:" +
       this.width +
@@ -360,6 +376,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
       "px; background-image: url('" +
       thumbURL +
       "'); ";
+    if (!this.playSupported) {
+      movieElem.style.cursor = "pointer";
+    }
 
     movieElem.addEventListener("click", function (event) {
       console.log(data);
@@ -396,7 +415,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     const playButton = this.getPlayButton();
     const interactiveArea = document.createElement("div");
     interactiveArea.className = "interactiveArea";
-    interactiveArea.append(playButton);
+    if (this.playSupported) {
+      interactiveArea.append(playButton);
+    }
 
     movieElem.append(interactiveArea);
 
@@ -439,6 +460,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+          .detail .metaInfo {
+            display: block;
+          }
           .detail h2 {
             text-overflow: ellipsis; 
             white-space: nowrap; 
