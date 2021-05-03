@@ -59,7 +59,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     this.detailElem = document.createElement("div");
     this.detailElem.className = "detail";
     this.detailElem.innerHTML =
-      "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span>";
+      "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div>";
+
+    if (this.playSupported) {
+      this.detailElem.innerHTML += "<span class='detailPlayAction'></span>";
+    }
+
     this.content.appendChild(this.detailElem);
 
     //todo: figure out why timeout is needed here and do it properly
@@ -238,6 +243,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                   duration: title.attributes.duration
                     ? title.attributes.duration.textContent
                     : undefined,
+                  type: sectionType ? sectionType : undefined,
                 });
               });
             });
@@ -305,15 +311,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
   };
 
   hideDetails = () => {
-    this.detailElem.style.top = "0px";
+    const doc = document.documentElement;
+    const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+    this.detailElem.style.top = top - 1000 + "px";
     this.detailElem.style.color = "rgba(255,255,255,0)";
     this.detailElem.style["z-index"] = "0";
+    this.detailElem.style["visibility"] = "hidden";
   };
 
   showDetails = (data) => {
     const _this = this;
     const doc = document.documentElement;
     const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+    this.detailElem.style["visibility"] = "visible";
     this.detailElem.style["transition"] = "0s";
     this.detailElem.style.top = top - 1000 + "px";
 
@@ -343,6 +353,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
           : "") +
         "<div class='clear'></div>";
       _this.detailElem.children[3].innerHTML = _this.escapeHtml(data.summary);
+      if (data.type === "movie") {
+        _this.detailElem.children[5].style.visibility = "visible";
+        _this.detailElem.children[5].innerHTML = "Play";
+      } else {
+        _this.detailElem.children[5].style.visibility = "hidden";
+      }
+
       _this.detailElem.style.color = "rgba(255,255,255,1)";
       _this.detailElem.style["z-index"] = "4";
     }, 1);
@@ -477,6 +494,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+          .detailPlayAction {
+            top: 10px;
+            color: rgb(15 17 19);
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            background: orange;
+          }
           .ratingDetail {
             background: #ffffff24;
             padding: 5px 10px;
@@ -516,6 +543,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             position: relative;
             padding: 5px 0px;
             margin: 16px 0 10px 0;
+          }
+          .detail {
+            visibility: hidden;
           }
           .detailDesc {
     
