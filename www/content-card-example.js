@@ -8,6 +8,8 @@ class ContentCardExample extends HTMLElement {
   movieElems = [];
   detailElem = undefined;
   data = {};
+  requestTimeout = 1000;
+  loading = false;
 
   renderPage = (hass) => {
     const _this = this;
@@ -16,9 +18,23 @@ class ContentCardExample extends HTMLElement {
     //card.header = this.config.libraryName;
     this.content = document.createElement("div");
     this.content.style.padding = "16px 16px 100px";
+
+    this.content.innerHTML = "";
+    if (this.error != "") {
+      this.content.innerHTML = "Error: " + this.error;
+    } else if (
+      this.data[this.config.libraryName] &&
+      this.data[this.config.libraryName].length === 0
+    ) {
+      this.content.innerHTML =
+        "Library " + this.config.libraryName + " has no items.";
+    } else if (this.loading) {
+      this.content.innerHTML = "Loading...";
+    }
+
     card.appendChild(this.content);
     this.appendChild(card);
-    this.content.innerHTML = "";
+
     var count = 0;
     var maxCount = false;
 
@@ -39,16 +55,18 @@ class ContentCardExample extends HTMLElement {
       });
     }, 1);
 
-    this.data[this.config.libraryName].some((movieData) => {
-      if (count < maxCount || !maxCount) {
-        count++;
-        this.content.appendChild(
-          this.getMovieElement(movieData, hass, this.data.server_id)
-        );
-      } else {
-        return true;
-      }
-    });
+    if (this.data[this.config.libraryName]) {
+      this.data[this.config.libraryName].some((movieData) => {
+        if (count < maxCount || !maxCount) {
+          count++;
+          this.content.appendChild(
+            this.getMovieElement(movieData, hass, this.data.server_id)
+          );
+        } else {
+          return true;
+        }
+      });
+    }
     const endElem = document.createElement("div");
     endElem.style = "clear:both;";
     this.content.appendChild(endElem);
@@ -60,38 +78,170 @@ class ContentCardExample extends HTMLElement {
   set hass(hass) {
     if (!this.content) {
       const _this = this;
-      this.previousPositions = [];
-
-      //todo: find a better way to detect resize...
-      setInterval(() => {
-        if (_this.movieElems.length > 0) {
-          if (_this.previousPositions.length === 0) {
-            for (let i = 0; i < _this.movieElems.length; i++) {
-              _this.previousPositions[i] = {};
-              _this.previousPositions[i]["top"] =
-                _this.movieElems[i].parentElement.offsetTop;
-              _this.previousPositions[i]["left"] =
-                _this.movieElems[i].parentElement.offsetLeft;
-            }
-          }
-          for (let i = 0; i < _this.movieElems.length; i++) {
-            if (
-              _this.previousPositions[i] &&
-              _this.movieElems[i].dataset.clicked !== "true" &&
-              (_this.previousPositions[i]["top"] !==
-                _this.movieElems[i].parentElement.offsetTop ||
-                _this.previousPositions[i]["left"] !==
-                  _this.movieElems[i].parentElement.offsetLeft)
-            ) {
-              _this.renderPage(hass);
-              _this.previousPositions = [];
-            }
-          }
-        }
-      }, 100);
-      this.renderPage(hass);
+      this.error = "";
+      if (!this.loading) {
+        this.loadInitialData(hass);
+      }
     }
   }
+
+  render = (hass) => {
+    const _this = this;
+    this.previousPositions = [];
+
+    console.log("render");
+    //todo: find a better way to detect resize...
+    setInterval(() => {
+      if (_this.movieElems.length > 0) {
+        if (_this.previousPositions.length === 0) {
+          for (let i = 0; i < _this.movieElems.length; i++) {
+            _this.previousPositions[i] = {};
+            _this.previousPositions[i]["top"] =
+              _this.movieElems[i].parentElement.offsetTop;
+            _this.previousPositions[i]["left"] =
+              _this.movieElems[i].parentElement.offsetLeft;
+          }
+        }
+        for (let i = 0; i < _this.movieElems.length; i++) {
+          if (
+            _this.previousPositions[i] &&
+            _this.movieElems[i].dataset.clicked !== "true" &&
+            (_this.previousPositions[i]["top"] !==
+              _this.movieElems[i].parentElement.offsetTop ||
+              _this.previousPositions[i]["left"] !==
+                _this.movieElems[i].parentElement.offsetLeft)
+          ) {
+            _this.renderPage(hass);
+            _this.previousPositions = [];
+          }
+        }
+      }
+    }, 100);
+    this.renderPage(hass);
+  };
+
+  loadInitialData = (hass) => {
+    this.loading = true;
+    this.renderPage(hass);
+    const serverRequest = this.getData(
+      this.plexProtocol +
+        "://" +
+        this.config.ip +
+        ":" +
+        this.config.port +
+        "/?X-Plex-Token=" +
+        this.config.token
+    );
+    const sectionsRequest = this.getData(
+      this.plexProtocol +
+        "://" +
+        this.config.ip +
+        ":" +
+        this.config.port +
+        "/library/sections?X-Plex-Token=" +
+        this.config.token
+    );
+
+    const parser = new DOMParser();
+    const sectionsDetails = [];
+    Promise.all([serverRequest, sectionsRequest])
+      .then((data) => {
+        const serverData = parser.parseFromString(data[0], "text/xml");
+        const sectionsData = parser.parseFromString(data[1], "text/xml");
+        const directories = sectionsData.getElementsByTagName("Directory");
+
+        Array.from(directories).some((directory) => {
+          const sectionID = directory.attributes.key.textContent;
+          const url =
+            this.plexProtocol +
+            "://" +
+            this.config.ip +
+            ":" +
+            this.config.port +
+            "/library/sections/" +
+            sectionID +
+            "/all?X-Plex-Token=" +
+            this.config.token;
+          sectionsDetails.push(this.getData(url));
+        });
+
+        Promise.all(sectionsDetails)
+          .then((sectionsData) => {
+            sectionsData.some((sectionData) => {
+              sectionData = parser.parseFromString(sectionData, "text/xml");
+              const sectionType = sectionData.getElementsByTagName(
+                "MediaContainer"
+              )[0].attributes.viewGroup.textContent;
+              const sectionTitle = sectionData.getElementsByTagName(
+                "MediaContainer"
+              )[0].attributes.title1.textContent;
+              this.data[sectionTitle] = [];
+              let titles = [];
+              if (sectionType == "movie") {
+                titles = sectionData.getElementsByTagName("Video");
+              } else if (sectionType == "show") {
+                titles = sectionData.getElementsByTagName("Directory");
+              } else {
+                //todo
+              }
+              Array.from(titles).some((title) => {
+                this.data[sectionTitle].push({
+                  title: title.attributes.title
+                    ? title.attributes.title.textContent
+                    : undefined,
+                  summary: title.attributes.summary
+                    ? title.attributes.summary.textContent
+                    : undefined,
+                  key: title.attributes.key
+                    ? title.attributes.key.textContent
+                    : undefined,
+                  guid: title.attributes.guid
+                    ? title.attributes.guid.textContent
+                    : undefined,
+                  rating: title.attributes.rating
+                    ? title.attributes.rating.textContent
+                    : undefined,
+                  audienceRating: title.attributes.audienceRating
+                    ? title.attributes.audienceRating.textContent
+                    : undefined,
+                  year: title.attributes.year
+                    ? title.attributes.year.textContent
+                    : undefined,
+                  thumb: title.attributes.thumb
+                    ? title.attributes.thumb.textContent
+                    : undefined,
+                  art: title.attributes.art
+                    ? title.attributes.art.textContent
+                    : undefined,
+                });
+              });
+            });
+            if (this.data[this.config.libraryName] === undefined) {
+              this.error =
+                "Library name " + this.config.libraryName + " does not exist.";
+            }
+
+            this.loading = false;
+            this.render(hass);
+          })
+          .catch((err) => {
+            console.log("err!");
+            this.error =
+              "Plex sections requests did not respond within " +
+              this.requestTimeout / 1000 +
+              " seconds.";
+            this.renderPage(hass);
+          });
+      })
+      .catch((err) => {
+        console.log("err!!!");
+        this.error =
+          "Plex server did not respond within " +
+          this.requestTimeout / 1000 +
+          " seconds.";
+        this.renderPage(hass);
+      });
+  };
 
   //todo: run also on resize
   calculatePositions = () => {
@@ -414,107 +564,21 @@ class ContentCardExample extends HTMLElement {
     if (config.protocol) {
       this.plexProtocol = config.protocol;
     }
-
-    const serverRequest = this.getData(
-      this.plexProtocol +
-        "://" +
-        this.config.ip +
-        ":" +
-        this.config.port +
-        "/?X-Plex-Token=" +
-        this.config.token
-    );
-
-    const sectionsRequest = this.getData(
-      this.plexProtocol +
-        "://" +
-        this.config.ip +
-        ":" +
-        this.config.port +
-        "/library/sections?X-Plex-Token=" +
-        this.config.token
-    );
-
-    //todo: replace this with a proper integration
-    const parser = new DOMParser();
-    const serverData = parser.parseFromString(serverRequest, "text/xml");
-    const sectionsData = parser.parseFromString(sectionsRequest, "text/xml");
-    const directories = sectionsData.getElementsByTagName("Directory");
-
-    Array.from(directories).some((directory) => {
-      const sectionID = directory.attributes.key.textContent;
-      const sectionTitle = directory.attributes.title.textContent;
-      const sectionType = directory.attributes.type.textContent;
-      this.data[sectionTitle] = [];
-      const sectionRequest = this.getData(
-        this.plexProtocol +
-          "://" +
-          this.config.ip +
-          ":" +
-          this.config.port +
-          "/library/sections/" +
-          sectionID +
-          "/all?X-Plex-Token=" +
-          this.config.token
-      );
-      const sectionData = parser.parseFromString(sectionRequest, "text/xml");
-      let titles = [];
-      if (sectionType == "movie") {
-        titles = sectionData.getElementsByTagName("Video");
-      } else if (sectionType == "show") {
-        titles = sectionData.getElementsByTagName("Directory");
-      } else {
-        //todo
-      }
-      Array.from(titles).some((title) => {
-        this.data[sectionTitle].push({
-          title: title.attributes.title
-            ? title.attributes.title.textContent
-            : undefined,
-          summary: title.attributes.summary
-            ? title.attributes.summary.textContent
-            : undefined,
-          key: title.attributes.key
-            ? title.attributes.key.textContent
-            : undefined,
-          guid: title.attributes.guid
-            ? title.attributes.guid.textContent
-            : undefined,
-          rating: title.attributes.rating
-            ? title.attributes.rating.textContent
-            : undefined,
-          audienceRating: title.attributes.audienceRating
-            ? title.attributes.audienceRating.textContent
-            : undefined,
-          year: title.attributes.year
-            ? title.attributes.year.textContent
-            : undefined,
-          thumb: title.attributes.thumb
-            ? title.attributes.thumb.textContent
-            : undefined,
-          art: title.attributes.art
-            ? title.attributes.art.textContent
-            : undefined,
-        });
-      });
-    });
-
-    this.data.server_id = serverData.getElementsByTagName(
-      "MediaContainer"
-    )[0].attributes.machineIdentifier.textContent;
-
-    if (this.data[this.config.libraryName] === undefined) {
-      throw new Error(
-        "Library name " + this.config.libraryName + " does not exist."
-      );
-    }
   }
 
   getData = (url) => {
-    const xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", url, false); // false for synchronous request
-    xmlHttp.send(null);
-    return xmlHttp.responseText;
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.timeout = this.requestTimeout;
+      xhr.onload = function () {
+        resolve(xhr.responseText);
+      };
+      xhr.ontimeout = function (e) {
+        reject(e);
+      };
+      xhr.send(null);
+    });
   };
 
   // The height of your card. Home Assistant uses this to automatically
