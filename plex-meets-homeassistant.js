@@ -12,6 +12,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
   loading = false;
   maxCount = false;
 
+  escapeHtml = (unsafe) => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
   renderPage = (hass) => {
     const _this = this;
     if (this) this.innerHTML = "";
@@ -28,11 +37,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
       this.data[this.config.libraryName].length === 0
     ) {
       this.content.innerHTML =
-        "Library " + this.config.libraryName + " has no items.";
+        "Library " +
+        this.escapeHtml(this.config.libraryName) +
+        " has no items.";
     } else if (this.loading) {
       this.content.style.padding = "16px 16px 16px";
       this.content.innerHTML =
-        '<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>'; //ttmp
+        '<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
     }
 
     card.appendChild(this.content);
@@ -46,7 +57,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
     this.detailElem = document.createElement("div");
     this.detailElem.className = "detail";
-    this.detailElem.innerHTML = "<h1></h1><span class='detailDesc'></span>";
+    this.detailElem.innerHTML =
+      "<h1></h1><h2></h2><span class='detailDesc'></span>";
     this.content.appendChild(this.detailElem);
 
     //todo: figure out why timeout is needed here and do it properly
@@ -90,7 +102,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     const _this = this;
     this.previousPositions = [];
 
-    console.log("render");
     //todo: find a better way to detect resize...
     setInterval(() => {
       if (_this.movieElems.length > 0) {
@@ -297,8 +308,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
       _this.detailElem.style["transition"] = "0.7s";
       _this.detailElem.style.top = top + "px";
 
-      _this.detailElem.children[0].innerHTML = data.title;
-      _this.detailElem.children[1].innerHTML = data.summary;
+      _this.detailElem.children[0].innerHTML = _this.escapeHtml(data.title);
+      _this.detailElem.children[1].innerHTML = _this.escapeHtml(data.year);
+      _this.detailElem.children[2].innerHTML = _this.escapeHtml(data.summary);
       _this.detailElem.style.color = "rgba(255,255,255,1)";
       _this.detailElem.style["z-index"] = "4";
     }, 1);
@@ -408,12 +420,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     });
 
     const titleElem = document.createElement("div");
-    titleElem.innerHTML = data.title;
+    titleElem.innerHTML = this.escapeHtml(data.title);
     titleElem.className = "titleElem";
     titleElem.style["margin-top"] = this.height + "px";
 
     const yearElem = document.createElement("div");
-    yearElem.innerHTML = data.year;
+    yearElem.innerHTML = this.escapeHtml(data.year);
     yearElem.className = "yearElem";
 
     container.appendChild(movieElem);
@@ -427,12 +439,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     let style = document.createElement("style");
 
     style.textContent = `
+          .detail h2 {
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+            overflow: hidden;
+            position: relative;
+            margin: 5px 0px 10px 0px;
+            font-size: 16px;
+          } 
           .detail h1 {
             text-overflow: ellipsis; 
             white-space: nowrap; 
             overflow: hidden;
             position: relative;
             padding: 5px 0px;
+            margin: 16px 0 10px 0;
           }
           .detailDesc {
     
@@ -623,6 +644,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
   }
 
   getData = (url) => {
+    console.log(url);
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
