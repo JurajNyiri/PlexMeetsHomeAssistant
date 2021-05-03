@@ -1,4 +1,4 @@
-class ContentCardExample extends HTMLElement {
+class PlexMeetsHomeAssistant extends HTMLElement {
   data = {}; // placeholder
 
   width = 138;
@@ -644,4 +644,4 @@ class ContentCardExample extends HTMLElement {
   }
 }
 
-customElements.define("content-card-example", ContentCardExample);
+customElements.define("plex-meets-homeassistant", PlexMeetsHomeAssistant);
