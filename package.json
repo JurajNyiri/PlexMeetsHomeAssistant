@@ -8,6 +8,7 @@
 		"lint": "eslint src/*.ts --fix",
 		"rollup": "rollup -c -m",
 		"build": "npm run lint && npm run rollup",
+		"start": "rollup -c --watch",
 		"dev": "npm run build && cp dist/plex-meets-homeassistant.js ~/.homeassistant/www/plex-meets-homeassistant.js"
 	},
 	"repository": {
