@@ -1,5 +1,5 @@
 {
 	"name": "Plex Meets Home Assistant",
 	"render_readme": true,
-	"filename": "plex-meets-homeassistant.js"
+	"filename": "dist/plex-meets-homeassistant.js"
 }
