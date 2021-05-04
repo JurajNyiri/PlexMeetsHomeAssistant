@@ -6,7 +6,13 @@ import json from '@rollup/plugin-json';
 
 const dev = process.env.ROLLUP_WATCH;
 
-const plugins = [nodeResolve({}), commonjs(), typescript(), json(), !dev && terser()];
+const plugins = [
+	nodeResolve({ jsnext: true, preferBuiltins: true, browser: true }),
+	commonjs(),
+	typescript(),
+	json(),
+	!dev && terser()
+];
 
 export default [
 	{

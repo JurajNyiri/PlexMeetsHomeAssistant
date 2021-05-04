@@ -3,6 +3,7 @@
 /* eslint-env browser */
 import { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
 import _ from 'lodash';
+import Plex from './modules/Plex';
 import { escapeHtml } from './utils';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -14,7 +15,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	expandedHeight = 324;
 
-	plexProtocol = '';
+	plexProtocol: 'http' | 'https' = 'http';
 
 	movieElems: any = [];
 
@@ -148,16 +149,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.renderPage(hass);
 	};
 
-	loadInitialData = (hass: HomeAssistant): void => {
+	loadInitialData = async (hass: HomeAssistant): Promise<void> => {
+		const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
+
+		const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSections()]);
+
+		console.log(plexInfo);
+		console.log(plexSections);
+
 		this.loading = true;
 		this.renderPage(hass);
-		const serverRequest = this.getData(
-			`${this.plexProtocol}://${this.config.ip}:${this.config.port}/?X-Plex-Token=${this.config.token}`
-		);
-		const sectionsRequest = this.getData(
-			`${this.plexProtocol}://${this.config.ip}:${this.config.port}/library/sections?X-Plex-Token=${this.config.token}`
-		);
-
+		/*
 		const parser = new DOMParser();
 		const sectionsDetails: Array<any> = [];
 		Promise.all([serverRequest, sectionsRequest])
@@ -230,6 +232,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.error = `Plex server did not respond within ${this.requestTimeout / 1000} seconds.`;
 				this.renderPage(hass);
 			});
+			*/
 	};
 
 	// todo: run also on resize
