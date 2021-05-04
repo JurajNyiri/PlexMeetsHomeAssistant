@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-underscore-dangle */
 /* eslint-env browser */
-import { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
+import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
 import Plex from './modules/Plex';
 import { escapeHtml } from './utils';
@@ -118,22 +117,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	}
 
 	render = (hass: HomeAssistant): void => {
-		console.log('render');
 		this.previousPositions = [];
 
 		// todo: find a better way to detect resize...
-		// todo: uncomment
-		/*
 		setInterval(() => {
 			if (this.movieElems.length > 0) {
 				if (this.previousPositions.length === 0) {
-					for (let i = 0; i < this.movieElems.length; i + 1) {
+					for (let i = 0; i < this.movieElems.length; i += 1) {
 						this.previousPositions[i] = {};
 						this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
 						this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
 					}
 				}
-				for (let i = 0; i < this.movieElems.length; i + 1) {
+				for (let i = 0; i < this.movieElems.length; i += 1) {
 					if (
 						this.previousPositions[i] &&
 						this.movieElems[i].dataset.clicked !== 'true' &&
@@ -146,7 +142,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 			}
 		}, 100);
-    */
+
 		this.renderPage(hass);
 	};
 
@@ -171,78 +167,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.render(hass);
 		} catch (err) {
 			// todo: proper timeout here
-			this.error = `Plex server did not respond.`;
+			this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
 			this.renderPage(hass);
 		}
-
-		/*
-		
-					// eslint-disable-next-line no-shadow
-					.then(sectionsData => {
-						// eslint-disable-next-line array-callback-return
-						sectionsData.some(sectionData => {
-							// eslint-disable-next-line no-param-reassign
-							sectionData = parser.parseFromString(sectionData, 'text/xml');
-							const sectionType = sectionData.getElementsByTagName('MediaContainer')[0].attributes.viewGroup
-								.textContent;
-							const sectionTitle = sectionData.getElementsByTagName('MediaContainer')[0].attributes.title1.textContent;
-							this.data[sectionTitle] = [];
-							let titles = [];
-							if (sectionType === 'movie') {
-								titles = sectionData.getElementsByTagName('Video');
-							} else if (sectionType === 'show') {
-								titles = sectionData.getElementsByTagName('Directory');
-							} else {
-								// todo
-							}
-							// eslint-disable-next-line array-callback-return
-							Array.from(titles).some((title: any) => {
-								this.data[sectionTitle].push({
-									title: title.attributes.title ? title.attributes.title.textContent : undefined,
-									summary: title.attributes.summary ? title.attributes.summary.textContent : undefined,
-									key: title.attributes.key ? title.attributes.key.textContent : undefined,
-									guid: title.attributes.guid ? title.attributes.guid.textContent : undefined,
-									rating: title.attributes.rating ? title.attributes.rating.textContent : undefined,
-									audienceRating: title.attributes.audienceRating
-										? title.attributes.audienceRating.textContent
-										: undefined,
-									year: title.attributes.year ? title.attributes.year.textContent : undefined,
-									thumb: title.attributes.thumb ? title.attributes.thumb.textContent : undefined,
-									art: title.attributes.art ? title.attributes.art.textContent : undefined,
-									contentRating: title.attributes.contentRating
-										? title.attributes.contentRating.textContent
-										: undefined,
-									duration: title.attributes.duration ? title.attributes.duration.textContent : undefined,
-									type: sectionType || undefined
-								});
-							});
-						});
-						if (this.data[this.config.libraryName] === undefined) {
-							this.error = `Library name ${this.config.libraryName} does not exist.`;
-						}
-
-						this.loading = false;
-						this.render(hass);
-					})
-					.catch(err => {
-						this.error = `Plex sections requests did not respond within ${this.requestTimeout / 1000} seconds.`;
-						this.renderPage(hass);
-					});
-			})
-			.catch(err => {
-				this.error = `Plex server did not respond within ${this.requestTimeout / 1000} seconds.`;
-				this.renderPage(hass);
-			});
-			*/
 	};
 
-	// todo: run also on resize
-	calculatePositions = () => {
+	calculatePositions = (): void => {
 		// todo: figure out why loop is needed here and do it properly
-		/*
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
-			for (let i = 0; i < this.movieElems.length; i + 1) {
+			for (let i = 0; i < this.movieElems.length; i += 1) {
 				if (this.movieElems[i].offsetLeft === 0) {
 					break;
 				} else {
@@ -254,11 +188,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
 			}
 		}, 10);
-		*/
 	};
 
-	minimizeAll = () => {
-		for (let i = 0; i < this.movieElems.length; i + 1) {
+	minimizeAll = (): void => {
+		for (let i = 0; i < this.movieElems.length; i += 1) {
 			if (this.movieElems[i].dataset.clicked === 'true') {
 				this.movieElems[i].style.width = `${this.width}px`;
 				this.movieElems[i].style.height = `${this.height}px`;
@@ -274,7 +207,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.hideDetails();
 	};
 
-	hideDetails = () => {
+	hideDetails = (): void => {
 		const doc = document.documentElement;
 		const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
 		if (this.detailElem) {
@@ -285,7 +218,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
-	showDetails = (data: any) => {
+	showDetails = (data: any): void => {
 		const doc = document.documentElement;
 		const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
 		if (this.detailElem) {
@@ -328,19 +261,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
-	showBackground = () => {
+	showBackground = (): void => {
 		const contentbg = this.getElementsByClassName('contentbg');
 		(contentbg[0] as HTMLElement).style.zIndex = '2';
 		(contentbg[0] as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.9)';
 	};
 
-	hideBackground = () => {
+	hideBackground = (): void => {
 		const contentbg = this.getElementsByClassName('contentbg');
 		(contentbg[0] as HTMLElement).style.zIndex = '1';
 		(contentbg[0] as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0)';
 	};
 
-	getMovieElement = (data: any, hass: HomeAssistant, serverID: string) => {
+	getMovieElement = (data: any, hass: HomeAssistant, serverID: string): HTMLDivElement => {
 		const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${this.expandedWidth}&height=${this.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
 
 		const container = document.createElement('div');
@@ -358,37 +291,34 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			movieElem.style.cursor = 'pointer';
 		}
 
-		movieElem.addEventListener('click', event => {
-			/* todo
-			console.log(data);
+		const self = this;
+		movieElem.addEventListener('click', function handleClick() {
 			if (this.dataset.clicked === 'true') {
-				_this.hideDetails();
-				this.style.width = `${_this.width}px`;
-				this.style.height = `${_this.height}px`;
-				this.style['z-index'] = 1;
+				self.hideDetails();
+				this.style.width = `${self.width}px`;
+				this.style.height = `${self.height}px`;
+				this.style.zIndex = '1';
 				this.style.top = `${this.dataset.top}px`;
 				this.style.left = `${this.dataset.left}px`;
 
-				const __this = this;
-				setTimeout(function() {
-					__this.dataset.clicked = false;
+				setTimeout(() => {
+					this.dataset.clicked = 'false';
 				}, 500);
 
-				_this.hideBackground();
+				self.hideBackground();
 			} else {
-				_this.minimizeAll();
-				_this.showDetails(data);
+				self.minimizeAll();
+				self.showDetails(data);
 				const doc = document.documentElement;
 				const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-				_this.showBackground();
-				this.style.width = `${_this.expandedWidth}px`;
-				this.style.height = `${_this.expandedHeight}px`;
-				this.style['z-index'] = 3;
+				self.showBackground();
+				this.style.width = `${self.expandedWidth}px`;
+				this.style.height = `${self.expandedHeight}px`;
+				this.style.zIndex = '3';
 				this.style.left = '16px';
 				this.style.top = `${top + 16}px`;
-				this.dataset.clicked = true;
+				this.dataset.clicked = 'true';
 			}
-      */
 		});
 
 		const playButton = this.getPlayButton();
@@ -432,7 +362,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		return container;
 	};
 
-	loadCustomStyles = () => {
+	loadCustomStyles = (): void => {
 		const style = document.createElement('style');
 
 		style.textContent = `
@@ -644,7 +574,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.appendChild(style);
 	};
 
-	getPlayButton = () => {
+	getPlayButton = (): HTMLButtonElement => {
 		const playButton = document.createElement('button');
 		playButton.name = 'playButton';
 
@@ -652,7 +582,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	// todo: define custom type
-	setConfig(config: any) {
+	setConfig = (config: any): void => {
 		this.plexProtocol = 'http';
 		if (!config.entity_id) {
 			throw new Error('You need to define an entity_id');
@@ -676,27 +606,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (config.maxCount) {
 			this.maxCount = config.maxCount;
 		}
-	}
-
-	getData = (url: string) => {
-		console.log(url);
-		return new Promise((resolve, reject) => {
-			const xhr = new XMLHttpRequest();
-			xhr.open('GET', url, true);
-			xhr.timeout = this.requestTimeout;
-			xhr.onload = function() {
-				resolve(xhr.responseText);
-			};
-			xhr.ontimeout = function(e) {
-				reject(e);
-			};
-			xhr.send(null);
-		});
 	};
 
-	// The height of your card. Home Assistant uses this to automatically
-	// distribute all cards over the available columns.
-	getCardSize = () => {
+	getCardSize = (): number => {
 		return 3;
 	};
 }

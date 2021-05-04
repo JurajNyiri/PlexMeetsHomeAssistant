@@ -45,6 +45,14 @@
 				"ts": "never",
 				"tsx": "never"
 			}
+		],
+		"@typescript-eslint/no-this-alias": [
+			"error",
+			{
+				"allowedNames": [
+					"self"
+				] // Allow `const self = this`; `[]` by default
+			}
 		]
 	}
 }
