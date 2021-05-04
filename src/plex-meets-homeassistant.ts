@@ -118,6 +118,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	}
 
 	render = (hass: HomeAssistant): void => {
+		console.log('render');
 		this.previousPositions = [];
 
 		// todo: find a better way to detect resize...
@@ -150,32 +151,32 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	loadInitialData = async (hass: HomeAssistant): Promise<void> => {
-		const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
-
-		const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSections()]);
-
-		console.log(plexInfo);
-		console.log(plexSections);
-
 		this.loading = true;
 		this.renderPage(hass);
+
+		const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
+		try {
+			const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSectionsData()]);
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			this.data.serverID = plexInfo;
+			_.forEach(plexSections, section => {
+				this.data[section.title1] = section.Metadata;
+			});
+
+			if (this.data[this.config.libraryName] === undefined) {
+				this.error = `Library name ${this.config.libraryName} does not exist.`;
+			}
+
+			this.loading = false;
+			this.render(hass);
+		} catch (err) {
+			// todo: proper timeout here
+			this.error = `Plex server did not respond.`;
+			this.renderPage(hass);
+		}
+
 		/*
-		const parser = new DOMParser();
-		const sectionsDetails: Array<any> = [];
-		Promise.all([serverRequest, sectionsRequest])
-			.then((data: Array<any>) => {
-				const serverData = parser.parseFromString(data[0], 'text/xml');
-				const sectionsData = parser.parseFromString(data[1], 'text/xml');
-				const directories = sectionsData.getElementsByTagName('Directory');
-
-				// eslint-disable-next-line array-callback-return
-				Array.from(directories).some(directory => {
-					const sectionID = (directory.attributes as Record<string, any>).key.textContent;
-					const url = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/library/sections/${sectionID}/all?X-Plex-Token=${this.config.token}`;
-					sectionsDetails.push(this.getData(url));
-				});
-
-				Promise.all(sectionsDetails)
+		
 					// eslint-disable-next-line no-shadow
 					.then(sectionsData => {
 						// eslint-disable-next-line array-callback-return
@@ -238,6 +239,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	// todo: run also on resize
 	calculatePositions = () => {
 		// todo: figure out why loop is needed here and do it properly
+		/*
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
 			for (let i = 0; i < this.movieElems.length; i + 1) {
@@ -252,6 +254,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
 			}
 		}, 10);
+		*/
 	};
 
 	minimizeAll = () => {

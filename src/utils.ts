@@ -1,5 +1,7 @@
-const escapeHtml = (unsafe: string): string => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const escapeHtml = (unsafe: any): string => {
 	return unsafe
+		.toString()
 		.replace(/&/g, '&amp;')
 		.replace(/</g, '&lt;')
 		.replace(/>/g, '&gt;')

@@ -18662,6 +18662,21 @@ class Plex {
             const url = `${this.protocol}://${this.ip}:${this.port}/library/sections?X-Plex-Token=${this.token}`;
             return (await axios.get(url)).data.MediaContainer.Directory;
         };
+        this.getSectionsData = async () => {
+            const sections = await this.getSections();
+            const sectionsRequests = [];
+            lodash.forEach(sections, section => {
+                sectionsRequests.push(axios.get(`${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`));
+            });
+            return this.exportSectionsData(await Promise.all(sectionsRequests));
+        };
+        this.exportSectionsData = (sectionsData) => {
+            const processedData = [];
+            lodash.forEach(sectionsData, sectionData => {
+                processedData.push(sectionData.data.MediaContainer);
+            });
+            return processedData;
+        };
         this.ip = ip;
         this.port = port;
         this.token = token;
@@ -18669,8 +18684,10 @@ class Plex {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
     return unsafe
+        .toString()
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -18755,6 +18772,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.loadCustomStyles();
         };
         this.render = (hass) => {
+            console.log('render');
             this.previousPositions = [];
             // todo: find a better way to detect resize...
             // todo: uncomment
@@ -18785,29 +18803,29 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.renderPage(hass);
         };
         this.loadInitialData = async (hass) => {
-            const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
-            const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSections()]);
-            console.log(plexInfo);
-            console.log(plexSections);
             this.loading = true;
             this.renderPage(hass);
+            const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
+            try {
+                const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSectionsData()]);
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                this.data.serverID = plexInfo;
+                lodash.forEach(plexSections, section => {
+                    this.data[section.title1] = section.Metadata;
+                });
+                if (this.data[this.config.libraryName] === undefined) {
+                    this.error = `Library name ${this.config.libraryName} does not exist.`;
+                }
+                this.loading = false;
+                this.render(hass);
+            }
+            catch (err) {
+                // todo: proper timeout here
+                this.error = `Plex server did not respond.`;
+                this.renderPage(hass);
+            }
             /*
-            const parser = new DOMParser();
-            const sectionsDetails: Array<any> = [];
-            Promise.all([serverRequest, sectionsRequest])
-                .then((data: Array<any>) => {
-                    const serverData = parser.parseFromString(data[0], 'text/xml');
-                    const sectionsData = parser.parseFromString(data[1], 'text/xml');
-                    const directories = sectionsData.getElementsByTagName('Directory');
-    
-                    // eslint-disable-next-line array-callback-return
-                    Array.from(directories).some(directory => {
-                        const sectionID = (directory.attributes as Record<string, any>).key.textContent;
-                        const url = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/library/sections/${sectionID}/all?X-Plex-Token=${this.config.token}`;
-                        sectionsDetails.push(this.getData(url));
-                    });
-    
-                    Promise.all(sectionsDetails)
+            
                         // eslint-disable-next-line no-shadow
                         .then(sectionsData => {
                             // eslint-disable-next-line array-callback-return
@@ -18869,13 +18887,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         // todo: run also on resize
         this.calculatePositions = () => {
             // todo: figure out why loop is needed here and do it properly
+            /*
             const setLeftOffsetsInterval = setInterval(() => {
                 this.movieElems = this.getElementsByClassName('movieElem');
                 for (let i = 0; i < this.movieElems.length; i + 1) {
                     if (this.movieElems[i].offsetLeft === 0) {
                         break;
-                    }
-                    else {
+                    } else {
                         clearInterval(setLeftOffsetsInterval);
                     }
                     this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
@@ -18884,6 +18902,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
                 }
             }, 10);
+            */
         };
         this.minimizeAll = () => {
             for (let i = 0; i < this.movieElems.length; i + 1) {
