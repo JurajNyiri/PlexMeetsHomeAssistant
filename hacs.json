@@ -1,6 +1,5 @@
 {
-  "name": "Plex Meets Home Assistant",
-  "render_readme": true,
-  "content_in_root": true,
-  "filename": "plex-meets-homeassistant.js"
+	"name": "Plex Meets Home Assistant",
+	"render_readme": true,
+	"filename": "plex-meets-homeassistant.js"
 }

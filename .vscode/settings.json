@@ -1,0 +1,12 @@
+{
+	"editor.renderWhitespace": "none",
+	"editor.formatOnSave": true,
+	"editor.formatOnPaste": true,
+	"editor.formatOnType": true,
+	"eslint.run": "onType",
+	"javascript.suggestionActions.enabled": false,
+	"yaml.format.enable": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	}
+}
