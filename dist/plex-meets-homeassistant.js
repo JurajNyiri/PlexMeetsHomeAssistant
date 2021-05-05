@@ -19561,7 +19561,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 }
                                 else {
                                     this.minimizeSeasons();
-                                    this.activeMovieElem.style.top = `0px`;
+                                    this.activeMovieElem.style.top = `16px`;
                                 }
                             }
                         });

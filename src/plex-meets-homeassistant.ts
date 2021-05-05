@@ -398,7 +398,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
 							} else {
 								this.minimizeSeasons();
-								this.activeMovieElem.style.top = `0px`;
+								this.activeMovieElem.style.top = `16px`;
 							}
 						}
 					});
