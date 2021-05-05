@@ -294,7 +294,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 			}, 200);
 		}
-		if (this.plex) {
+		if (this.plex && data.childCount > 0) {
 			this.seasonElemFreshlyLoaded = true;
 			const seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
 			if (this.seasonsElem) {
