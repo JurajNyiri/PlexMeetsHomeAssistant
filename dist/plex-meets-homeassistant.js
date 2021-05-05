@@ -19871,7 +19871,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const keyParts = data.key.split('/');
                 const movieID = keyParts[3];
                 if (this.hassObj && this.playController) {
-                    this.playController.play(movieID);
+                    this.playController.play(movieID, data.type === 'movie');
                 }
             });
             const titleElem = document.createElement('div');
