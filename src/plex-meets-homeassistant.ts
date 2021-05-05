@@ -320,9 +320,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					const seasonElem = document.createElement('div');
 					seasonElem.className = 'seasonElem';
 					seasonElem.style.width = `${CSS_STYLE.width}px`;
-					seasonElem.style.height = `${CSS_STYLE.height}px`;
+					seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
 					seasonElem.style.backgroundImage = `url('${thumbURL}')`;
 
+					const interactiveArea = document.createElement('div');
+					interactiveArea.className = 'interactiveArea';
+
+					const playButton = document.createElement('button');
+					playButton.name = 'playButton';
+					playButton.addEventListener('click', event => {
+						event.stopPropagation();
+						if (this.plex && this.playController) {
+							this.playController.play(seasonData.key.split('/')[3]);
+						}
+					});
+
+					interactiveArea.append(playButton);
+					seasonElem.append(interactiveArea);
 					seasonContainer.append(seasonElem);
 
 					const seasonTitleElem = document.createElement('div');
@@ -338,8 +352,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					seasonContainer.addEventListener('click', event => {
 						event.stopPropagation();
 						(async (): Promise<void> => {
-							if (this.plex) {
+							if (this.plex && this.playController) {
 								console.log(seasonData);
+								// this.playController.play(seasonData.key.split('/')[3]);
 								console.log(await this.plex.getLibraryData(seasonData.key.split('/')[3]));
 							}
 						})();
