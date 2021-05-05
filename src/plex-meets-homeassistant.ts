@@ -38,7 +38,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	previousPositions: Array<any> = [];
 
+	hassObj: HomeAssistant | undefined;
+
 	set hass(hass: HomeAssistant) {
+		this.hassObj = hass;
 		if (!this.content) {
 			this.playSupported =
 				hass.states[this.config.entity_id] &&
@@ -59,7 +62,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (this.plex) {
 				const [plexInfo, plexSections] = await Promise.all([this.plex.getServerInfo(), this.plex.getSectionsData()]);
 				// eslint-disable-next-line @typescript-eslint/camelcase
-				this.data.serverID = plexInfo;
+				this.data.serverID = plexInfo.machineIdentifier;
 				_.forEach(plexSections, section => {
 					this.data[section.title1] = section.Metadata;
 				});
@@ -173,7 +176,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				if (!this.maxCount || count < this.maxCount) {
 					count += 1;
-					this.content.appendChild(this.getMovieElement(movieData, this.data.server_id));
+					this.content.appendChild(this.getMovieElement(movieData, this.data.serverID));
 				} else {
 					return true;
 				}
@@ -440,11 +443,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			console.log(command);
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			const { entity_id } = this.config;
-			this.hass.callService('androidtv', 'adb_command', {
-				// eslint-disable-next-line @typescript-eslint/camelcase
-				entity_id,
-				command
-			});
+			if (this.hassObj) {
+				this.hassObj.callService('androidtv', 'adb_command', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id,
+					command
+				});
+			}
 		});
 
 		const titleElem = document.createElement('div');
