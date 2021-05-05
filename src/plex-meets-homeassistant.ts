@@ -323,10 +323,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				if (this.episodesElem && !this.episodesElemFreshlyLoaded) {
 					this.episodesElem.innerHTML = '';
 					this.episodesElem.style.display = 'none';
-					// fix for a specific case when user scrolls outside of normal home assistant area for seasons look
-					console.log('AAA');
 					this.resizeBackground();
-					console.log('BBB');
 				}
 			}, 700);
 		}
@@ -535,7 +532,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 														episodeContainer.addEventListener('click', episodeEvent => {
 															episodeEvent.stopPropagation();
-															console.log(episodeData);
 														});
 
 														this.episodesElem.append(episodeContainer);
@@ -556,9 +552,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 										}
 									})();
 								} else {
-									console.log('A');
 									await this.minimizeSeasons();
-									console.log('B');
 									this.hideEpisodes();
 									this.activeMovieElem.style.top = `${top + 16}px`;
 									if (this.detailElem && (this.detailElem.children[1] as HTMLElement)) {
@@ -601,17 +595,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			const requiredEpisodeBodyHeight =
 				parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
 
-			console.log(this.seasonsElemHidden);
-			console.log(this.episodesElemHidden);
-
 			if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
-				console.log('1');
 				(contentbg[0] as HTMLElement).style.height = `${requiredSeasonBodyHeight}px`;
 			} else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
-				console.log('2');
 				(contentbg[0] as HTMLElement).style.height = `${requiredEpisodeBodyHeight}px`;
 			} else {
-				console.log('3');
 				(contentbg[0] as HTMLElement).style.height = '100%';
 			}
 		}

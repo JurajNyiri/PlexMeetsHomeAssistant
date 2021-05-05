@@ -19533,10 +19533,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     if (this.episodesElem && !this.episodesElemFreshlyLoaded) {
                         this.episodesElem.innerHTML = '';
                         this.episodesElem.style.display = 'none';
-                        // fix for a specific case when user scrolls outside of normal home assistant area for seasons look
-                        console.log('AAA');
                         this.resizeBackground();
-                        console.log('BBB');
                     }
                 }, 700);
             }
@@ -19714,7 +19711,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                             episodeContainer.append(episodeNumber);
                                                             episodeContainer.addEventListener('click', episodeEvent => {
                                                                 episodeEvent.stopPropagation();
-                                                                console.log(episodeData);
                                                             });
                                                             this.episodesElem.append(episodeContainer);
                                                         }
@@ -19734,9 +19730,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         })();
                                     }
                                     else {
-                                        console.log('A');
                                         await this.minimizeSeasons();
-                                        console.log('B');
                                         this.hideEpisodes();
                                         this.activeMovieElem.style.top = `${top + 16}px`;
                                         if (this.detailElem && this.detailElem.children[1]) {
@@ -19772,18 +19766,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 const requiredSeasonBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
                 const requiredEpisodeBodyHeight = parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
-                console.log(this.seasonsElemHidden);
-                console.log(this.episodesElemHidden);
                 if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
-                    console.log('1');
                     contentbg[0].style.height = `${requiredSeasonBodyHeight}px`;
                 }
                 else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
-                    console.log('2');
                     contentbg[0].style.height = `${requiredEpisodeBodyHeight}px`;
                 }
                 else {
-                    console.log('3');
                     contentbg[0].style.height = '100%';
                 }
             }
