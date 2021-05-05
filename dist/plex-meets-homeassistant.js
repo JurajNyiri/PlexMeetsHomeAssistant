@@ -18958,12 +18958,18 @@ style.textContent = css `
 		background: #ffffff24;
 		padding: 5px 10px;
 		border-radius: 5px;
+		white-space: nowrap;
+		margin-bottom: 10px;
+		float: left;
 	}
 	.contentRatingDetail {
 		background: #ffffff24;
 		padding: 5px 10px;
 		border-radius: 5px;
 		margin-right: 10px;
+		white-space: nowrap;
+		float: left;
+		margin-bottom: 10px;
 	}
 	.clear {
 		clear: both;
@@ -18973,6 +18979,9 @@ style.textContent = css `
 		padding: 5px 10px;
 		border-radius: 5px;
 		margin-right: 10px;
+		white-space: nowrap;
+		float: left;
+		margin-bottom: 10px;
 	}
 	.detail .metaInfo {
 		display: block;
