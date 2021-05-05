@@ -4,7 +4,7 @@ import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
 import Plex from './modules/Plex';
 import { escapeHtml } from './modules/utils';
-import { CSS_STYLE } from './const';
+import { CSS_STYLE, LOREM_IPSUM } from './const';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {

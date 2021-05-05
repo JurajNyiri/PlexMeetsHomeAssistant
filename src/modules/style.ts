@@ -1,4 +1,5 @@
 import { css } from 'lit-element';
+import { CSS_STYLE } from '../const';
 /* eslint-env browser */
 const style = document.createElement('style');
 
@@ -55,8 +56,13 @@ style.textContent = css`
 	}
 	.detail {
 		visibility: hidden;
+		max-height: ${CSS_STYLE.expandedHeight + 16}px;
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.detailDesc {
+		position: relative;
 	}
 	.lds-ring {
 		display: inline-block;
