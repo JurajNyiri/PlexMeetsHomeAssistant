@@ -19411,13 +19411,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     const seasonTitleElem = child.children[1];
                     const seasonEpisodesCount = child.children[2];
                     seasonElem.style.display = 'block';
-                    const moveElem = (seasonElem) => {
-                        seasonElem.style.marginTop = '0';
-                        seasonElem.style.width = `${CSS_STYLE.width}px`;
-                        seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
-                        seasonElem.style.zIndex = '3';
-                        seasonElem.style.marginLeft = `0px`;
-                        seasonElem.dataset.clicked = 'false';
+                    const moveElem = (elem) => {
+                        const seasonElemLocal = elem;
+                        seasonElemLocal.style.marginTop = '0';
+                        seasonElemLocal.style.width = `${CSS_STYLE.width}px`;
+                        seasonElemLocal.style.height = `${CSS_STYLE.height - 3}px`;
+                        seasonElemLocal.style.zIndex = '3';
+                        seasonElemLocal.style.marginLeft = `0px`;
+                        seasonElemLocal.dataset.clicked = 'false';
                         seasonTitleElem.style.display = 'block';
                         seasonEpisodesCount.style.display = 'block';
                         setTimeout(() => {
@@ -19471,11 +19472,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.scrollDownInactiveSeasons = () => {
-            console.log('scrollDownInactiveSeasons');
             if (this.seasonsElem) {
                 lodash.forEach(this.seasonsElem.childNodes, child => {
                     const seasonElem = child.children[0];
-                    console.log(seasonElem);
                     const seasonTitleElem = child.children[1];
                     const seasonEpisodesCount = child.children[2];
                     if (seasonElem.dataset.clicked === 'false') {
@@ -19513,6 +19512,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.detailElem.style.top = `${top}px`;
                         this.detailElem.children[0].innerHTML = escapeHtml(data.title);
                         this.detailElem.children[1].innerHTML = escapeHtml(data.year);
+                        this.detailElem.children[1].dataset.year = escapeHtml(data.year);
                         this.detailElem.children[2].innerHTML = `${(data.duration !== undefined
                             ? `<span class='minutesDetail'>${Math.round(parseInt(escapeHtml(data.duration), 10) / 60 / 1000)} min</span>`
                             : '') +
@@ -19592,10 +19592,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                     seasonElem.style.marginLeft = `-${getOffset(seasonElem).left - getOffset(this.activeMovieElem).left}px`;
                                     seasonTitleElem.style.color = 'rgba(255,255,255,0)';
                                     seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
+                                    if (this.detailElem) {
+                                        this.detailElem.children[1].innerHTML = seasonData.title;
+                                    }
                                 }
                                 else {
                                     this.minimizeSeasons();
                                     this.activeMovieElem.style.top = `16px`;
+                                    if (this.detailElem && this.detailElem.children[1]) {
+                                        const { year } = this.detailElem.children[1].dataset;
+                                        if (year) {
+                                            this.detailElem.children[1].innerHTML = year;
+                                        }
+                                    }
                                 }
                             }
                         });
@@ -19616,7 +19625,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         }
                     }
                 }, 200);
-                console.log(seasonsData);
             }
         };
         this.showBackground = () => {

@@ -226,13 +226,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				const seasonEpisodesCount = (child as HTMLElement).children[2] as HTMLElement;
 				seasonElem.style.display = 'block';
 
-				const moveElem = (seasonElem: HTMLElement) => {
-					seasonElem.style.marginTop = '0';
-					seasonElem.style.width = `${CSS_STYLE.width}px`;
-					seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
-					seasonElem.style.zIndex = '3';
-					seasonElem.style.marginLeft = `0px`;
-					seasonElem.dataset.clicked = 'false';
+				const moveElem = (elem: HTMLElement): void => {
+					const seasonElemLocal = elem;
+					seasonElemLocal.style.marginTop = '0';
+					seasonElemLocal.style.width = `${CSS_STYLE.width}px`;
+					seasonElemLocal.style.height = `${CSS_STYLE.height - 3}px`;
+					seasonElemLocal.style.zIndex = '3';
+					seasonElemLocal.style.marginLeft = `0px`;
+					seasonElemLocal.dataset.clicked = 'false';
 					seasonTitleElem.style.display = 'block';
 					seasonEpisodesCount.style.display = 'block';
 					setTimeout(() => {
@@ -289,11 +290,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	scrollDownInactiveSeasons = (): void => {
-		console.log('scrollDownInactiveSeasons');
 		if (this.seasonsElem) {
 			_.forEach(this.seasonsElem.childNodes, child => {
 				const seasonElem = (child as HTMLElement).children[0] as HTMLElement;
-				console.log(seasonElem);
 				const seasonTitleElem = (child as HTMLElement).children[1] as HTMLElement;
 				const seasonEpisodesCount = (child as HTMLElement).children[2] as HTMLElement;
 				if (seasonElem.dataset.clicked === 'false') {
@@ -335,6 +334,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 					this.detailElem.children[0].innerHTML = escapeHtml(data.title);
 					this.detailElem.children[1].innerHTML = escapeHtml(data.year);
+					(this.detailElem.children[1] as HTMLElement).dataset.year = escapeHtml(data.year);
 					this.detailElem.children[2].innerHTML = `${(data.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
 								parseInt(escapeHtml(data.duration), 10) / 60 / 1000
@@ -432,9 +432,18 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 								seasonTitleElem.style.color = 'rgba(255,255,255,0)';
 								seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
+								if (this.detailElem) {
+									(this.detailElem.children[1] as HTMLElement).innerHTML = seasonData.title;
+								}
 							} else {
 								this.minimizeSeasons();
 								this.activeMovieElem.style.top = `16px`;
+								if (this.detailElem && (this.detailElem.children[1] as HTMLElement)) {
+									const { year } = (this.detailElem.children[1] as HTMLElement).dataset;
+									if (year) {
+										(this.detailElem.children[1] as HTMLElement).innerHTML = year;
+									}
+								}
 							}
 						}
 					});
@@ -460,8 +469,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}
 			}, 200);
-
-			console.log(seasonsData);
 		}
 	};
 
