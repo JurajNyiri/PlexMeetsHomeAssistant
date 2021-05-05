@@ -19595,9 +19595,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             contentbg[0].style.zIndex = '1';
             contentbg[0].style.backgroundColor = 'rgba(0,0,0,0)';
         };
-        this.activateMovieElem = (movieElem, minimize = true) => {
+        this.activateMovieElem = (movieElem) => {
             const movieElemLocal = movieElem;
             if (movieElem.dataset.clicked === 'true') {
+                this.minimizeAll();
                 this.activeMovieElem = undefined;
                 this.hideDetails();
                 movieElemLocal.style.width = `${CSS_STYLE.width}px`;
@@ -19606,19 +19607,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 movieElemLocal.style.top = `${movieElem.dataset.top}px`;
                 movieElemLocal.style.left = `${movieElem.dataset.left}px`;
                 setTimeout(() => {
-                    this.dataset.clicked = 'false';
+                    movieElemLocal.dataset.clicked = 'false';
                 }, 500);
                 this.hideBackground();
             }
             else {
-                console.log('TEST');
                 const doc = document.documentElement;
                 const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-                if (minimize) {
-                    this.minimizeAll();
-                    this.showDetails(this.activeMovieElemData);
-                    this.showBackground();
-                }
+                this.minimizeAll();
+                this.showDetails(this.activeMovieElemData);
+                this.showBackground();
                 movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;
                 movieElemLocal.style.height = `${CSS_STYLE.expandedHeight}px`;
                 movieElemLocal.style.zIndex = '3';
