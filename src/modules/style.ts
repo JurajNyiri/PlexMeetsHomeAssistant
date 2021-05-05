@@ -144,8 +144,10 @@ style.textContent = css`
 		position: relative;
 		font-weight: bold;
 		margin-top: 5px;
+		transition: 0.5s;
 	}
 	.seasonEpisodesCount {
+		transition: 0.5s;
 	}
 	.titleElem {
 		text-overflow: ellipsis;
@@ -158,7 +160,7 @@ style.textContent = css`
 		float: left;
 		margin-right: 16px;
 		margin-bottom: 15px;
-		transition: 5s;
+		transition: 0.5s;
 	}
 	.seasonElem {
 		background-repeat: no-repeat;

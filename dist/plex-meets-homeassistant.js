@@ -18724,6 +18724,7 @@ class PlayController {
     }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
     if (unsafe) {
@@ -18736,6 +18737,23 @@ const escapeHtml = (unsafe) => {
             .replace(/'/g, '&#039;');
     }
     return '';
+};
+const getOffset = (el) => {
+    let x = 0;
+    let y = 0;
+    while (el &&
+        el.offsetParent &&
+        !lodash.isNaN(el.offsetLeft) &&
+        !lodash.isNaN(el.offsetTop)) {
+        x += el.offsetLeft - el.scrollLeft;
+        y += el.offsetTop - el.scrollTop;
+        const tmp = el.offsetParent;
+        if (tmp) {
+            // eslint-disable-next-line no-param-reassign
+            el = tmp;
+        }
+    }
+    return { top: y, left: x };
 };
 
 const CSS_STYLE = {
@@ -19123,8 +19141,10 @@ style.textContent = css `
 		position: relative;
 		font-weight: bold;
 		margin-top: 5px;
+		transition: 0.5s;
 	}
 	.seasonEpisodesCount {
+		transition: 0.5s;
 	}
 	.titleElem {
 		text-overflow: ellipsis;
@@ -19137,7 +19157,7 @@ style.textContent = css `
 		float: left;
 		margin-right: 16px;
 		margin-bottom: 15px;
-		transition: 5s;
+		transition: 0.5s;
 	}
 	.seasonElem {
 		background-repeat: no-repeat;
@@ -19237,6 +19257,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         super(...arguments);
         this.plexProtocol = 'http';
         this.movieElems = [];
+        this.activeMovieElemData = {};
         this.seasonElemFreshlyLoaded = false;
         this.data = {};
         this.config = {};
@@ -19383,7 +19404,29 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
             }, 100);
         };
+        this.minimizeSeasons = () => {
+            if (this.seasonsElem) {
+                lodash.forEach(this.seasonsElem.childNodes, child => {
+                    const seasonElem = child.children[0];
+                    const seasonTitleElem = child.children[1];
+                    const seasonEpisodesCount = child.children[2];
+                    if (seasonElem.dataset.clicked === 'true') {
+                        seasonElem.style.marginTop = '0';
+                        seasonElem.style.width = `${CSS_STYLE.width}px`;
+                        seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
+                        seasonElem.style.zIndex = '3';
+                        seasonElem.style.marginLeft = `0px`;
+                        seasonElem.dataset.clicked = 'false';
+                        setTimeout(() => {
+                            seasonTitleElem.style.color = 'rgba(255,255,255,1)';
+                            seasonEpisodesCount.style.color = 'rgba(255,255,255,1)';
+                        }, 500);
+                    }
+                });
+            }
+        };
         this.minimizeAll = () => {
+            this.activeMovieElem = undefined;
             for (let i = 0; i < this.movieElems.length; i += 1) {
                 if (this.movieElems[i].dataset.clicked === 'true') {
                     this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
@@ -19479,6 +19522,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         seasonElem.style.width = `${CSS_STYLE.width}px`;
                         seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
                         seasonElem.style.backgroundImage = `url('${thumbURL}')`;
+                        seasonElem.dataset.clicked = 'false';
                         const interactiveArea = document.createElement('div');
                         interactiveArea.className = 'interactiveArea';
                         const playButton = document.createElement('button');
@@ -19502,13 +19546,24 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         seasonContainer.append(seasonEpisodesCount);
                         seasonContainer.addEventListener('click', event => {
                             event.stopPropagation();
-                            (async () => {
-                                if (this.plex && this.playController) {
-                                    console.log(seasonData);
-                                    // this.playController.play(seasonData.key.split('/')[3]);
-                                    console.log(await this.plex.getLibraryData(seasonData.key.split('/')[3]));
+                            if (this.activeMovieElem) {
+                                if (seasonElem.dataset.clicked === 'false') {
+                                    this.activeMovieElem.style.top = `${top - 1000}px`;
+                                    this.minimizeSeasons();
+                                    seasonElem.style.marginTop = `${-CSS_STYLE.expandedHeight - 16}px`;
+                                    seasonElem.style.width = `${CSS_STYLE.expandedWidth}px`;
+                                    seasonElem.style.height = `${CSS_STYLE.expandedHeight - 6}px`;
+                                    seasonElem.style.zIndex = '3';
+                                    seasonElem.style.marginLeft = `-${getOffset(seasonElem).left - getOffset(this.activeMovieElem).left}px`;
+                                    seasonElem.dataset.clicked = 'true';
+                                    seasonTitleElem.style.color = 'rgba(255,255,255,0)';
+                                    seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
                                 }
-                            })();
+                                else {
+                                    this.minimizeSeasons();
+                                    this.activeMovieElem.style.top = `0px`;
+                                }
+                            }
                         });
                         this.seasonsElem.append(seasonContainer);
                         setTimeout(() => {
@@ -19540,6 +19595,39 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             contentbg[0].style.zIndex = '1';
             contentbg[0].style.backgroundColor = 'rgba(0,0,0,0)';
         };
+        this.activateMovieElem = (movieElem, minimize = true) => {
+            const movieElemLocal = movieElem;
+            if (movieElem.dataset.clicked === 'true') {
+                this.activeMovieElem = undefined;
+                this.hideDetails();
+                movieElemLocal.style.width = `${CSS_STYLE.width}px`;
+                movieElemLocal.style.height = `${CSS_STYLE.height}px`;
+                movieElemLocal.style.zIndex = '1';
+                movieElemLocal.style.top = `${movieElem.dataset.top}px`;
+                movieElemLocal.style.left = `${movieElem.dataset.left}px`;
+                setTimeout(() => {
+                    this.dataset.clicked = 'false';
+                }, 500);
+                this.hideBackground();
+            }
+            else {
+                console.log('TEST');
+                const doc = document.documentElement;
+                const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+                if (minimize) {
+                    this.minimizeAll();
+                    this.showDetails(this.activeMovieElemData);
+                    this.showBackground();
+                }
+                movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;
+                movieElemLocal.style.height = `${CSS_STYLE.expandedHeight}px`;
+                movieElemLocal.style.zIndex = '3';
+                movieElemLocal.style.left = '16px';
+                movieElemLocal.style.top = `${top + 16}px`;
+                movieElemLocal.dataset.clicked = 'true';
+                this.activeMovieElem = movieElemLocal;
+            }
+        };
         this.getMovieElement = (data, serverID) => {
             const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
             const container = document.createElement('div');
@@ -19554,33 +19642,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (!this.playSupported) {
                 movieElem.style.cursor = 'pointer';
             }
-            const self = this;
-            movieElem.addEventListener('click', function handleClick() {
-                if (this.dataset.clicked === 'true') {
-                    self.hideDetails();
-                    this.style.width = `${CSS_STYLE.width}px`;
-                    this.style.height = `${CSS_STYLE.height}px`;
-                    this.style.zIndex = '1';
-                    this.style.top = `${this.dataset.top}px`;
-                    this.style.left = `${this.dataset.left}px`;
-                    setTimeout(() => {
-                        this.dataset.clicked = 'false';
-                    }, 500);
-                    self.hideBackground();
-                }
-                else {
-                    self.minimizeAll();
-                    self.showDetails(data);
-                    const doc = document.documentElement;
-                    const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-                    self.showBackground();
-                    this.style.width = `${CSS_STYLE.expandedWidth}px`;
-                    this.style.height = `${CSS_STYLE.expandedHeight}px`;
-                    this.style.zIndex = '3';
-                    this.style.left = '16px';
-                    this.style.top = `${top + 16}px`;
-                    this.dataset.clicked = 'true';
-                }
+            movieElem.addEventListener('click', () => {
+                this.activeMovieElemData = data;
+                this.activateMovieElem(movieElem);
             });
             const playButton = this.getPlayButton();
             const interactiveArea = document.createElement('div');
