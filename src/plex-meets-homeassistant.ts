@@ -506,7 +506,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													episodePlayButton.addEventListener('click', episodeEvent => {
 														episodeEvent.stopPropagation();
 														if (this.plex && this.playController) {
-															this.playController.play(episodeData.key.split('/')[3]);
+															this.playController.play(episodeData.key.split('/')[3], true);
 														}
 													});
 

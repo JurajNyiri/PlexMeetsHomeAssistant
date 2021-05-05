@@ -18698,7 +18698,7 @@ class Plex {
 
 class PlayController {
     constructor(hass, plex, entity) {
-        this.play = async (mediaID) => {
+        this.play = async (mediaID, instantPlay = false) => {
             const serverID = await this.plex.getServerID();
             const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
             console.log(command);
@@ -18712,6 +18712,17 @@ class PlayController {
                 entity_id: this.entity,
                 command
             });
+            if (instantPlay) {
+                console.log('instantPlay');
+                setTimeout(() => {
+                    console.log('PLAY');
+                    this.hass.callService('androidtv', 'adb_command', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        entity_id: this.entity,
+                        command: 'CENTER'
+                    });
+                }, 5000);
+            }
         };
         this.isPlaySupported = () => {
             return (this.hass.states[this.entity] &&
@@ -19694,7 +19705,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                         episodePlayButton.addEventListener('click', episodeEvent => {
                                                             episodeEvent.stopPropagation();
                                                             if (this.plex && this.playController) {
-                                                                this.playController.play(episodeData.key.split('/')[3]);
+                                                                this.playController.play(episodeData.key.split('/')[3], true);
                                                             }
                                                         });
                                                         episodeInteractiveArea.append(episodePlayButton);

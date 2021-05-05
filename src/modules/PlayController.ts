@@ -14,7 +14,7 @@ class PlayController {
 		this.entity = entity;
 	}
 
-	play = async (mediaID: number): Promise<void> => {
+	play = async (mediaID: number, instantPlay = false): Promise<void> => {
 		const serverID = await this.plex.getServerID();
 		const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
 
@@ -29,6 +29,17 @@ class PlayController {
 			entity_id: this.entity,
 			command
 		});
+		if (instantPlay) {
+			console.log('instantPlay');
+			setTimeout(() => {
+				console.log('PLAY');
+				this.hass.callService('androidtv', 'adb_command', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: this.entity,
+					command: 'CENTER'
+				});
+			}, 5000);
+		}
 	};
 
 	isPlaySupported = (): boolean => {
