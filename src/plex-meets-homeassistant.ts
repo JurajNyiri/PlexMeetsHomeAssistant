@@ -461,8 +461,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 								this.scrollDownInactiveSeasons();
 
-								seasonElem.style.marginTop = `${-CSS_STYLE.expandedHeight - 16}px`;
-
+								seasonContainer.style.top = `${-CSS_STYLE.expandedHeight}px`;
 								seasonElem.style.width = `${CSS_STYLE.expandedWidth}px`;
 								seasonElem.style.height = `${CSS_STYLE.expandedHeight - 6}px`;
 								seasonElem.style.zIndex = '3';
@@ -471,6 +470,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 								seasonTitleElem.style.color = 'rgba(255,255,255,0)';
 								seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
+
 								if (this.detailElem) {
 									(this.detailElem.children[1] as HTMLElement).innerHTML = seasonData.title;
 								}
@@ -547,6 +547,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									}
 								})();
 							} else {
+								seasonContainer.style.top = `${seasonContainer.dataset.top}px`;
 								this.minimizeSeasons();
 								this.hideEpisodes();
 								this.activeMovieElem.style.top = `${top + 16}px`;
@@ -563,6 +564,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.seasonsElem.append(seasonContainer);
 				}
 			});
+
+			_.forEach((this.seasonsElem as HTMLElement).children, elem => {
+				const seasonElem = elem as HTMLElement;
+				const left = seasonElem.offsetLeft;
+				const topElem = seasonElem.offsetTop;
+				seasonElem.style.left = `${left}px`;
+				seasonElem.dataset.left = `${left}`;
+				seasonElem.style.top = `${topElem}px`;
+				seasonElem.dataset.top = `${topElem}`;
+			});
+			_.forEach((this.seasonsElem as HTMLElement).children, elem => {
+				const seasonElem = elem as HTMLElement;
+				seasonElem.style.position = 'absolute';
+			});
+
 			setTimeout(() => {
 				this.seasonElemFreshlyLoaded = false;
 			}, 700);
