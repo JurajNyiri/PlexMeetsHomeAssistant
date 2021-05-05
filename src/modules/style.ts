@@ -154,6 +154,7 @@ style.textContent = css`
 		font-weight: bold;
 		margin-top: 5px;
 		transition: 0.5s;
+		color: white;
 	}
 	.episodeTitleElem {
 		text-overflow: ellipsis;
@@ -163,11 +164,14 @@ style.textContent = css`
 		font-weight: bold;
 		margin-top: 5px;
 		transition: 0.5s;
+		color: white;
 	}
 	.seasonEpisodesCount {
 		transition: 0.5s;
+		color: white;
 	}
 	.episodeNumber {
+		color: white;
 	}
 	.titleElem {
 		text-overflow: ellipsis;
