@@ -66,7 +66,7 @@ style.textContent = css`
 		visibility: hidden;
 		max-height: ${CSS_STYLE.expandedHeight + 16}px;
 		display: block;
-		overflow: hidden;
+		overflow: scroll;
 		text-overflow: ellipsis;
 	}
 	.detailDesc {

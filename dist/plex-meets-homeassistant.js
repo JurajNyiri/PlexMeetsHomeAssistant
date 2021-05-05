@@ -19006,7 +19006,7 @@ style.textContent = css `
 		visibility: hidden;
 		max-height: ${CSS_STYLE.expandedHeight + 16}px;
 		display: block;
-		overflow: hidden;
+		overflow: scroll;
 		text-overflow: ellipsis;
 	}
 	.detailDesc {
@@ -19262,9 +19262,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.detailElem.className = 'detail';
             this.detailElem.innerHTML =
                 "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div>";
-            if (this.playSupported) {
-                this.detailElem.innerHTML += "<span class='detailPlayAction'></span>";
-            }
+            if (this.playSupported) ;
             this.content.appendChild(this.detailElem);
             // todo: figure out why timeout is needed here and do it properly
             setTimeout(() => {
@@ -19358,13 +19356,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 ? `<span class='ratingDetail'>${data.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${escapeHtml(data.rating)}</span>`
                                 : '')}<div class='clear'></div>`;
                         this.detailElem.children[3].innerHTML = escapeHtml(data.summary);
+                        /* todo temp disabled
                         if (data.type === 'movie') {
-                            this.detailElem.children[5].style.visibility = 'visible';
+                            (this.detailElem.children[5] as HTMLElement).style.visibility = 'visible';
                             this.detailElem.children[5].innerHTML = 'Play';
+                        } else {
+                            (this.detailElem.children[5] as HTMLElement).style.visibility = 'hidden';
                         }
-                        else {
-                            this.detailElem.children[5].style.visibility = 'hidden';
-                        }
+                        */
                         this.detailElem.style.color = 'rgba(255,255,255,1)';
                         this.detailElem.style.zIndex = '4';
                     }

@@ -143,7 +143,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			"<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div>";
 
 		if (this.playSupported) {
-			this.detailElem.innerHTML += "<span class='detailPlayAction'></span>";
+			// todo: temp disabled
+			// this.detailElem.innerHTML += "<span class='detailPlayAction'></span>";
 		}
 
 		this.content.appendChild(this.detailElem);
@@ -249,12 +250,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							  )}</span>`
 							: '')}<div class='clear'></div>`;
 					this.detailElem.children[3].innerHTML = escapeHtml(data.summary);
+					/* todo temp disabled
 					if (data.type === 'movie') {
 						(this.detailElem.children[5] as HTMLElement).style.visibility = 'visible';
 						this.detailElem.children[5].innerHTML = 'Play';
 					} else {
 						(this.detailElem.children[5] as HTMLElement).style.visibility = 'hidden';
 					}
+					*/
 
 					this.detailElem.style.color = 'rgba(255,255,255,1)';
 					this.detailElem.style.zIndex = '4';
