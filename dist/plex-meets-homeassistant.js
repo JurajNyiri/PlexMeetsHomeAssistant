@@ -18700,8 +18700,11 @@ class PlayController {
     constructor(hass, plex, entity) {
         this.play = async (mediaID, instantPlay = false) => {
             const serverID = await this.plex.getServerID();
-            const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
-            console.log(command);
+            let command = `am start`;
+            if (instantPlay) {
+                command += ' --ez "android.intent.extra.START_PLAYBACK" true';
+            }
+            command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: this.entity,
@@ -18712,17 +18715,6 @@ class PlayController {
                 entity_id: this.entity,
                 command
             });
-            if (instantPlay) {
-                console.log('instantPlay');
-                setTimeout(() => {
-                    console.log('PLAY');
-                    this.hass.callService('androidtv', 'adb_command', {
-                        // eslint-disable-next-line @typescript-eslint/camelcase
-                        entity_id: this.entity,
-                        command: 'CENTER'
-                    });
-                }, 5000);
-            }
         };
         this.isPlaySupported = () => {
             return (this.hass.states[this.entity] &&
