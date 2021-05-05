@@ -41,6 +41,11 @@ class Plex {
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
 	};
 
+	getLibraryData = async (id: number): Promise<any> => {
+		const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}/children?X-Plex-Token=${this.token}`;
+		return (await axios.get(url)).data.MediaContainer.Metadata;
+	};
+
 	private exportSectionsData = (sectionsData: Array<any>): Array<any> => {
 		const processedData: Array<any> = [];
 		_.forEach(sectionsData, sectionData => {

@@ -18670,6 +18670,10 @@ class Plex {
             });
             return this.exportSectionsData(await Promise.all(sectionsRequests));
         };
+        this.getLibraryData = async (id) => {
+            const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}/children?X-Plex-Token=${this.token}`;
+            return (await axios.get(url)).data.MediaContainer.Metadata;
+        };
         this.exportSectionsData = (sectionsData) => {
             const processedData = [];
             lodash.forEach(sectionsData, sectionData => {
@@ -19149,6 +19153,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
+        this.plex = undefined;
         this.movieElems = [];
         this.detailElem = undefined;
         this.data = {};
@@ -19162,19 +19167,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.loadInitialData = async (hass) => {
             this.loading = true;
             this.renderPage(hass);
-            const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
             try {
-                const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSectionsData()]);
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                this.data.serverID = plexInfo;
-                lodash.forEach(plexSections, section => {
-                    this.data[section.title1] = section.Metadata;
-                });
-                if (this.data[this.config.libraryName] === undefined) {
-                    this.error = `Library name ${this.config.libraryName} does not exist.`;
+                if (this.plex) {
+                    const [plexInfo, plexSections] = await Promise.all([this.plex.getServerInfo(), this.plex.getSectionsData()]);
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    this.data.serverID = plexInfo;
+                    lodash.forEach(plexSections, section => {
+                        this.data[section.title1] = section.Metadata;
+                    });
+                    if (this.data[this.config.libraryName] === undefined) {
+                        this.error = `Library name ${this.config.libraryName} does not exist.`;
+                    }
+                    this.loading = false;
+                    this.render(hass);
                 }
-                this.loading = false;
-                this.render(hass);
+                else {
+                    throw Error('Plex not initialized.');
+                }
             }
             catch (err) {
                 // todo: proper timeout here
@@ -19313,13 +19322,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.detailElem.style.visibility = 'hidden';
             }
         };
-        this.showDetails = (data) => {
+        this.showDetails = async (data) => {
             const doc = document.documentElement;
             const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
             if (this.detailElem) {
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
-                console.log(this.detailElem.style.top);
                 setTimeout(() => {
                     if (this.detailElem) {
                         this.detailElem.style.visibility = 'visible';
@@ -19348,6 +19356,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.detailElem.style.zIndex = '4';
                     }
                 }, 200);
+            }
+            if (this.plex) {
+                const seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
+                console.log(seasonsData);
             }
         };
         this.showBackground = () => {
@@ -19467,6 +19479,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.maxCount) {
                 this.maxCount = config.maxCount;
             }
+            this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
         };
         this.getCardSize = () => {
             return 3;
