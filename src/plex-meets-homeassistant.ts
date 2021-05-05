@@ -224,17 +224,29 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				const seasonElem = (child as HTMLElement).children[0] as HTMLElement;
 				const seasonTitleElem = (child as HTMLElement).children[1] as HTMLElement;
 				const seasonEpisodesCount = (child as HTMLElement).children[2] as HTMLElement;
-				if (seasonElem.dataset.clicked === 'true') {
+				seasonElem.style.display = 'block';
+
+				const moveElem = (seasonElem: HTMLElement) => {
 					seasonElem.style.marginTop = '0';
 					seasonElem.style.width = `${CSS_STYLE.width}px`;
 					seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
 					seasonElem.style.zIndex = '3';
 					seasonElem.style.marginLeft = `0px`;
 					seasonElem.dataset.clicked = 'false';
+					seasonTitleElem.style.display = 'block';
+					seasonEpisodesCount.style.display = 'block';
 					setTimeout(() => {
 						seasonTitleElem.style.color = 'rgba(255,255,255,1)';
 						seasonEpisodesCount.style.color = 'rgba(255,255,255,1)';
 					}, 500);
+				};
+
+				if (seasonElem.dataset.clicked === 'true') {
+					moveElem(seasonElem);
+				} else {
+					setTimeout(() => {
+						moveElem(seasonElem);
+					}, 100);
 				}
 			});
 		}
@@ -255,6 +267,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}, 500);
 			}
 		}
+		this.hideSeasons();
+		this.hideDetails();
+	};
+
+	hideSeasons = (): void => {
 		if (this.seasonsElem) {
 			const doc = document.documentElement;
 			const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
@@ -269,8 +286,27 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 			}, 700);
 		}
+	};
 
-		this.hideDetails();
+	scrollDownInactiveSeasons = (): void => {
+		console.log('scrollDownInactiveSeasons');
+		if (this.seasonsElem) {
+			_.forEach(this.seasonsElem.childNodes, child => {
+				const seasonElem = (child as HTMLElement).children[0] as HTMLElement;
+				console.log(seasonElem);
+				const seasonTitleElem = (child as HTMLElement).children[1] as HTMLElement;
+				const seasonEpisodesCount = (child as HTMLElement).children[2] as HTMLElement;
+				if (seasonElem.dataset.clicked === 'false') {
+					seasonElem.style.marginTop = '1000px';
+					seasonElem.style.marginLeft = `0px`;
+					setTimeout(() => {
+						seasonElem.style.display = 'none';
+						seasonTitleElem.style.display = 'none';
+						seasonEpisodesCount.style.display = 'none';
+					}, 500);
+				}
+			});
+		}
 	};
 
 	hideDetails = (): void => {
@@ -381,9 +417,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						event.stopPropagation();
 						if (this.activeMovieElem) {
 							if (seasonElem.dataset.clicked === 'false') {
+								seasonElem.dataset.clicked = 'true';
 								this.activeMovieElem.style.top = `${top - 1000}px`;
 
-								this.minimizeSeasons();
+								this.scrollDownInactiveSeasons();
 
 								seasonElem.style.marginTop = `${-CSS_STYLE.expandedHeight - 16}px`;
 
@@ -392,7 +429,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								seasonElem.style.zIndex = '3';
 
 								seasonElem.style.marginLeft = `-${getOffset(seasonElem).left - getOffset(this.activeMovieElem).left}px`;
-								seasonElem.dataset.clicked = 'true';
 
 								seasonTitleElem.style.color = 'rgba(255,255,255,0)';
 								seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
