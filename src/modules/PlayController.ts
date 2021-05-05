@@ -18,6 +18,12 @@ class PlayController {
 		const serverID = await this.plex.getServerID();
 		const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
 
+		console.log(command);
+		this.hass.callService('androidtv', 'adb_command', {
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			entity_id: this.entity,
+			command: 'HOME'
+		});
 		this.hass.callService('androidtv', 'adb_command', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			entity_id: this.entity,
