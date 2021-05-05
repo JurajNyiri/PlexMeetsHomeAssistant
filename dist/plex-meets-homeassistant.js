@@ -18702,6 +18702,449 @@ const CSS_STYLE = {
     expandedHeight: 324
 };
 
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+/**
+ * An expression marker with embedded unique key to avoid collision with
+ * possible text in templates.
+ */
+`{{lit-${String(Math.random()).slice(2)}}}`;
+
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+/**
+ * Our TrustedTypePolicy for HTML which is declared using the html template
+ * tag function.
+ *
+ * That HTML is a developer-authored constant, and is parsed with innerHTML
+ * before any untrusted expressions have been mixed in. Therefor it is
+ * considered safe by construction.
+ */
+window.trustedTypes &&
+    trustedTypes.createPolicy('lit-html', { createHTML: (s) => s });
+
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+// Detect event listener options support. If the `capture` property is read
+// from the options object, then options are supported. If not, then the third
+// argument to add/removeEventListener is interpreted as the boolean capture
+// value so we should only pass the `capture` property.
+let eventOptionsSupported = false;
+// Wrap into an IIFE because MS Edge <= v41 does not support having try/catch
+// blocks right into the body of a module
+(() => {
+    try {
+        const options = {
+            get capture() {
+                eventOptionsSupported = true;
+                return false;
+            }
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        window.addEventListener('test', options, options);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        window.removeEventListener('test', options, options);
+    }
+    catch (_e) {
+        // event options not supported
+    }
+})();
+
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+// IMPORTANT: do not change the property name or the assignment expression.
+// This line will be used in regexes to search for lit-html usage.
+// TODO(justinfagnani): inject version number at build time
+if (typeof window !== 'undefined') {
+    (window['litHtmlVersions'] || (window['litHtmlVersions'] = [])).push('1.4.0');
+}
+
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+if (typeof window.ShadyCSS === 'undefined') ;
+else if (typeof window.ShadyCSS.prepareTemplateDom === 'undefined') {
+    console.warn(`Incompatible ShadyCSS version detected. ` +
+        `Please update to at least @webcomponents/webcomponentsjs@2.0.2 and ` +
+        `@webcomponents/shadycss@1.3.1.`);
+}
+
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+/**
+ * Use this module if you want to create your own base class extending
+ * [[UpdatingElement]].
+ * @packageDocumentation
+ */
+/*
+ * When using Closure Compiler, JSCompiler_renameProperty(property, object) is
+ * replaced at compile time by the munged name for object[property]. We cannot
+ * alias this function, so we have to use a small shim that has the same
+ * behavior when not compiling.
+ */
+window.JSCompiler_renameProperty =
+    (prop, _obj) => prop;
+
+/**
+@license
+Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at
+http://polymer.github.io/LICENSE.txt The complete set of authors may be found at
+http://polymer.github.io/AUTHORS.txt The complete set of contributors may be
+found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
+part of the polymer project is also subject to an additional IP rights grant
+found at http://polymer.github.io/PATENTS.txt
+*/
+/**
+ * Whether the current browser supports `adoptedStyleSheets`.
+ */
+const supportsAdoptingStyleSheets = (window.ShadowRoot) &&
+    (window.ShadyCSS === undefined || window.ShadyCSS.nativeShadow) &&
+    ('adoptedStyleSheets' in Document.prototype) &&
+    ('replace' in CSSStyleSheet.prototype);
+const constructionToken = Symbol();
+class CSSResult {
+    constructor(cssText, safeToken) {
+        if (safeToken !== constructionToken) {
+            throw new Error('CSSResult is not constructable. Use `unsafeCSS` or `css` instead.');
+        }
+        this.cssText = cssText;
+    }
+    // Note, this is a getter so that it's lazy. In practice, this means
+    // stylesheets are not created until the first element instance is made.
+    get styleSheet() {
+        if (this._styleSheet === undefined) {
+            // Note, if `supportsAdoptingStyleSheets` is true then we assume
+            // CSSStyleSheet is constructable.
+            if (supportsAdoptingStyleSheets) {
+                this._styleSheet = new CSSStyleSheet();
+                this._styleSheet.replaceSync(this.cssText);
+            }
+            else {
+                this._styleSheet = null;
+            }
+        }
+        return this._styleSheet;
+    }
+    toString() {
+        return this.cssText;
+    }
+}
+const textFromCSSResult = (value) => {
+    if (value instanceof CSSResult) {
+        return value.cssText;
+    }
+    else if (typeof value === 'number') {
+        return value;
+    }
+    else {
+        throw new Error(`Value passed to 'css' function must be a 'css' function result: ${value}. Use 'unsafeCSS' to pass non-literal values, but
+            take care to ensure page security.`);
+    }
+};
+/**
+ * Template tag which which can be used with LitElement's [[LitElement.styles |
+ * `styles`]] property to set element styles. For security reasons, only literal
+ * string values may be used. To incorporate non-literal values [[`unsafeCSS`]]
+ * may be used inside a template string part.
+ */
+const css = (strings, ...values) => {
+    const cssText = values.reduce((acc, v, idx) => acc + textFromCSSResult(v) + strings[idx + 1], strings[0]);
+    return new CSSResult(cssText, constructionToken);
+};
+
+/**
+ * @license
+ * Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+ * This code may only be used under the BSD style license found at
+ * http://polymer.github.io/LICENSE.txt
+ * The complete set of authors may be found at
+ * http://polymer.github.io/AUTHORS.txt
+ * The complete set of contributors may be found at
+ * http://polymer.github.io/CONTRIBUTORS.txt
+ * Code distributed by Google as part of the polymer project is also
+ * subject to an additional IP rights grant found at
+ * http://polymer.github.io/PATENTS.txt
+ */
+// IMPORTANT: do not change the property name or the assignment expression.
+// This line will be used in regexes to search for LitElement usage.
+// TODO(justinfagnani): inject version number at build time
+(window['litElementVersions'] || (window['litElementVersions'] = []))
+    .push('2.5.0');
+
+/* eslint-env browser */
+const style = document.createElement('style');
+style.textContent = css `
+	.detailPlayAction {
+		top: 10px;
+		color: rgb(15 17 19);
+		font-weight: bold;
+		padding: 5px 10px;
+		border-radius: 5px;
+		cursor: pointer;
+		position: relative;
+		background: orange;
+	}
+	.ratingDetail {
+		background: #ffffff24;
+		padding: 5px 10px;
+		border-radius: 5px;
+	}
+	.contentRatingDetail {
+		background: #ffffff24;
+		padding: 5px 10px;
+		border-radius: 5px;
+		margin-right: 10px;
+	}
+	.clear {
+		clear: both;
+	}
+	.minutesDetail {
+		background: #ffffff24;
+		padding: 5px 10px;
+		border-radius: 5px;
+		margin-right: 10px;
+	}
+	.detail .metaInfo {
+		display: block;
+		margin-bottom: 15px;
+	}
+	.detail h2 {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		position: relative;
+		margin: 5px 0px 10px 0px;
+		font-size: 16px;
+	}
+	.detail h1 {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		position: relative;
+		padding: 5px 0px;
+		margin: 16px 0 10px 0;
+	}
+	.detail {
+		visibility: hidden;
+	}
+	.detailDesc {
+	}
+	.lds-ring {
+		display: inline-block;
+		position: relative;
+		width: 80px;
+		height: 80px;
+	}
+	.lds-ring div {
+		box-sizing: border-box;
+		display: block;
+		position: absolute;
+		width: 64px;
+		height: 64px;
+		margin: 8px;
+		border: 8px solid orange;
+		border-radius: 50%;
+		animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+		border-color: orange transparent transparent transparent;
+	}
+	.lds-ring div:nth-child(1) {
+		animation-delay: -0.45s;
+	}
+	.lds-ring div:nth-child(2) {
+		animation-delay: -0.3s;
+	}
+	.lds-ring div:nth-child(3) {
+		animation-delay: -0.15s;
+	}
+	@keyframes lds-ring {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	.detail {
+		position: absolute;
+		left: 247px;
+		width: calc(100% - 267px);
+		z-index: 4;
+		transition: 0.5s;
+		color: rgba(255, 255, 255, 0);
+	}
+	.contentbg {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0);
+		z-index: 0;
+		transition: 0.5s;
+		left: 0;
+		top: 0;
+	}
+	.yearElem {
+		color: hsla(0, 0%, 100%, 0.45);
+		position: relative;
+	}
+	.titleElem {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		position: relative;
+	}
+	.movieElem {
+		margin-bottom: 5px;
+		background-repeat: no-repeat;
+		background-size: contain;
+		border-radius: 5px;
+		transition: 0.5s;
+		position: absolute;
+		z-index: 1;
+	}
+	.container {
+		z-index: 1;
+		float: left;
+		margin-bottom: 20px;
+		margin-right: 10px;
+		transition: 0.5s;
+	}
+	.interactiveArea {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		transition: 0.5s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.interactiveArea:hover {
+		background: rgba(0, 0, 0, 0.3);
+	}
+	button[name='playButton'] {
+		width: 40px;
+		height: 40px;
+		border: 2px solid white;
+		border-radius: 100%;
+		margin: auto;
+		cursor: pointer;
+		transition: 0.2s;
+	}
+	button[name='playButton']:hover {
+		background: orange !important;
+		border: 2px solid orange !important;
+	}
+	button[name='playButton']:focus {
+		outline: 0;
+		background: orange !important;
+		border: 2px solid orange !important;
+		box-shadow: 0 0 0 3px orange !important;
+	}
+
+	button[name='playButton']::after {
+		content: '';
+		display: inline-block;
+		position: relative;
+		top: 1px;
+		left: 2px;
+		border-style: solid;
+		border-width: 6px 0 6px 12px;
+		border-color: transparent transparent transparent white;
+		transition: 0.2s;
+	}
+
+	.interactiveArea button[name='playButton'] {
+		background: rgba(0, 0, 0, 0);
+		border: 2px solid rgba(255, 255, 255, 0);
+	}
+
+	.interactiveArea:hover button[name='playButton'] {
+		background: rgba(0, 0, 0, 0.4);
+		border: 2px solid rgba(255, 255, 255, 1);
+	}
+
+	.interactiveArea button[name='playButton']:after {
+		border-color: transparent transparent transparent rgba(255, 255, 255, 0);
+	}
+
+	.interactiveArea:hover button[name='playButton']:after {
+		border-color: transparent transparent transparent rgba(255, 255, 255, 1);
+	}
+
+	button[name='playButton']:hover:after {
+		border-color: transparent transparent transparent black !important;
+	}
+
+	button[name='playButton']:focus:after {
+		border-color: transparent transparent transparent black !important;
+	}
+`.cssText;
+
 class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
@@ -18993,212 +19436,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return container;
         };
         this.loadCustomStyles = () => {
-            const style = document.createElement('style');
-            style.textContent = `
-          .detailPlayAction {
-            top: 10px;
-            color: rgb(15 17 19);
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            position: relative;
-            background: orange;
-          }
-          .ratingDetail {
-            background: #ffffff24;
-            padding: 5px 10px;
-            border-radius: 5px;
-          }
-          .contentRatingDetail {
-            background: #ffffff24;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-right: 10px;
-          }
-          .clear {
-            clear:both;
-          }
-          .minutesDetail {
-            background: #ffffff24;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-right: 10px;
-          }
-          .detail .metaInfo {
-            display: block;
-            margin-bottom: 15px;
-          }
-          .detail h2 {
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-            overflow: hidden;
-            position: relative;
-            margin: 5px 0px 10px 0px;
-            font-size: 16px;
-          } 
-          .detail h1 {
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-            overflow: hidden;
-            position: relative;
-            padding: 5px 0px;
-            margin: 16px 0 10px 0;
-          }
-          .detail {
-            visibility: hidden;
-          }
-          .detailDesc {
-    
-          }
-          .lds-ring {
-            display: inline-block;
-            position: relative;
-            width: 80px;
-            height: 80px;
-          }
-          .lds-ring div {
-            box-sizing: border-box;
-            display: block;
-            position: absolute;
-            width: 64px;
-            height: 64px;
-            margin: 8px;
-            border: 8px solid orange;
-            border-radius: 50%;
-            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            border-color: orange transparent transparent transparent;
-          }
-          .lds-ring div:nth-child(1) {
-            animation-delay: -0.45s;
-          }
-          .lds-ring div:nth-child(2) {
-            animation-delay: -0.3s;
-          }
-          .lds-ring div:nth-child(3) {
-            animation-delay: -0.15s;
-          }
-          @keyframes lds-ring {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }      
-          .detail {
-            position: absolute;
-            left: 247px;
-            width: calc(100% - 267px);
-            z-index: 4;
-            transition: 0.5s;
-            color: rgba(255,255,255,0);
-          }
-          .contentbg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0);
-            z-index: 0;
-            transition: 0.5s;
-            left: 0;
-            top: 0;
-          }
-          .yearElem {
-            color:hsla(0,0%,100%,.45);
-            position: relative;
-          }
-          .titleElem {
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-            overflow: hidden;
-            position: relative;
-          }
-          .movieElem {
-            margin-bottom:5px;
-            background-repeat: no-repeat; 
-            background-size: contain; 
-            border-radius: 5px;
-            transition: 0.5s;
-            position: absolute;
-            z-index: 1;
-          }
-          .container {
-            z-index: 1;
-            float:left;
-            margin-bottom: 20px;
-            margin-right: 10px;
-            transition: 0.5s;
-          }
-          .interactiveArea {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transition: 0.5s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .interactiveArea:hover {
-            background: rgba(0,0,0,0.3);
-          }
-          button[name="playButton"] {
-            width: 40px;
-            height: 40px;
-            border: 2px solid white;
-            border-radius: 100%;
-            margin: auto;
-            cursor: pointer;
-            transition: 0.2s;
-          }
-          button[name="playButton"]:hover {
-            background: orange !important;
-            border: 2px solid orange !important;
-          }
-          button[name="playButton"]:focus {
-            outline: 0;
-            background: orange !important;
-            border: 2px solid orange !important;
-            box-shadow: 0 0 0 3px orange !important;
-          }
-          
-          button[name="playButton"]::after {
-            content: '';
-            display: inline-block;
-            position: relative;
-            top: 1px;
-            left: 2px;
-            border-style: solid;
-            border-width: 6px 0 6px 12px;
-            border-color: transparent transparent transparent white;
-            transition: 0.2s;
-          } 
-    
-          .interactiveArea button[name="playButton"] {
-            background: rgba(0,0,0,0.0);
-            border: 2px solid rgba(255,255,255,0.0);
-          }
-    
-          .interactiveArea:hover button[name="playButton"] {
-            background: rgba(0,0,0,0.4);
-            border: 2px solid rgba(255,255,255,1);
-          }
-    
-          .interactiveArea button[name="playButton"]:after {
-            border-color: transparent transparent transparent rgba(255,255,255,0);
-          }
-    
-          .interactiveArea:hover button[name="playButton"]:after {
-            border-color: transparent transparent transparent rgba(255,255,255,1);
-          }
-      
-          button[name="playButton"]:hover:after {
-            border-color: transparent transparent transparent black !important;
-          }
-      
-          button[name="playButton"]:focus:after {
-            border-color: transparent transparent transparent black !important;
-          }`;
             this.appendChild(style);
         };
         this.getPlayButton = () => {
@@ -19206,7 +19443,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             playButton.name = 'playButton';
             return playButton;
         };
-        // todo: define custom type
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
             if (!config.entity_id) {
