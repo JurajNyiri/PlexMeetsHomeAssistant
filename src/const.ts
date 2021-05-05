@@ -2,7 +2,9 @@ const CSS_STYLE = {
 	width: 138,
 	height: 203,
 	expandedWidth: 220,
-	expandedHeight: 324
+	expandedHeight: 324,
+	episodeWidth: 300,
+	episodeHeight: 169
 };
 
 const LOREM_IPSUM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec semper risus vitae aliquet interdum. Nulla facilisi. Pellentesque viverra sagittis lorem eget aliquet. Cras vehicula, purus vel consectetur mattis, ipsum arcu ullamcorper mi, id viverra purus ex eu dolor. Integer vehicula lacinia sem convallis iaculis. Nulla fermentum erat interdum, efficitur felis in, mollis neque. Vivamus luctus metus eget nisl pellentesque, placerat elementum magna eleifend.

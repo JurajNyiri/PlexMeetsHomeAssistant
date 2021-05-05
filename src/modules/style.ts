@@ -15,12 +15,21 @@ style.textContent = css`
 		background: orange;
 	}
 	.seasons {
+		z-index: 5;
+		position: absolute;
+		top: ${CSS_STYLE.expandedHeight + 16}px;
+		width: calc(100% - 32px);
+		left: 0;
+		padding: 16px;
+	}
+	.episodes {
 		z-index: 4;
 		position: absolute;
 		top: ${CSS_STYLE.expandedHeight + 16}px;
-		width: 100%;
+		width: calc(100% - 32px);
 		left: 0;
 		padding: 16px;
+		display: none;
 	}
 	.ratingDetail {
 		background: #ffffff24;
@@ -146,8 +155,19 @@ style.textContent = css`
 		margin-top: 5px;
 		transition: 0.5s;
 	}
+	.episodeTitleElem {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		position: relative;
+		font-weight: bold;
+		margin-top: 5px;
+		transition: 0.5s;
+	}
 	.seasonEpisodesCount {
 		transition: 0.5s;
+	}
+	.episodeNumber {
 	}
 	.titleElem {
 		text-overflow: ellipsis;
@@ -160,6 +180,19 @@ style.textContent = css`
 		float: left;
 		margin-right: 16px;
 		margin-bottom: 15px;
+		transition: 0.5s;
+	}
+	.episodeContainer {
+		position: relative;
+		float: left;
+		margin-right: 16px;
+		margin-bottom: 15px;
+		transition: 0.5s;
+	}
+	.episodeElem {
+		background-repeat: no-repeat;
+		background-size: contain;
+		border-radius: 5px;
 		transition: 0.5s;
 	}
 	.seasonElem {

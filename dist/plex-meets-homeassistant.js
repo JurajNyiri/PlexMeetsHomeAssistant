@@ -18760,7 +18760,9 @@ const CSS_STYLE = {
     width: 138,
     height: 203,
     expandedWidth: 220,
-    expandedHeight: 324
+    expandedHeight: 324,
+    episodeWidth: 300,
+    episodeHeight: 169
 };
 
 /**
@@ -19012,12 +19014,21 @@ style.textContent = css `
 		background: orange;
 	}
 	.seasons {
+		z-index: 5;
+		position: absolute;
+		top: ${CSS_STYLE.expandedHeight + 16}px;
+		width: calc(100% - 32px);
+		left: 0;
+		padding: 16px;
+	}
+	.episodes {
 		z-index: 4;
 		position: absolute;
 		top: ${CSS_STYLE.expandedHeight + 16}px;
-		width: 100%;
+		width: calc(100% - 32px);
 		left: 0;
 		padding: 16px;
+		display: none;
 	}
 	.ratingDetail {
 		background: #ffffff24;
@@ -19143,8 +19154,19 @@ style.textContent = css `
 		margin-top: 5px;
 		transition: 0.5s;
 	}
+	.episodeTitleElem {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		position: relative;
+		font-weight: bold;
+		margin-top: 5px;
+		transition: 0.5s;
+	}
 	.seasonEpisodesCount {
 		transition: 0.5s;
+	}
+	.episodeNumber {
 	}
 	.titleElem {
 		text-overflow: ellipsis;
@@ -19157,6 +19179,19 @@ style.textContent = css `
 		float: left;
 		margin-right: 16px;
 		margin-bottom: 15px;
+		transition: 0.5s;
+	}
+	.episodeContainer {
+		position: relative;
+		float: left;
+		margin-right: 16px;
+		margin-bottom: 15px;
+		transition: 0.5s;
+	}
+	.episodeElem {
+		background-repeat: no-repeat;
+		background-size: contain;
+		border-radius: 5px;
 		transition: 0.5s;
 	}
 	.seasonElem {
@@ -19259,6 +19294,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.movieElems = [];
         this.activeMovieElemData = {};
         this.seasonElemFreshlyLoaded = false;
+        this.episodesElemFreshlyLoaded = false;
+        this.seasonsElemHidden = true;
+        this.episodesElemHidden = true;
         this.data = {};
         this.config = {};
         this.requestTimeout = 3000;
@@ -19267,6 +19305,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.playSupported = false;
         this.error = '';
         this.previousPositions = [];
+        this.contentBGHeight = 0;
         this.loadInitialData = async () => {
             this.loading = true;
             this.renderPage();
@@ -19318,6 +19357,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                     if (renderNeeded) {
                         this.renderPage();
+                        const contentbg = this.getElementsByClassName('contentbg');
+                        this.contentBGHeight = contentbg[0].scrollHeight;
                     }
                 }
             }, 100);
@@ -19361,6 +19402,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.minimizeAll();
             });
             this.content.appendChild(this.seasonsElem);
+            this.episodesElem = document.createElement('div');
+            this.episodesElem.className = 'episodes';
+            this.episodesElem.addEventListener('click', () => {
+                this.hideBackground();
+                this.minimizeAll();
+            });
+            this.content.appendChild(this.episodesElem);
             // todo: figure out why timeout is needed here and do it properly
             setTimeout(() => {
                 contentbg.addEventListener('click', () => {
@@ -19405,37 +19453,41 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }, 100);
         };
         this.minimizeSeasons = () => {
-            if (this.seasonsElem) {
-                lodash.forEach(this.seasonsElem.childNodes, child => {
-                    const seasonElem = child.children[0];
-                    const seasonTitleElem = child.children[1];
-                    const seasonEpisodesCount = child.children[2];
-                    seasonElem.style.display = 'block';
-                    const moveElem = (elem) => {
-                        const seasonElemLocal = elem;
-                        seasonElemLocal.style.marginTop = '0';
-                        seasonElemLocal.style.width = `${CSS_STYLE.width}px`;
-                        seasonElemLocal.style.height = `${CSS_STYLE.height - 3}px`;
-                        seasonElemLocal.style.zIndex = '3';
-                        seasonElemLocal.style.marginLeft = `0px`;
-                        seasonElemLocal.dataset.clicked = 'false';
-                        seasonTitleElem.style.display = 'block';
-                        seasonEpisodesCount.style.display = 'block';
-                        setTimeout(() => {
-                            seasonTitleElem.style.color = 'rgba(255,255,255,1)';
-                            seasonEpisodesCount.style.color = 'rgba(255,255,255,1)';
-                        }, 500);
-                    };
-                    if (seasonElem.dataset.clicked === 'true') {
-                        moveElem(seasonElem);
-                    }
-                    else {
-                        setTimeout(() => {
+            return new Promise((resolve, reject) => {
+                this.seasonsElemHidden = false;
+                if (this.seasonsElem) {
+                    lodash.forEach(this.seasonsElem.childNodes, child => {
+                        const seasonElem = child.children[0];
+                        const seasonTitleElem = child.children[1];
+                        const seasonEpisodesCount = child.children[2];
+                        seasonElem.style.display = 'block';
+                        const moveElem = (elem) => {
+                            const seasonElemLocal = elem;
+                            seasonElemLocal.style.marginTop = '0';
+                            seasonElemLocal.style.width = `${CSS_STYLE.width}px`;
+                            seasonElemLocal.style.height = `${CSS_STYLE.height - 3}px`;
+                            seasonElemLocal.style.zIndex = '3';
+                            seasonElemLocal.style.marginLeft = `0px`;
+                            seasonElemLocal.dataset.clicked = 'false';
+                            seasonTitleElem.style.display = 'block';
+                            seasonEpisodesCount.style.display = 'block';
+                            setTimeout(() => {
+                                seasonTitleElem.style.color = 'rgba(255,255,255,1)';
+                                seasonEpisodesCount.style.color = 'rgba(255,255,255,1)';
+                            }, 500);
+                        };
+                        if (seasonElem.dataset.clicked === 'true') {
                             moveElem(seasonElem);
-                        }, 100);
-                    }
-                });
-            }
+                        }
+                        else {
+                            setTimeout(() => {
+                                moveElem(seasonElem);
+                                resolve();
+                            }, 100);
+                        }
+                    });
+                }
+            });
         };
         this.minimizeAll = () => {
             this.activeMovieElem = undefined;
@@ -19453,10 +19505,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
             }
             this.hideSeasons();
+            this.hideEpisodes();
             this.hideDetails();
         };
         this.hideSeasons = () => {
             if (this.seasonsElem) {
+                this.seasonsElemHidden = true;
                 const doc = document.documentElement;
                 const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
                 this.seasonsElem.style.top = `${top + 2000}px`;
@@ -19464,15 +19518,32 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     if (this.seasonsElem && !this.seasonElemFreshlyLoaded) {
                         this.seasonsElem.innerHTML = '';
                         this.seasonsElem.style.display = 'none';
+                        this.resizeBackground();
+                    }
+                }, 700);
+            }
+        };
+        this.hideEpisodes = () => {
+            if (this.episodesElem) {
+                this.episodesElemHidden = true;
+                const doc = document.documentElement;
+                const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+                this.episodesElem.style.top = `${top + 2000}px`;
+                setTimeout(() => {
+                    if (this.episodesElem && !this.episodesElemFreshlyLoaded) {
+                        this.episodesElem.innerHTML = '';
+                        this.episodesElem.style.display = 'none';
                         // fix for a specific case when user scrolls outside of normal home assistant area for seasons look
-                        const contentbg = this.getElementsByClassName('contentbg');
-                        contentbg[0].style.height = '100%';
+                        console.log('AAA');
+                        this.resizeBackground();
+                        console.log('BBB');
                     }
                 }, 700);
             }
         };
         this.scrollDownInactiveSeasons = () => {
             if (this.seasonsElem) {
+                this.seasonsElemHidden = true;
                 lodash.forEach(this.seasonsElem.childNodes, child => {
                     const seasonElem = child.children[0];
                     const seasonTitleElem = child.children[1];
@@ -19547,6 +19618,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 lodash.forEach(seasonsData, seasonData => {
                     if (this.seasonsElem) {
+                        this.seasonsElemHidden = false;
                         const seasonContainer = document.createElement('div');
                         seasonContainer.className = 'seasonContainer';
                         seasonContainer.style.width = `${CSS_STYLE.width}px`;
@@ -19579,52 +19651,141 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         seasonEpisodesCount.innerHTML = `${escapeHtml(seasonData.leafCount)} episodes`;
                         seasonContainer.append(seasonEpisodesCount);
                         seasonContainer.addEventListener('click', event => {
-                            event.stopPropagation();
-                            if (this.activeMovieElem) {
-                                if (seasonElem.dataset.clicked === 'false') {
-                                    seasonElem.dataset.clicked = 'true';
-                                    this.activeMovieElem.style.top = `${top - 1000}px`;
-                                    this.scrollDownInactiveSeasons();
-                                    seasonElem.style.marginTop = `${-CSS_STYLE.expandedHeight - 16}px`;
-                                    seasonElem.style.width = `${CSS_STYLE.expandedWidth}px`;
-                                    seasonElem.style.height = `${CSS_STYLE.expandedHeight - 6}px`;
-                                    seasonElem.style.zIndex = '3';
-                                    seasonElem.style.marginLeft = `-${getOffset(seasonElem).left - getOffset(this.activeMovieElem).left}px`;
-                                    seasonTitleElem.style.color = 'rgba(255,255,255,0)';
-                                    seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
-                                    if (this.detailElem) {
-                                        this.detailElem.children[1].innerHTML = seasonData.title;
+                            (async () => {
+                                event.stopPropagation();
+                                if (this.activeMovieElem) {
+                                    if (seasonElem.dataset.clicked === 'false') {
+                                        seasonElem.dataset.clicked = 'true';
+                                        this.activeMovieElem.style.top = `${top - 1000}px`;
+                                        this.scrollDownInactiveSeasons();
+                                        seasonElem.style.marginTop = `${-CSS_STYLE.expandedHeight - 16}px`;
+                                        seasonElem.style.width = `${CSS_STYLE.expandedWidth}px`;
+                                        seasonElem.style.height = `${CSS_STYLE.expandedHeight - 6}px`;
+                                        seasonElem.style.zIndex = '3';
+                                        seasonElem.style.marginLeft = `-${getOffset(seasonElem).left -
+                                            getOffset(this.activeMovieElem).left}px`;
+                                        seasonTitleElem.style.color = 'rgba(255,255,255,0)';
+                                        seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
+                                        if (this.detailElem) {
+                                            this.detailElem.children[1].innerHTML = seasonData.title;
+                                        }
+                                        (async () => {
+                                            if (seasonData.leafCount > 0 && this.plex) {
+                                                this.episodesElemFreshlyLoaded = true;
+                                                const episodesData = await this.plex.getLibraryData(seasonData.key.split('/')[3]);
+                                                if (this.episodesElem) {
+                                                    this.episodesElemHidden = false;
+                                                    this.episodesElem.style.display = 'block';
+                                                    this.episodesElem.innerHTML = '';
+                                                    this.episodesElem.style.transition = `0s`;
+                                                    this.episodesElem.style.top = `${top + 2000}px`;
+                                                    lodash.forEach(episodesData, episodeData => {
+                                                        if (this.episodesElem) {
+                                                            const episodeContainer = document.createElement('div');
+                                                            episodeContainer.className = 'episodeContainer';
+                                                            episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
+                                                            const episodeThumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${episodeData.thumb}&X-Plex-Token=${this.config.token}`;
+                                                            const episodeElem = document.createElement('div');
+                                                            episodeElem.className = 'episodeElem';
+                                                            episodeElem.style.width = `${CSS_STYLE.episodeWidth}px`;
+                                                            episodeElem.style.height = `${CSS_STYLE.episodeHeight}px`;
+                                                            episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
+                                                            episodeElem.dataset.clicked = 'false';
+                                                            const episodeInteractiveArea = document.createElement('div');
+                                                            episodeInteractiveArea.className = 'interactiveArea';
+                                                            const episodePlayButton = document.createElement('button');
+                                                            episodePlayButton.name = 'playButton';
+                                                            episodePlayButton.addEventListener('click', episodeEvent => {
+                                                                episodeEvent.stopPropagation();
+                                                                if (this.plex && this.playController) {
+                                                                    this.playController.play(episodeData.key.split('/')[3]);
+                                                                }
+                                                            });
+                                                            episodeInteractiveArea.append(episodePlayButton);
+                                                            episodeElem.append(episodeInteractiveArea);
+                                                            episodeContainer.append(episodeElem);
+                                                            const episodeTitleElem = document.createElement('div');
+                                                            episodeTitleElem.className = 'episodeTitleElem';
+                                                            episodeTitleElem.innerHTML = escapeHtml(episodeData.title);
+                                                            episodeContainer.append(episodeTitleElem);
+                                                            const episodeNumber = document.createElement('div');
+                                                            episodeNumber.className = 'episodeNumber';
+                                                            episodeNumber.innerHTML = escapeHtml(`Episode ${escapeHtml(episodeData.index)}`);
+                                                            episodeContainer.append(episodeNumber);
+                                                            episodeContainer.addEventListener('click', episodeEvent => {
+                                                                episodeEvent.stopPropagation();
+                                                                console.log(episodeData);
+                                                            });
+                                                            this.episodesElem.append(episodeContainer);
+                                                        }
+                                                    });
+                                                    setTimeout(() => {
+                                                        if (this.episodesElem) {
+                                                            this.episodesElem.style.transition = `0.7s`;
+                                                            this.episodesElem.style.top = `${top + CSS_STYLE.expandedHeight + 16}px`;
+                                                            this.resizeBackground();
+                                                        }
+                                                    }, 200);
+                                                    setTimeout(() => {
+                                                        this.episodesElemFreshlyLoaded = false;
+                                                    }, 700);
+                                                }
+                                            }
+                                        })();
                                     }
-                                }
-                                else {
-                                    this.minimizeSeasons();
-                                    this.activeMovieElem.style.top = `16px`;
-                                    if (this.detailElem && this.detailElem.children[1]) {
-                                        const { year } = this.detailElem.children[1].dataset;
-                                        if (year) {
-                                            this.detailElem.children[1].innerHTML = year;
+                                    else {
+                                        console.log('A');
+                                        await this.minimizeSeasons();
+                                        console.log('B');
+                                        this.hideEpisodes();
+                                        this.activeMovieElem.style.top = `${top + 16}px`;
+                                        if (this.detailElem && this.detailElem.children[1]) {
+                                            const { year } = this.detailElem.children[1].dataset;
+                                            if (year) {
+                                                this.detailElem.children[1].innerHTML = year;
+                                            }
                                         }
                                     }
                                 }
-                            }
+                            })();
                         });
                         this.seasonsElem.append(seasonContainer);
-                        setTimeout(() => {
-                            this.seasonElemFreshlyLoaded = false;
-                        }, 700);
                     }
                 });
+                setTimeout(() => {
+                    this.seasonElemFreshlyLoaded = false;
+                }, 700);
                 setTimeout(() => {
                     if (this.seasonsElem) {
                         this.seasonsElem.style.transition = `0.7s`;
                         this.seasonsElem.style.top = `${top + CSS_STYLE.expandedHeight + 16}px`;
-                        const requiredBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
-                        const contentbg = this.getElementsByClassName('contentbg');
-                        if (requiredBodyHeight > contentbg[0].scrollHeight) {
-                            contentbg[0].style.height = `${requiredBodyHeight}px`;
-                        }
+                        this.resizeBackground();
                     }
                 }, 200);
+            }
+        };
+        this.resizeBackground = () => {
+            if (this.seasonsElem && this.episodesElem) {
+                const contentbg = this.getElementsByClassName('contentbg');
+                if (this.contentBGHeight === 0) {
+                    this.contentBGHeight = contentbg[0].scrollHeight;
+                }
+                const requiredSeasonBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
+                const requiredEpisodeBodyHeight = parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
+                console.log(this.seasonsElemHidden);
+                console.log(this.episodesElemHidden);
+                if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
+                    console.log('1');
+                    contentbg[0].style.height = `${requiredSeasonBodyHeight}px`;
+                }
+                else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
+                    console.log('2');
+                    contentbg[0].style.height = `${requiredEpisodeBodyHeight}px`;
+                }
+                else {
+                    console.log('3');
+                    contentbg[0].style.height = '100%';
+                }
             }
         };
         this.showBackground = () => {
