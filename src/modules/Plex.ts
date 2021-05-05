@@ -11,6 +11,8 @@ class Plex {
 
 	protocol: string;
 
+	serverInfo: Record<string, any> = {};
+
 	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http') {
 		this.ip = ip;
 		this.port = port;
@@ -18,9 +20,17 @@ class Plex {
 		this.protocol = protocol;
 	}
 
+	getServerID = async (): Promise<any> => {
+		if (_.isEmpty(this.serverInfo)) {
+			await this.getServerInfo();
+		}
+		return this.serverInfo.machineIdentifier;
+	};
+
 	getServerInfo = async (): Promise<any> => {
 		const url = `${this.protocol}://${this.ip}:${this.port}/?X-Plex-Token=${this.token}`;
-		return (await axios.get(url)).data.MediaContainer;
+		this.serverInfo = (await axios.get(url)).data.MediaContainer;
+		return this.serverInfo;
 	};
 
 	getSections = async (): Promise<any> => {

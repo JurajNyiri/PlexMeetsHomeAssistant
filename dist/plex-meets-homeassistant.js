@@ -18654,9 +18654,17 @@ var axios = axios_1;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 class Plex {
     constructor(ip, port = 32400, token, protocol = 'http') {
+        this.serverInfo = {};
+        this.getServerID = async () => {
+            if (lodash.isEmpty(this.serverInfo)) {
+                await this.getServerInfo();
+            }
+            return this.serverInfo.machineIdentifier;
+        };
         this.getServerInfo = async () => {
             const url = `${this.protocol}://${this.ip}:${this.port}/?X-Plex-Token=${this.token}`;
-            return (await axios.get(url)).data.MediaContainer;
+            this.serverInfo = (await axios.get(url)).data.MediaContainer;
+            return this.serverInfo;
         };
         this.getSections = async () => {
             const url = `${this.protocol}://${this.ip}:${this.port}/library/sections?X-Plex-Token=${this.token}`;
@@ -19218,9 +19226,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.renderPage();
             try {
                 if (this.plex) {
-                    const [plexInfo, plexSections] = await Promise.all([this.plex.getServerInfo(), this.plex.getSectionsData()]);
+                    const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
                     // eslint-disable-next-line @typescript-eslint/camelcase
-                    this.data.serverID = plexInfo.machineIdentifier;
+                    this.data.serverID = serverID;
                     lodash.forEach(plexSections, section => {
                         this.data[section.title1] = section.Metadata;
                     });

@@ -60,9 +60,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.renderPage();
 		try {
 			if (this.plex) {
-				const [plexInfo, plexSections] = await Promise.all([this.plex.getServerInfo(), this.plex.getSectionsData()]);
+				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
 				// eslint-disable-next-line @typescript-eslint/camelcase
-				this.data.serverID = plexInfo.machineIdentifier;
+				this.data.serverID = serverID;
 				_.forEach(plexSections, section => {
 					this.data[section.title1] = section.Metadata;
 				});
