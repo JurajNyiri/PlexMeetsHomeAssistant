@@ -18985,7 +18985,6 @@ style.textContent = css `
 	}
 	.detail .metaInfo {
 		display: block;
-		margin-bottom: 15px;
 	}
 	.detail h2 {
 		text-overflow: ellipsis;
