@@ -14,6 +14,14 @@ style.textContent = css`
 		position: relative;
 		background: orange;
 	}
+	.seasons {
+		z-index: 4;
+		position: absolute;
+		top: ${CSS_STYLE.expandedHeight + 16}px;
+		width: 100%;
+		left: 0;
+		padding: 16px;
+	}
 	.ratingDetail {
 		background: #ffffff24;
 		padding: 5px 10px;
@@ -129,11 +137,34 @@ style.textContent = css`
 		color: hsla(0, 0%, 100%, 0.45);
 		position: relative;
 	}
+	.seasonTitleElem {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+		position: relative;
+		font-weight: bold;
+		margin-top: 5px;
+	}
+	.seasonEpisodesCount {
+	}
 	.titleElem {
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		overflow: hidden;
 		position: relative;
+	}
+	.seasonContainer {
+		position: relative;
+		float: left;
+		margin-right: 16px;
+		margin-bottom: 15px;
+		transition: 5s;
+	}
+	.seasonElem {
+		background-repeat: no-repeat;
+		background-size: contain;
+		border-radius: 5px;
+		transition: 0.5s;
 	}
 	.movieElem {
 		margin-bottom: 5px;

@@ -1,6 +1,6 @@
 const CSS_STYLE = {
 	width: 138,
-	height: 206,
+	height: 203,
 	expandedWidth: 220,
 	expandedHeight: 324
 };
