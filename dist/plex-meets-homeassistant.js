@@ -18690,13 +18690,16 @@ class Plex {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
-    return unsafe
-        .toString()
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    if (unsafe) {
+        return unsafe
+            .toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    return '';
 };
 
 const CSS_STYLE = {
