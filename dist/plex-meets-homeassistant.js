@@ -18696,6 +18696,28 @@ class Plex {
     }
 }
 
+class PlayController {
+    constructor(hass, plex, entity) {
+        this.play = async (mediaID) => {
+            const serverID = await this.plex.getServerID();
+            const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
+            this.hass.callService('androidtv', 'adb_command', {
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                entity_id: this.entity,
+                command
+            });
+        };
+        this.isPlaySupported = () => {
+            return (this.hass.states[this.entity] &&
+                this.hass.states[this.entity].attributes &&
+                this.hass.states[this.entity].attributes.adb_response !== undefined);
+        };
+        this.hass = hass;
+        this.plex = plex;
+        this.entity = entity;
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
     if (unsafe) {
@@ -19208,11 +19230,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
-        this.plex = undefined;
         this.movieElems = [];
         this.seasonElemFreshlyLoaded = false;
-        this.detailElem = undefined;
-        this.seasonsElem = undefined;
         this.data = {};
         this.config = {};
         this.requestTimeout = 3000;
@@ -19555,16 +19574,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 event.stopPropagation();
                 const keyParts = data.key.split('/');
                 const movieID = keyParts[3];
-                const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${movieID}'`;
-                console.log(command);
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                const { entity_id } = this.config;
-                if (this.hassObj) {
-                    this.hassObj.callService('androidtv', 'adb_command', {
-                        // eslint-disable-next-line @typescript-eslint/camelcase
-                        entity_id,
-                        command
-                    });
+                if (this.hassObj && this.playController) {
+                    this.playController.play(movieID);
                 }
             });
             const titleElem = document.createElement('div');
@@ -19619,11 +19630,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     }
     set hass(hass) {
         this.hassObj = hass;
+        if (this.plex) {
+            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity_id);
+        }
         if (!this.content) {
-            this.playSupported =
-                hass.states[this.config.entity_id] &&
-                    hass.states[this.config.entity_id].attributes &&
-                    hass.states[this.config.entity_id].attributes.adb_response !== undefined;
+            if (this.playController) {
+                this.playSupported = this.playController.isPlaySupported();
+            }
             this.error = '';
             if (!this.loading) {
                 this.loadInitialData();

@@ -3,6 +3,7 @@
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
 import Plex from './modules/Plex';
+import PlayController from './modules/PlayController';
 import { escapeHtml } from './modules/utils';
 import { CSS_STYLE, LOREM_IPSUM } from './const';
 import style from './modules/style';
@@ -10,15 +11,17 @@ import style from './modules/style';
 class PlexMeetsHomeAssistant extends HTMLElement {
 	plexProtocol: 'http' | 'https' = 'http';
 
-	plex: Plex | undefined = undefined;
+	plex: Plex | undefined;
+
+	playController: PlayController | undefined;
 
 	movieElems: any = [];
 
 	seasonElemFreshlyLoaded = false;
 
-	detailElem: HTMLElement | undefined = undefined;
+	detailElem: HTMLElement | undefined;
 
-	seasonsElem: HTMLElement | undefined = undefined;
+	seasonsElem: HTMLElement | undefined;
 
 	data: Record<string, any> = {};
 
@@ -42,11 +45,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
+		if (this.plex) {
+			this.playController = new PlayController(this.hassObj, this.plex, this.config.entity_id);
+		}
+
 		if (!this.content) {
-			this.playSupported =
-				hass.states[this.config.entity_id] &&
-				hass.states[this.config.entity_id].attributes &&
-				hass.states[this.config.entity_id].attributes.adb_response !== undefined;
+			if (this.playController) {
+				this.playSupported = this.playController.isPlaySupported();
+			}
 
 			this.error = '';
 			if (!this.loading) {
@@ -438,17 +444,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			event.stopPropagation();
 			const keyParts = data.key.split('/');
 			const movieID = keyParts[3];
-			const command = `am start -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${movieID}'`;
 
-			console.log(command);
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			const { entity_id } = this.config;
-			if (this.hassObj) {
-				this.hassObj.callService('androidtv', 'adb_command', {
-					// eslint-disable-next-line @typescript-eslint/camelcase
-					entity_id,
-					command
-				});
+			if (this.hassObj && this.playController) {
+				this.playController.play(movieID);
 			}
 		});
 
