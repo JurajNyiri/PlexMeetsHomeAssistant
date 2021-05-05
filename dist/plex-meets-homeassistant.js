@@ -18695,13 +18695,16 @@ const escapeHtml = (unsafe) => {
         .replace(/'/g, '&#039;');
 };
 
+const CSS_STYLE = {
+    width: 138,
+    height: 206,
+    expandedWidth: 220,
+    expandedHeight: 324
+};
+
 class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
-        this.width = 138;
-        this.height = 206;
-        this.expandedWidth = 220;
-        this.expandedHeight = 324;
         this.plexProtocol = 'http';
         this.movieElems = [];
         this.detailElem = undefined;
@@ -18713,6 +18716,58 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.playSupported = false;
         this.error = '';
         this.previousPositions = [];
+        this.loadInitialData = async (hass) => {
+            this.loading = true;
+            this.renderPage(hass);
+            const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
+            try {
+                const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSectionsData()]);
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                this.data.serverID = plexInfo;
+                lodash.forEach(plexSections, section => {
+                    this.data[section.title1] = section.Metadata;
+                });
+                if (this.data[this.config.libraryName] === undefined) {
+                    this.error = `Library name ${this.config.libraryName} does not exist.`;
+                }
+                this.loading = false;
+                this.render(hass);
+            }
+            catch (err) {
+                // todo: proper timeout here
+                this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
+                this.renderPage(hass);
+            }
+        };
+        this.render = (hass) => {
+            this.previousPositions = [];
+            // todo: find a better way to detect resize...
+            setInterval(() => {
+                if (this.movieElems.length > 0) {
+                    let renderNeeded = false;
+                    if (this.previousPositions.length === 0) {
+                        for (let i = 0; i < this.movieElems.length; i += 1) {
+                            this.previousPositions[i] = {};
+                            this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
+                            this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
+                        }
+                    }
+                    for (let i = 0; i < this.movieElems.length; i += 1) {
+                        if (this.previousPositions[i] &&
+                            this.movieElems[i].dataset.clicked !== 'true' &&
+                            (this.previousPositions[i].top !== this.movieElems[i].parentElement.offsetTop ||
+                                this.previousPositions[i].left !== this.movieElems[i].parentElement.offsetLeft)) {
+                            renderNeeded = true;
+                            this.previousPositions = [];
+                        }
+                    }
+                    if (renderNeeded) {
+                        this.renderPage(hass);
+                    }
+                }
+            }, 100);
+            this.renderPage(hass);
+        };
         this.renderPage = (hass) => {
             if (this)
                 this.innerHTML = '';
@@ -18771,56 +18826,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.calculatePositions();
             this.loadCustomStyles();
         };
-        this.render = (hass) => {
-            this.previousPositions = [];
-            // todo: find a better way to detect resize...
-            setInterval(() => {
-                if (this.movieElems.length > 0) {
-                    if (this.previousPositions.length === 0) {
-                        for (let i = 0; i < this.movieElems.length; i += 1) {
-                            this.previousPositions[i] = {};
-                            this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
-                            this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
-                        }
-                    }
-                    for (let i = 0; i < this.movieElems.length; i += 1) {
-                        if (this.previousPositions[i] &&
-                            this.movieElems[i].dataset.clicked !== 'true' &&
-                            (this.previousPositions[i].top !== this.movieElems[i].parentElement.offsetTop ||
-                                this.previousPositions[i].left !== this.movieElems[i].parentElement.offsetLeft)) {
-                            this.renderPage(hass);
-                            this.previousPositions = [];
-                        }
-                    }
-                }
-            }, 100);
-            this.renderPage(hass);
-        };
-        this.loadInitialData = async (hass) => {
-            this.loading = true;
-            this.renderPage(hass);
-            const plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
-            try {
-                const [plexInfo, plexSections] = await Promise.all([plex.getServerInfo(), plex.getSectionsData()]);
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                this.data.serverID = plexInfo;
-                lodash.forEach(plexSections, section => {
-                    this.data[section.title1] = section.Metadata;
-                });
-                if (this.data[this.config.libraryName] === undefined) {
-                    this.error = `Library name ${this.config.libraryName} does not exist.`;
-                }
-                this.loading = false;
-                this.render(hass);
-            }
-            catch (err) {
-                // todo: proper timeout here
-                this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
-                this.renderPage(hass);
-            }
-        };
         this.calculatePositions = () => {
-            // todo: figure out why loop is needed here and do it properly
+            // todo: figure out why interval is needed here and do it properly
             const setLeftOffsetsInterval = setInterval(() => {
                 this.movieElems = this.getElementsByClassName('movieElem');
                 for (let i = 0; i < this.movieElems.length; i += 1) {
@@ -18835,13 +18842,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
                     this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
                 }
-            }, 10);
+            }, 100);
         };
         this.minimizeAll = () => {
             for (let i = 0; i < this.movieElems.length; i += 1) {
                 if (this.movieElems[i].dataset.clicked === 'true') {
-                    this.movieElems[i].style.width = `${this.width}px`;
-                    this.movieElems[i].style.height = `${this.height}px`;
+                    this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
+                    this.movieElems[i].style.height = `${CSS_STYLE.height}px`;
                     this.movieElems[i].style['z-index'] = 1;
                     this.movieElems[i].style.position = 'absolute';
                     this.movieElems[i].style.left = `${this.movieElems[i].dataset.left}px`;
@@ -18867,11 +18874,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const doc = document.documentElement;
             const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
             if (this.detailElem) {
-                this.detailElem.style.visibility = 'visible';
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
+                console.log(this.detailElem.style.top);
                 setTimeout(() => {
                     if (this.detailElem) {
+                        this.detailElem.style.visibility = 'visible';
                         this.detailElem.style.transition = '0.7s';
                         this.detailElem.style.top = `${top}px`;
                         this.detailElem.children[0].innerHTML = escapeHtml(data.title);
@@ -18896,7 +18904,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.detailElem.style.color = 'rgba(255,255,255,1)';
                         this.detailElem.style.zIndex = '4';
                     }
-                }, 1);
+                }, 200);
             }
         };
         this.showBackground = () => {
@@ -18910,15 +18918,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             contentbg[0].style.backgroundColor = 'rgba(0,0,0,0)';
         };
         this.getMovieElement = (data, hass, serverID) => {
-            const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${this.expandedWidth}&height=${this.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+            const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
             const container = document.createElement('div');
             container.className = 'container';
-            container.style.width = `${this.width}px`;
-            container.style.height = `${this.height + 30}px`;
+            container.style.width = `${CSS_STYLE.width}px`;
+            container.style.height = `${CSS_STYLE.height + 30}px`;
             const movieElem = document.createElement('div');
             movieElem.className = 'movieElem';
-            movieElem.style.width = `${this.width}px`;
-            movieElem.style.height = `${this.height}px`;
+            movieElem.style.width = `${CSS_STYLE.width}px`;
+            movieElem.style.height = `${CSS_STYLE.height}px`;
             movieElem.style.backgroundImage = `url('${thumbURL}')`;
             if (!this.playSupported) {
                 movieElem.style.cursor = 'pointer';
@@ -18927,8 +18935,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             movieElem.addEventListener('click', function handleClick() {
                 if (this.dataset.clicked === 'true') {
                     self.hideDetails();
-                    this.style.width = `${self.width}px`;
-                    this.style.height = `${self.height}px`;
+                    this.style.width = `${CSS_STYLE.width}px`;
+                    this.style.height = `${CSS_STYLE.height}px`;
                     this.style.zIndex = '1';
                     this.style.top = `${this.dataset.top}px`;
                     this.style.left = `${this.dataset.left}px`;
@@ -18943,8 +18951,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     const doc = document.documentElement;
                     const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
                     self.showBackground();
-                    this.style.width = `${self.expandedWidth}px`;
-                    this.style.height = `${self.expandedHeight}px`;
+                    this.style.width = `${CSS_STYLE.expandedWidth}px`;
+                    this.style.height = `${CSS_STYLE.expandedHeight}px`;
                     this.style.zIndex = '3';
                     this.style.left = '16px';
                     this.style.top = `${top + 16}px`;
@@ -18975,7 +18983,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const titleElem = document.createElement('div');
             titleElem.innerHTML = escapeHtml(data.title);
             titleElem.className = 'titleElem';
-            titleElem.style.marginTop = `${this.height}px`;
+            titleElem.style.marginTop = `${CSS_STYLE.height}px`;
             const yearElem = document.createElement('div');
             yearElem.innerHTML = escapeHtml(data.year);
             yearElem.className = 'yearElem';
