@@ -57,6 +57,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	contentBGHeight = 0;
 
+	card: HTMLElement | undefined;
+
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
 		if (this.plex) {
@@ -141,10 +143,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	renderPage = (): void => {
 		if (this) this.innerHTML = '';
-		const card = document.createElement('ha-card');
+		this.card = document.createElement('ha-card');
+		this.card.style.transition = '0.5s';
+		this.card.style.overflow = 'hidden';
+		this.card.style.padding = '16px';
 		// card.header = this.config.libraryName;
 		this.content = document.createElement('div');
-		this.content.style.padding = '16px 16px 100px';
 
 		this.content.innerHTML = '';
 		if (this.error !== '') {
@@ -157,8 +161,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				'<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
 		}
 
-		card.appendChild(this.content);
-		this.appendChild(card);
+		this.card.appendChild(this.content);
+		this.appendChild(this.card);
 
 		let count = 0;
 
@@ -591,10 +595,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	resizeBackground = (): void => {
-		if (this.seasonsElem && this.episodesElem) {
-			const contentbg = this.getElementsByClassName('contentbg');
+		if (this.seasonsElem && this.episodesElem && this.card) {
+			const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
 			if (this.contentBGHeight === 0) {
-				this.contentBGHeight = (contentbg[0] as HTMLElement).scrollHeight;
+				this.contentBGHeight = contentbg.scrollHeight;
 			}
 			const requiredSeasonBodyHeight =
 				parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
@@ -602,11 +606,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
 
 			if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
-				(contentbg[0] as HTMLElement).style.height = `${requiredSeasonBodyHeight}px`;
+				this.card.style.height = `${requiredSeasonBodyHeight + 16}px`;
 			} else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
-				(contentbg[0] as HTMLElement).style.height = `${requiredEpisodeBodyHeight}px`;
+				this.card.style.height = `${requiredEpisodeBodyHeight + 16}px`;
 			} else {
-				(contentbg[0] as HTMLElement).style.height = '100%';
+				this.card.style.height = '100%';
 			}
 		}
 	};
@@ -656,13 +660,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	getTop = (): number => {
-		const doc = document.documentElement;
-		const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-		const cardTop = getOffset(this.content).top;
-		if (top < cardTop) {
-			return 0;
+		if (this.card) {
+			const doc = document.documentElement;
+			const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+			const cardTop = getOffset(this.card).top;
+			if (top < cardTop - 64) {
+				return 0;
+			}
+			return top - cardTop + 64;
 		}
-		return top - cardTop + 64;
+		return 0;
 	};
 
 	getMovieElement = (data: any, serverID: string): HTMLDivElement => {

@@ -19374,10 +19374,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.renderPage = () => {
             if (this)
                 this.innerHTML = '';
-            const card = document.createElement('ha-card');
+            this.card = document.createElement('ha-card');
+            this.card.style.transition = '0.5s';
+            this.card.style.overflow = 'hidden';
+            this.card.style.padding = '16px';
             // card.header = this.config.libraryName;
             this.content = document.createElement('div');
-            this.content.style.padding = '16px 16px 100px';
             this.content.innerHTML = '';
             if (this.error !== '') {
                 this.content.innerHTML = `Error: ${this.error}`;
@@ -19390,8 +19392,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.content.innerHTML =
                     '<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
             }
-            card.appendChild(this.content);
-            this.appendChild(card);
+            this.card.appendChild(this.content);
+            this.appendChild(this.card);
             let count = 0;
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';
@@ -19770,21 +19772,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.resizeBackground = () => {
-            if (this.seasonsElem && this.episodesElem) {
-                const contentbg = this.getElementsByClassName('contentbg');
+            if (this.seasonsElem && this.episodesElem && this.card) {
+                const contentbg = this.getElementsByClassName('contentbg')[0];
                 if (this.contentBGHeight === 0) {
-                    this.contentBGHeight = contentbg[0].scrollHeight;
+                    this.contentBGHeight = contentbg.scrollHeight;
                 }
                 const requiredSeasonBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
                 const requiredEpisodeBodyHeight = parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
                 if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
-                    contentbg[0].style.height = `${requiredSeasonBodyHeight}px`;
+                    this.card.style.height = `${requiredSeasonBodyHeight + 16}px`;
                 }
                 else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
-                    contentbg[0].style.height = `${requiredEpisodeBodyHeight}px`;
+                    this.card.style.height = `${requiredEpisodeBodyHeight + 16}px`;
                 }
                 else {
-                    contentbg[0].style.height = '100%';
+                    this.card.style.height = '100%';
                 }
             }
         };
@@ -19829,13 +19831,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.getTop = () => {
-            const doc = document.documentElement;
-            const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
-            const cardTop = getOffset(this.content).top;
-            if (top < cardTop) {
-                return 0;
+            if (this.card) {
+                const doc = document.documentElement;
+                const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+                const cardTop = getOffset(this.card).top;
+                if (top < cardTop - 64) {
+                    return 0;
+                }
+                return top - cardTop + 64;
             }
-            return top - cardTop + 64;
+            return 0;
         };
         this.getMovieElement = (data, serverID) => {
             const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
