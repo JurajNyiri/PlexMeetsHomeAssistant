@@ -19515,8 +19515,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.hideSeasons = () => {
             if (this.seasonsElem) {
                 this.seasonsElemHidden = true;
-                const doc = document.documentElement;
-                const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+                const top = this.getTop();
                 this.seasonsElem.style.top = `${top + 2000}px`;
                 setTimeout(() => {
                     if (this.seasonsElem && !this.seasonElemFreshlyLoaded) {
@@ -19530,8 +19529,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.hideEpisodes = () => {
             if (this.episodesElem) {
                 this.episodesElemHidden = true;
-                const doc = document.documentElement;
-                const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+                const top = this.getTop();
                 this.episodesElem.style.top = `${top + 2000}px`;
                 setTimeout(() => {
                     if (this.episodesElem && !this.episodesElemFreshlyLoaded) {
@@ -19562,8 +19560,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.hideDetails = () => {
-            const doc = document.documentElement;
-            const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+            const top = this.getTop();
             if (this.detailElem) {
                 this.detailElem.style.top = `${top - 1000}px`;
                 this.detailElem.style.color = 'rgba(255,255,255,0)';
@@ -19572,8 +19569,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.showDetails = async (data) => {
-            const doc = document.documentElement;
-            const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+            const top = this.getTop();
             if (this.detailElem) {
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
@@ -19819,8 +19815,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.hideBackground();
             }
             else {
-                const doc = document.documentElement;
-                const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+                const top = this.getTop();
                 this.minimizeAll();
                 this.showDetails(this.activeMovieElemData);
                 this.showBackground();
@@ -19832,6 +19827,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 movieElemLocal.dataset.clicked = 'true';
                 this.activeMovieElem = movieElemLocal;
             }
+        };
+        this.getTop = () => {
+            const doc = document.documentElement;
+            const top = (window.pageYOffset || doc.scrollTop) - (doc.clientTop || 0);
+            const cardTop = getOffset(this.content).top;
+            if (top < cardTop) {
+                return 0;
+            }
+            return top - cardTop + 64;
         };
         this.getMovieElement = (data, serverID) => {
             const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
