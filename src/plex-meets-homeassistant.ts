@@ -5,7 +5,7 @@ import _ from 'lodash';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
 import { escapeHtml, getOffset } from './modules/utils';
-import { CSS_STYLE, LOREM_IPSUM } from './const';
+import { CSS_STYLE } from './const';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -142,7 +142,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderPage = (): void => {
-		if (this) this.innerHTML = '';
+		if (this) this.innerHTML = this.loadCustomStyles();
 		this.card = document.createElement('ha-card');
 		this.card.style.transition = '0.5s';
 		this.card.style.overflow = 'hidden';
@@ -730,8 +730,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		return container;
 	};
 
-	loadCustomStyles = (): void => {
-		this.appendChild(style);
+	loadCustomStyles = (): string => {
+		// this.appendChild(style);
+		return `<style>${style.innerHTML}</style>`;
 	};
 
 	getPlayButton = (): HTMLButtonElement => {

@@ -19373,7 +19373,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.renderPage = () => {
             if (this)
-                this.innerHTML = '';
+                this.innerHTML = this.loadCustomStyles();
             this.card = document.createElement('ha-card');
             this.card.style.transition = '0.5s';
             this.card.style.overflow = 'hidden';
@@ -19888,7 +19888,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return container;
         };
         this.loadCustomStyles = () => {
-            this.appendChild(style);
+            // this.appendChild(style);
+            return `<style>${style.innerHTML}</style>`;
         };
         this.getPlayButton = () => {
             const playButton = document.createElement('button');
