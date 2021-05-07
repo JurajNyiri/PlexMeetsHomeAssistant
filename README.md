@@ -55,7 +55,7 @@ protocol: http
 maxCount: 10
 entity:
   kodi: media_player.kodi_123456qwe789rty
-  adb: media_player.living_room_nvidia_shield
+  androidtv: media_player.living_room_nvidia_shield
 ```
 
 If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.

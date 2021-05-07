@@ -18701,7 +18701,7 @@ class PlayController {
         this.supported = {
             // kodi: ['movie', 'episode'],
             kodi: ['movie'],
-            adb: ['movie', 'show', 'season', 'episode']
+            androidtv: ['movie', 'show', 'season', 'episode']
         };
         this.getState = async (entityID) => {
             return this.hass.callApi('GET', `states/${entityID}`);

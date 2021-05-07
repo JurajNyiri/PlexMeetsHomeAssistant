@@ -14,7 +14,7 @@ class PlayController {
 	supported: any = {
 		// kodi: ['movie', 'episode'],
 		kodi: ['movie'],
-		adb: ['movie', 'show', 'season', 'episode']
+		androidtv: ['movie', 'show', 'season', 'episode']
 	};
 
 	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>) {
