@@ -32,7 +32,10 @@ Custom integration which integrates plex into Home Assistant and makes it possib
 
 - **adb**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/)
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/).
+
   You also need to install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors) and its sensor **kodi_media_sensor_search**.
+
+  It is strongly recommended to use [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect) for this setup, otherwise if the file name is different in kodi playback **will** fail.
 
 _You can combine multiple supported entities_, in that case, entity for supported content will be chosen in order how you entered them.
 
