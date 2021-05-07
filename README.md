@@ -12,17 +12,39 @@ Custom integration which integrates plex into Home Assistant and makes it possib
 
 - Reload browser, clear cache as usual
 - Create a new Home Assistant tab, turn on panel mode
-- Add a new card to it:
+- Add a new card, see configuration below.
+
+## Configuration
+
+**type**: 'custom:plex-meets-homeassistant'
+**token**: Enter your [Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
+**ip**: Enter ip address of plex server. You can also enter hostname without protocol or port.
+**port**: Enter port of your plex sever.
+**protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
+**maxCount**: _Optional_ Maximum number of items to display in card.
+**entity**: You need to configure at least one supported media_player entity.
+
+- **adb**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/)
+- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). You also need to install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors) and its sensor **kodi_media_sensor_search**.
+
+_You can combine multiple supported entities_, in that case, entity for supported content will be chosen in order how you entered them.
+As an example, if content can be played / shown both by kodi and adb, and you entered kodi first, it will be shown by kodi. If it cannot be played by kodi but can be played by adb, adb will be used.
+
+This will also work with play button being shown, it will only show when you can actually play content on your device.
+
+Example of card configuration:
 
 ```
 type: 'custom:plex-meets-homeassistant'
-token: Plex token
-ip: Plex IP address
-port: Plex port
-entity_id: Android TV media_player entity
-libraryName: Plex library name that you wish to display
-protocol: Optional - protocol to use for plex, defaults to http
-maxCount: Optional - maximum number of items to display
+token: QWdsqEXAMPLETOKENqwerty
+ip: 192.168.13.37
+port: 32400
+libraryName: Movies
+protocol: http
+maxCount: 10
+entity:
+  kodi: media_player.kodi_123456qwe789rty
+  adb: media_player.living_room_nvidia_shield
 ```
 
 If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.

@@ -18698,7 +18698,72 @@ class Plex {
 
 class PlayController {
     constructor(hass, plex, entity) {
-        this.play = async (mediaID, instantPlay = false) => {
+        this.supported = {
+            // kodi: ['movie', 'episode'],
+            kodi: ['movie'],
+            adb: ['movie', 'show', 'season', 'episode']
+        };
+        this.getState = async (entityID) => {
+            return this.hass.callApi('GET', `states/${entityID}`);
+        };
+        this.getKodiSearchResults = async () => {
+            return JSON.parse((await this.getState('sensor.kodi_media_sensor_search')).attributes.data);
+        };
+        this.getKodiSearch = async (search) => {
+            await this.hass.callService('kodi_media_sensors', 'call_method', {
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                entity_id: 'sensor.kodi_media_sensor_search',
+                method: 'search',
+                item: {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_type: 'all',
+                    value: search
+                }
+            });
+            const results = await this.getKodiSearchResults();
+            let foundResult = {};
+            lodash.forEach(results, result => {
+                if (lodash.isEqual(result.title, search)) {
+                    foundResult = result;
+                    return false;
+                }
+            });
+            return foundResult;
+        };
+        this.play = async (data, instantPlay = false) => {
+            const playService = this.getPlayService(data);
+            switch (playService) {
+                case 'kodi':
+                    await this.playViaKodi(data.title, data.type);
+                    break;
+                case 'adb':
+                    await this.playViaADB(data.key.split('/')[3], instantPlay);
+                    break;
+                default:
+                    throw Error(`No service available to play ${data.title}!`);
+            }
+        };
+        this.playViaKodi = async (title, type) => {
+            const kodiData = await this.getKodiSearch(title);
+            if (type === 'movie') {
+                await this.hass.callService('kodi', 'call_method', {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: this.entity.kodi,
+                    method: 'Player.Open',
+                    item: {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        movieid: kodiData.movieid
+                    }
+                });
+            }
+            else if (type === 'episode') {
+                console.log('TODO');
+            }
+            else {
+                throw Error(`Plex type ${type} is not supported in Kodi.`);
+            }
+        };
+        this.playViaADB = async (mediaID, instantPlay = false) => {
             const serverID = await this.plex.getServerID();
             let command = `am start`;
             if (instantPlay) {
@@ -18707,19 +18772,45 @@ class PlayController {
             command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: this.entity,
+                entity_id: this.entity.adb,
                 command: 'HOME'
             });
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: this.entity,
+                entity_id: this.entity.adb,
                 command
             });
         };
-        this.isPlaySupported = () => {
-            return (this.hass.states[this.entity] &&
-                this.hass.states[this.entity].attributes &&
-                this.hass.states[this.entity].attributes.adb_response !== undefined);
+        this.getPlayService = (data) => {
+            let service = '';
+            lodash.forEach(this.entity, (value, key) => {
+                if (lodash.includes(this.supported[key], data.type)) {
+                    if ((key === 'kodi' && this.isKodiSupported()) || (key === 'adb' && this.isADBSupported())) {
+                        service = key;
+                        return false;
+                    }
+                }
+            });
+            return service;
+        };
+        this.isPlaySupported = (data) => {
+            return !lodash.isEmpty(this.getPlayService(data));
+        };
+        this.isKodiSupported = () => {
+            if (this.entity.kodi) {
+                return (this.hass.states[this.entity.kodi] &&
+                    this.hass.states['sensor.kodi_media_sensor_search'] &&
+                    this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable' &&
+                    this.hass.states[this.entity.kodi].state !== 'off' &&
+                    this.hass.states[this.entity.kodi].state !== 'unavailable' &&
+                    lodash.includes(this.entity.kodi, 'kodi_'));
+            }
+            return false;
+        };
+        this.isADBSupported = () => {
+            return (this.hass.states[this.entity.adb] &&
+                this.hass.states[this.entity.adb].attributes &&
+                this.hass.states[this.entity.adb].attributes.adb_response !== undefined);
         };
         this.hass = hass;
         this.plex = plex;
@@ -19309,7 +19400,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.requestTimeout = 3000;
         this.loading = false;
         this.maxCount = false;
-        this.playSupported = false;
         this.error = '';
         this.previousPositions = [];
         this.contentBGHeight = 0;
@@ -19402,7 +19492,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.detailElem.className = 'detail';
             this.detailElem.innerHTML =
                 "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div>";
-            if (this.playSupported) ;
             this.content.appendChild(this.detailElem);
             this.seasonsElem = document.createElement('div');
             this.seasonsElem.className = 'seasons';
@@ -19628,17 +19717,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
                         seasonElem.style.backgroundImage = `url('${thumbURL}')`;
                         seasonElem.dataset.clicked = 'false';
+                        if (this.playController && !this.playController.isPlaySupported(seasonData)) {
+                            seasonElem.style.cursor = 'pointer';
+                        }
                         const interactiveArea = document.createElement('div');
                         interactiveArea.className = 'interactiveArea';
-                        const playButton = document.createElement('button');
-                        playButton.name = 'playButton';
-                        playButton.addEventListener('click', event => {
-                            event.stopPropagation();
-                            if (this.plex && this.playController) {
-                                this.playController.play(seasonData.key.split('/')[3]);
-                            }
-                        });
-                        interactiveArea.append(playButton);
+                        if (this.playController && this.playController.isPlaySupported(seasonData)) {
+                            const playButton = this.getPlayButton();
+                            playButton.addEventListener('click', event => {
+                                event.stopPropagation();
+                                if (this.plex && this.playController) {
+                                    this.playController.play(seasonData);
+                                }
+                            });
+                            interactiveArea.append(playButton);
+                        }
                         seasonElem.append(interactiveArea);
                         seasonContainer.append(seasonElem);
                         const seasonTitleElem = document.createElement('div');
@@ -19688,18 +19781,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                         episodeElem.style.height = `${CSS_STYLE.episodeHeight}px`;
                                                         episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
                                                         episodeElem.dataset.clicked = 'false';
-                                                        const episodeInteractiveArea = document.createElement('div');
-                                                        episodeInteractiveArea.className = 'interactiveArea';
-                                                        const episodePlayButton = document.createElement('button');
-                                                        episodePlayButton.name = 'playButton';
-                                                        episodePlayButton.addEventListener('click', episodeEvent => {
-                                                            episodeEvent.stopPropagation();
-                                                            if (this.plex && this.playController) {
-                                                                this.playController.play(episodeData.key.split('/')[3], true);
-                                                            }
-                                                        });
-                                                        episodeInteractiveArea.append(episodePlayButton);
-                                                        episodeElem.append(episodeInteractiveArea);
+                                                        if (this.playController && this.playController.isPlaySupported(episodeData)) {
+                                                            const episodeInteractiveArea = document.createElement('div');
+                                                            episodeInteractiveArea.className = 'interactiveArea';
+                                                            const episodePlayButton = document.createElement('button');
+                                                            episodePlayButton.name = 'playButton';
+                                                            episodePlayButton.addEventListener('click', episodeEvent => {
+                                                                episodeEvent.stopPropagation();
+                                                                if (this.plex && this.playController) {
+                                                                    this.playController.play(episodeData, true);
+                                                                }
+                                                            });
+                                                            episodeInteractiveArea.append(episodePlayButton);
+                                                            episodeElem.append(episodeInteractiveArea);
+                                                        }
                                                         episodeContainer.append(episodeElem);
                                                         const episodeTitleElem = document.createElement('div');
                                                         episodeTitleElem.className = 'episodeTitleElem';
@@ -19853,7 +19948,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             movieElem.style.width = `${CSS_STYLE.width}px`;
             movieElem.style.height = `${CSS_STYLE.height}px`;
             movieElem.style.backgroundImage = `url('${thumbURL}')`;
-            if (!this.playSupported) {
+            if (this.playController && !this.playController.isPlaySupported(data)) {
                 movieElem.style.cursor = 'pointer';
             }
             movieElem.addEventListener('click', () => {
@@ -19863,16 +19958,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const playButton = this.getPlayButton();
             const interactiveArea = document.createElement('div');
             interactiveArea.className = 'interactiveArea';
-            if (this.playSupported) {
+            if (this.playController && this.playController.isPlaySupported(data)) {
                 interactiveArea.append(playButton);
             }
             movieElem.append(interactiveArea);
             playButton.addEventListener('click', event => {
                 event.stopPropagation();
-                const keyParts = data.key.split('/');
-                const movieID = keyParts[3];
                 if (this.hassObj && this.playController) {
-                    this.playController.play(movieID, data.type === 'movie');
+                    this.playController.play(data, data.type === 'movie');
                 }
             });
             const titleElem = document.createElement('div');
@@ -19898,8 +19991,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
-            if (!config.entity_id) {
-                throw new Error('You need to define an entity_id');
+            if (config.entity.length === 0) {
+                throw new Error('You need to define at least one entity');
             }
             if (!config.token) {
                 throw new Error('You need to define a token');
@@ -19929,12 +20022,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     set hass(hass) {
         this.hassObj = hass;
         if (this.plex) {
-            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity_id);
+            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity);
         }
         if (!this.content) {
-            if (this.playController) {
-                this.playSupported = this.playController.isPlaySupported();
-            }
             this.error = '';
             if (!this.loading) {
                 this.loadInitialData();

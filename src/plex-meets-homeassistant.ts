@@ -45,8 +45,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	maxCount: false | number = false;
 
-	playSupported = false;
-
 	error = '';
 
 	content: any;
@@ -62,14 +60,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
 		if (this.plex) {
-			this.playController = new PlayController(this.hassObj, this.plex, this.config.entity_id);
+			this.playController = new PlayController(this.hassObj, this.plex, this.config.entity);
 		}
 
 		if (!this.content) {
-			if (this.playController) {
-				this.playSupported = this.playController.isPlaySupported();
-			}
-
 			this.error = '';
 			if (!this.loading) {
 				this.loadInitialData();
@@ -174,11 +168,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.detailElem.className = 'detail';
 		this.detailElem.innerHTML =
 			"<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div>";
-
-		if (this.playSupported) {
-			// todo: temp disabled
-			// this.detailElem.innerHTML += "<span class='detailPlayAction'></span>";
-		}
 
 		this.content.appendChild(this.detailElem);
 
@@ -426,19 +415,24 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					seasonElem.style.backgroundImage = `url('${thumbURL}')`;
 					seasonElem.dataset.clicked = 'false';
 
+					if (this.playController && !this.playController.isPlaySupported(seasonData)) {
+						seasonElem.style.cursor = 'pointer';
+					}
+
 					const interactiveArea = document.createElement('div');
 					interactiveArea.className = 'interactiveArea';
 
-					const playButton = document.createElement('button');
-					playButton.name = 'playButton';
-					playButton.addEventListener('click', event => {
-						event.stopPropagation();
-						if (this.plex && this.playController) {
-							this.playController.play(seasonData.key.split('/')[3]);
-						}
-					});
+					if (this.playController && this.playController.isPlaySupported(seasonData)) {
+						const playButton = this.getPlayButton();
+						playButton.addEventListener('click', event => {
+							event.stopPropagation();
+							if (this.plex && this.playController) {
+								this.playController.play(seasonData);
+							}
+						});
 
-					interactiveArea.append(playButton);
+						interactiveArea.append(playButton);
+					}
 					seasonElem.append(interactiveArea);
 					seasonContainer.append(seasonElem);
 
@@ -498,21 +492,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
 													episodeElem.dataset.clicked = 'false';
 
-													const episodeInteractiveArea = document.createElement('div');
-													episodeInteractiveArea.className = 'interactiveArea';
+													if (this.playController && this.playController.isPlaySupported(episodeData)) {
+														const episodeInteractiveArea = document.createElement('div');
+														episodeInteractiveArea.className = 'interactiveArea';
 
-													const episodePlayButton = document.createElement('button');
-													episodePlayButton.name = 'playButton';
-													episodePlayButton.addEventListener('click', episodeEvent => {
-														episodeEvent.stopPropagation();
-														if (this.plex && this.playController) {
-															this.playController.play(episodeData.key.split('/')[3], true);
-														}
-													});
+														const episodePlayButton = document.createElement('button');
+														episodePlayButton.name = 'playButton';
+														episodePlayButton.addEventListener('click', episodeEvent => {
+															episodeEvent.stopPropagation();
+															if (this.plex && this.playController) {
+																this.playController.play(episodeData, true);
+															}
+														});
 
-													episodeInteractiveArea.append(episodePlayButton);
-
-													episodeElem.append(episodeInteractiveArea);
+														episodeInteractiveArea.append(episodePlayButton);
+														episodeElem.append(episodeInteractiveArea);
+													}
 													episodeContainer.append(episodeElem);
 
 													const episodeTitleElem = document.createElement('div');
@@ -686,7 +681,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		movieElem.style.width = `${CSS_STYLE.width}px`;
 		movieElem.style.height = `${CSS_STYLE.height}px`;
 		movieElem.style.backgroundImage = `url('${thumbURL}')`;
-		if (!this.playSupported) {
+		if (this.playController && !this.playController.isPlaySupported(data)) {
 			movieElem.style.cursor = 'pointer';
 		}
 
@@ -698,7 +693,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const playButton = this.getPlayButton();
 		const interactiveArea = document.createElement('div');
 		interactiveArea.className = 'interactiveArea';
-		if (this.playSupported) {
+		if (this.playController && this.playController.isPlaySupported(data)) {
 			interactiveArea.append(playButton);
 		}
 
@@ -706,11 +701,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		playButton.addEventListener('click', event => {
 			event.stopPropagation();
-			const keyParts = data.key.split('/');
-			const movieID = keyParts[3];
 
 			if (this.hassObj && this.playController) {
-				this.playController.play(movieID, data.type === 'movie');
+				this.playController.play(data, data.type === 'movie');
 			}
 		});
 
@@ -743,8 +736,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	setConfig = (config: any): void => {
 		this.plexProtocol = 'http';
-		if (!config.entity_id) {
-			throw new Error('You need to define an entity_id');
+		if (config.entity.length === 0) {
+			throw new Error('You need to define at least one entity');
 		}
 		if (!config.token) {
 			throw new Error('You need to define a token');
