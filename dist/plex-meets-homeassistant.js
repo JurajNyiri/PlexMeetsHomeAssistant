@@ -18736,8 +18736,8 @@ class PlayController {
                 case 'kodi':
                     await this.playViaKodi(data.title, data.type);
                     break;
-                case 'adb':
-                    await this.playViaADB(data.key.split('/')[3], instantPlay);
+                case 'androidtv':
+                    await this.playViaAndroidTV(data.key.split('/')[3], instantPlay);
                     break;
                 default:
                     throw Error(`No service available to play ${data.title}!`);
@@ -18763,7 +18763,7 @@ class PlayController {
                 throw Error(`Plex type ${type} is not supported in Kodi.`);
             }
         };
-        this.playViaADB = async (mediaID, instantPlay = false) => {
+        this.playViaAndroidTV = async (mediaID, instantPlay = false) => {
             const serverID = await this.plex.getServerID();
             let command = `am start`;
             if (instantPlay) {
@@ -18772,12 +18772,12 @@ class PlayController {
             command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: this.entity.adb,
+                entity_id: this.entity.androidtv,
                 command: 'HOME'
             });
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: this.entity.adb,
+                entity_id: this.entity.androidtv,
                 command
             });
         };
@@ -18785,7 +18785,7 @@ class PlayController {
             let service = '';
             lodash.forEach(this.entity, (value, key) => {
                 if (lodash.includes(this.supported[key], data.type)) {
-                    if ((key === 'kodi' && this.isKodiSupported()) || (key === 'adb' && this.isADBSupported())) {
+                    if ((key === 'kodi' && this.isKodiSupported()) || (key === 'androidtv' && this.isAndroidTVSupported())) {
                         service = key;
                         return false;
                     }
@@ -18807,10 +18807,10 @@ class PlayController {
             }
             return false;
         };
-        this.isADBSupported = () => {
-            return (this.hass.states[this.entity.adb] &&
-                this.hass.states[this.entity.adb].attributes &&
-                this.hass.states[this.entity.adb].attributes.adb_response !== undefined);
+        this.isAndroidTVSupported = () => {
+            return (this.hass.states[this.entity.androidtv] &&
+                this.hass.states[this.entity.androidtv].attributes &&
+                this.hass.states[this.entity.androidtv].attributes.adb_response !== undefined);
         };
         this.hass = hass;
         this.plex = plex;
