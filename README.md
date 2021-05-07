@@ -6,10 +6,13 @@ Custom integration which integrates plex into Home Assistant and makes it possib
 
 ## Installation
 
-1. Add [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) to HACS, url: `https://github.com/JurajNyiri/PlexMeetsHomeAssistant`.
-2. Reload browser, clear cache as usual
-3. Create a new Home Assistant tab, turn on panel mode
-4. Add a new card to it:
+- Add [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) to HACS, url: `https://github.com/JurajNyiri/PlexMeetsHomeAssistant`.
+
+![Adding lovelace custom repository](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/3.png)
+
+- Reload browser, clear cache as usual
+- Create a new Home Assistant tab, turn on panel mode
+- Add a new card to it:
 
 ```
 type: 'custom:plex-meets-homeassistant'
