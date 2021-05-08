@@ -30,7 +30,7 @@ Custom integration which integrates plex into Home Assistant and makes it possib
 
 **entity**: You need to configure at least one supported media_player entity.
 
-- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#android-tv).
+- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#android-tv-or-fire-tv).
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#kodi).
 
 Example of card configuration:
