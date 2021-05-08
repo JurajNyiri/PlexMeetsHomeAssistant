@@ -38,6 +38,7 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 - **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#android-tv-or-fire-tv).
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#kodi).
+- **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#all-other-plex-clients).
 
 Example of card configuration:
 
