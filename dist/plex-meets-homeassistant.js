@@ -19603,6 +19603,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.data[this.config.libraryName]) {
                 // eslint-disable-next-line consistent-return
                 const searchValues = lodash.split(this.searchValue, ' ');
+                // eslint-disable-next-line consistent-return
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     if (!this.maxCount || count < this.maxCount) {
                         count += 1;

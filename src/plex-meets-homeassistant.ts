@@ -225,6 +225,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (this.data[this.config.libraryName]) {
 			// eslint-disable-next-line consistent-return
 			const searchValues = _.split(this.searchValue, ' ');
+			// eslint-disable-next-line consistent-return
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				if (!this.maxCount || count < this.maxCount) {
 					count += 1;
