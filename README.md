@@ -124,7 +124,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ❌ Season
 
-❌ Episodes (Coming soon)
+✅ Episodes
 
 ## Ask for help or help development
 
