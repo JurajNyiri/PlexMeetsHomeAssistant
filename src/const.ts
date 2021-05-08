@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const CSS_STYLE = {
 	width: 138,
 	height: 203,
@@ -5,6 +6,11 @@ const CSS_STYLE = {
 	expandedHeight: 324,
 	episodeWidth: 300,
 	episodeHeight: 169
+};
+
+const supported: any = {
+	kodi: ['movie', 'episode'],
+	androidtv: ['movie', 'show', 'season', 'episode']
 };
 
 const LOREM_IPSUM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec semper risus vitae aliquet interdum. Nulla facilisi. Pellentesque viverra sagittis lorem eget aliquet. Cras vehicula, purus vel consectetur mattis, ipsum arcu ullamcorper mi, id viverra purus ex eu dolor. Integer vehicula lacinia sem convallis iaculis. Nulla fermentum erat interdum, efficitur felis in, mollis neque. Vivamus luctus metus eget nisl pellentesque, placerat elementum magna eleifend.
@@ -17,4 +23,4 @@ Nam molestie auctor erat. Sed tempor porttitor nisi vel hendrerit. Vestibulum eg
 
 Vivamus at enim hendrerit, lacinia mauris sit amet, facilisis dolor. Sed egestas urna ut ante iaculis consequat. Ut ac libero commodo, egestas ligula in, pretium nisi. Nullam dolor sapien, auctor vitae enim non, dapibus laoreet enim. Nullam rhoncus efficitur nibh faucibus ultricies. In vitae libero sed turpis posuere tincidunt. Vivamus dapibus erat placerat lorem fringilla, a varius elit placerat. Aliquam sodales condimentum porta. Etiam ac mattis dui, quis sodales urna. Praesent at laoreet lectus. Ut tellus nisl, ullamcorper vitae metus eget, porttitor sagittis metus. Aliquam purus dolor, porttitor eget magna a, ullamcorper aliquam dui. Donec a neque vel justo fringilla tincidunt maximus eget nisl. Aliquam consequat id turpis nec laoreet. In dignissim enim quis neque scelerisque finibus.`;
 
-export { CSS_STYLE, LOREM_IPSUM };
+export { CSS_STYLE, LOREM_IPSUM, supported };

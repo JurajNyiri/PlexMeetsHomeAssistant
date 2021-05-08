@@ -3,6 +3,7 @@
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
 import Plex from './Plex';
+import { supported } from '../const';
 
 class PlayController {
 	entity: Record<string, any>;
@@ -11,10 +12,7 @@ class PlayController {
 
 	plex: Plex;
 
-	supported: any = {
-		kodi: ['movie', 'episode'],
-		androidtv: ['movie', 'show', 'season', 'episode']
-	};
+	supported: any = supported;
 
 	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>) {
 		this.hass = hass;

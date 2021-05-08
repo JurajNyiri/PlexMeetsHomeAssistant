@@ -17194,6 +17194,20 @@ var lodash = createCommonjsModule(function (module, exports) {
 }.call(commonjsGlobal));
 });
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const CSS_STYLE = {
+    width: 138,
+    height: 203,
+    expandedWidth: 220,
+    expandedHeight: 324,
+    episodeWidth: 300,
+    episodeHeight: 169
+};
+const supported = {
+    kodi: ['movie', 'episode'],
+    androidtv: ['movie', 'show', 'season', 'episode']
+};
+
 var bind = function bind(fn, thisArg) {
   return function wrap() {
     var args = new Array(arguments.length);
@@ -18698,10 +18712,7 @@ class Plex {
 
 class PlayController {
     constructor(hass, plex, entity) {
-        this.supported = {
-            kodi: ['movie', 'episode'],
-            androidtv: ['movie', 'show', 'season', 'episode']
-        };
+        this.supported = supported;
         this.getState = async (entityID) => {
             return this.hass.callApi('GET', `states/${entityID}`);
         };
@@ -18892,15 +18903,6 @@ const getOffset = (el) => {
         }
     }
     return { top: y, left: x };
-};
-
-const CSS_STYLE = {
-    width: 138,
-    height: 203,
-    expandedWidth: 220,
-    expandedHeight: 324,
-    episodeWidth: 300,
-    episodeHeight: 169
 };
 
 /**
@@ -20094,8 +20096,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
-            if (!config.entity || config.entity.length === 0) {
+            if (!config.entity || config.entity.length === 0 || !lodash.isObject(config.entity)) {
                 throw new Error('You need to define at least one entity');
+            }
+            if (lodash.isObject(config.entity)) {
+                let entityDefined = false;
+                // eslint-disable-next-line consistent-return
+                lodash.forEach(config.entity, (value, key) => {
+                    if (supported[key]) {
+                        entityDefined = true;
+                        return false;
+                    }
+                });
+                if (!entityDefined) {
+                    throw new Error('You need to define at least one supported entity');
+                }
             }
             if (!config.token) {
                 throw new Error('You need to define a token');

@@ -2,10 +2,10 @@
 /* eslint-env browser */
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
+import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
 import { escapeHtml, getOffset } from './modules/utils';
-import { CSS_STYLE } from './const';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -780,8 +780,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	setConfig = (config: any): void => {
 		this.plexProtocol = 'http';
-		if (!config.entity || config.entity.length === 0) {
+		if (!config.entity || config.entity.length === 0 || !_.isObject(config.entity)) {
 			throw new Error('You need to define at least one entity');
+		}
+		if (_.isObject(config.entity)) {
+			let entityDefined = false;
+			// eslint-disable-next-line consistent-return
+			_.forEach(config.entity, (value, key) => {
+				if (supported[key]) {
+					entityDefined = true;
+					return false;
+				}
+			});
+			if (!entityDefined) {
+				throw new Error('You need to define at least one supported entity');
+			}
 		}
 		if (!config.token) {
 			throw new Error('You need to define a token');
