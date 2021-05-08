@@ -132,8 +132,7 @@ class PlayController {
 				this.hass.states['sensor.kodi_media_sensor_search'] &&
 				this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable' &&
 				this.hass.states[this.entity.kodi].state !== 'off' &&
-				this.hass.states[this.entity.kodi].state !== 'unavailable' &&
-				_.includes(this.entity.kodi, 'kodi_')
+				this.hass.states[this.entity.kodi].state !== 'unavailable'
 			);
 		}
 		return false;

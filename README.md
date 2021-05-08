@@ -112,7 +112,6 @@ Play button is only visible if all the conditions inside Availability section of
 **Availability**:
 
 - Provided entity ID needs to exists
-- Provided entity ID has to have 'kodi\_' in the entity_id
 - Entity 'sensor.kodi_media_sensor_search' needs to exist
 - State of both entities cannot be 'unavailable'
 - State of kodi cannot be 'off'
