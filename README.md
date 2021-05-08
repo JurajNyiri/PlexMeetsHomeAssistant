@@ -135,3 +135,13 @@ Join [Discord](https://discord.gg/5W9Ttp2R) or [Home Assistant Community](https:
 ![View without hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/1.png)
 
 ![View with hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/2.png)
+
+# Disclaimer
+
+Author is in no way affiliated with Kodi, Plex, Roku or any other companies mentioned above.
+
+Author does not guarantee functionality of this integration and is not responsible for any damage.
+
+All product names, trademarks and registered trademarks in this repository, are property of their respective owners.
+
+This card provides user interface for navigating plex library and playing plex content on users devices. It does not host any content on its own and does not provide any plex server.
