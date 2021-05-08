@@ -17,6 +17,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	movieElems: any = [];
 
+	searchValue = '';
+
 	activeMovieElem: HTMLElement | undefined;
 
 	activeMovieElemData: Record<string, any> = {};
@@ -158,20 +160,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.card.appendChild(this.content);
 		this.appendChild(this.card);
 
-		const searchContainer = document.createElement('div');
-		searchContainer.className = 'searchContainer';
-
-		const searchInput = document.createElement('input');
-		searchInput.type = 'text';
-		searchInput.placeholder = `Search ${this.config.libraryName}...`;
-
-		searchInput.addEventListener('keyup', () => {
-			console.log(searchInput.value);
-		});
-
-		searchContainer.appendChild(searchInput);
-		this.content.appendChild(searchContainer);
-
 		let count = 0;
 
 		const contentbg = document.createElement('div');
@@ -209,6 +197,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			});
 		}, 1);
 		if (this.data[this.config.libraryName]) {
+			const searchContainer = document.createElement('div');
+			searchContainer.className = 'searchContainer';
+
+			const searchInput = document.createElement('input');
+			searchInput.type = 'text';
+			searchInput.value = this.searchValue;
+			searchInput.placeholder = `Search ${this.config.libraryName}...`;
+
+			searchInput.addEventListener('keyup', () => {
+				this.searchValue = searchInput.value;
+			});
+
+			searchContainer.appendChild(searchInput);
+			this.content.appendChild(searchContainer);
 			// eslint-disable-next-line consistent-return
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				if (!this.maxCount || count < this.maxCount) {

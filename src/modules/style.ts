@@ -96,7 +96,7 @@ style.textContent = css`
 	}
 
 	.searchContainer input {
-		width: 100%;
+		width: calc(100% - 26px);
 		padding: 10px;
 		margin-bottom: 10px;
 	}

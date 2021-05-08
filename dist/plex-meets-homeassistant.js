@@ -19233,7 +19233,7 @@ style.textContent = css `
 	}
 
 	.searchContainer input {
-		width: 100%;
+		width: calc(100% - 26px);
 		padding: 10px;
 		margin-bottom: 10px;
 	}
@@ -19456,6 +19456,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         super(...arguments);
         this.plexProtocol = 'http';
         this.movieElems = [];
+        this.searchValue = '';
         this.activeMovieElemData = {};
         this.seasonElemFreshlyLoaded = false;
         this.episodesElemFreshlyLoaded = false;
@@ -19550,16 +19551,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             this.card.appendChild(this.content);
             this.appendChild(this.card);
-            const searchContainer = document.createElement('div');
-            searchContainer.className = 'searchContainer';
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.placeholder = `Search ${this.config.libraryName}...`;
-            searchInput.addEventListener('keyup', () => {
-                console.log(searchInput.value);
-            });
-            searchContainer.appendChild(searchInput);
-            this.content.appendChild(searchContainer);
             let count = 0;
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';
@@ -19591,6 +19582,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 });
             }, 1);
             if (this.data[this.config.libraryName]) {
+                const searchContainer = document.createElement('div');
+                searchContainer.className = 'searchContainer';
+                const searchInput = document.createElement('input');
+                searchInput.type = 'text';
+                searchInput.value = this.searchValue;
+                searchInput.placeholder = `Search ${this.config.libraryName}...`;
+                searchInput.addEventListener('keyup', () => {
+                    this.searchValue = searchInput.value;
+                });
+                searchContainer.appendChild(searchInput);
+                this.content.appendChild(searchContainer);
                 // eslint-disable-next-line consistent-return
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     if (!this.maxCount || count < this.maxCount) {
