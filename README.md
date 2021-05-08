@@ -82,7 +82,7 @@ Play button is only visible if all the conditions inside Availability section of
 **Steps**:
 
 - Install and configure [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect#download-and-installation) on Kodi itself.
-- Setup [Kodi](https://www.home-assistant.io/integrations/kodi/) for your device.
+- Setup [Kodi](https://www.home-assistant.io/integrations/kodi/) integration for your device.
 - Install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) and its sensor **kodi_media_sensor_search**
 
 <details>
