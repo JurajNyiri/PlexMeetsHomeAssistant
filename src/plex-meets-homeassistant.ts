@@ -199,7 +199,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				if (!this.maxCount || count < this.maxCount) {
 					count += 1;
-					this.content.appendChild(this.getMovieElement(movieData, this.data.serverID));
+					this.content.appendChild(this.getMovieElement(movieData));
 				} else {
 					return true;
 				}
@@ -667,7 +667,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		return 0;
 	};
 
-	getMovieElement = (data: any, serverID: string): HTMLDivElement => {
+	getMovieElement = (data: any): HTMLDivElement => {
 		const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
 
 		const container = document.createElement('div');

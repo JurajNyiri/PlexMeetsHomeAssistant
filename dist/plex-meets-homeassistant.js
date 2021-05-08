@@ -19528,7 +19528,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     if (!this.maxCount || count < this.maxCount) {
                         count += 1;
-                        this.content.appendChild(this.getMovieElement(movieData, this.data.serverID));
+                        this.content.appendChild(this.getMovieElement(movieData));
                     }
                     else {
                         return true;
@@ -19946,7 +19946,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             return 0;
         };
-        this.getMovieElement = (data, serverID) => {
+        this.getMovieElement = (data) => {
             const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
             const container = document.createElement('div');
             container.className = 'container';
