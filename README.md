@@ -86,7 +86,7 @@ Play button is only visible if all the conditions inside Availability section of
 - Install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) and its sensor **kodi_media_sensor_search**
 
 <details>
-    <summary>Images of installation</summary>
+    <summary>Images of installation of Kodi Recently Added Media</summary>
 
 ![Click on add integration in integrations](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/1.png)
 
