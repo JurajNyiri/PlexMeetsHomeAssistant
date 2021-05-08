@@ -17205,7 +17205,8 @@ const CSS_STYLE = {
 };
 const supported = {
     kodi: ['movie', 'episode'],
-    androidtv: ['movie', 'show', 'season', 'episode']
+    androidtv: ['movie', 'show', 'season', 'episode'],
+    plexPlayer: ['movie', 'show', 'season', 'episode']
 };
 
 var bind = function bind(fn, thisArg) {
@@ -18777,8 +18778,47 @@ class PlayController {
                 case 'androidtv':
                     await this.playViaAndroidTV(data.key.split('/')[3], instantPlay);
                     break;
+                case 'plexPlayer':
+                    await this.playViaPlexPlayer(data.key.split('/')[3]);
+                    break;
                 default:
                     throw Error(`No service available to play ${data.title}!`);
+            }
+        };
+        this.plexPlayerCreateQueue = async (movieID) => {
+            const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await this.plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
+            const plexResponse = await axios({
+                method: 'post',
+                url,
+                headers: {
+                    'X-Plex-Token': this.plex.token,
+                    'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
+                }
+            });
+            if (plexResponse.status !== 200) {
+                throw Error('Error reaching Plex to generate queue');
+            }
+            return {
+                playQueueID: plexResponse.data.MediaContainer.playQueueID,
+                playQueueSelectedMetadataItemID: plexResponse.data.MediaContainer.playQueueSelectedMetadataItemID
+            };
+        };
+        this.playViaPlexPlayer = async (movieID) => {
+            const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID);
+            const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/player/playback/playMedia?address=${this.plex.ip}&commandID=1&containerKey=/playQueues/${playQueueID}?window=100%26own=1&key=/library/metadata/${playQueueSelectedMetadataItemID}&machineIdentifier=${await this.plex.getServerID()}&offset=0&port=${this.plex.port}&token=${this.plex.token}&type=video&protocol=${this.plex.protocol}`;
+            const plexResponse = await axios({
+                method: 'post',
+                url,
+                headers: {
+                    'X-Plex-Target-Client-Identifier': this.entity.plexPlayer,
+                    'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
+                }
+            });
+            if (plexResponse.status !== 200) {
+                throw Error('Error while asking plex to play a movie - server request error.');
+            }
+            if (!lodash.includes(plexResponse.data, 'status="OK"')) {
+                throw Error('Error while asking plex to play a movie - target device not available.');
             }
         };
         this.playViaKodi = async (data, type) => {
@@ -18841,13 +18881,19 @@ class PlayController {
             let service = '';
             lodash.forEach(this.entity, (value, key) => {
                 if (lodash.includes(this.supported[key], data.type)) {
-                    if ((key === 'kodi' && this.isKodiSupported()) || (key === 'androidtv' && this.isAndroidTVSupported())) {
+                    if ((key === 'kodi' && this.isKodiSupported()) ||
+                        (key === 'androidtv' && this.isAndroidTVSupported()) ||
+                        (key === 'plexPlayer' && this.isPlexPlayerSupported())) {
                         service = key;
                         return false;
                     }
                 }
             });
             return service;
+        };
+        // todo: finish check
+        this.isPlexPlayerSupported = () => {
+            return true;
         };
         this.isPlaySupported = (data) => {
             return !lodash.isEmpty(this.getPlayService(data));
