@@ -20000,7 +20000,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
-            if (config.entity.length === 0) {
+            if (!config.entity || config.entity.length === 0) {
                 throw new Error('You need to define at least one entity');
             }
             if (!config.token) {
