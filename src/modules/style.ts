@@ -79,6 +79,16 @@ style.textContent = css`
 		padding: 5px 0px;
 		margin: 16px 0 10px 0;
 	}
+
+	.detail::-webkit-scrollbar {
+		display: none;
+	}
+
+	.detail {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
 	.detail {
 		visibility: hidden;
 		max-height: ${CSS_STYLE.expandedHeight + 16}px;
