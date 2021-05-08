@@ -141,7 +141,7 @@ Join [Discord](https://discord.gg/5W9Ttp2R) or [Home Assistant Community](https:
 
 # Disclaimer
 
-Author is in no way affiliated with Kodi, Plex, Roku or any other companies mentioned above.
+Author is in no way affiliated with Kodi, Plex, Roku, Android TV, Google or any other companies mentioned above.
 
 Author does not guarantee functionality of this integration and is not responsible for any damage.
 
