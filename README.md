@@ -30,18 +30,8 @@ Custom integration which integrates plex into Home Assistant and makes it possib
 
 **entity**: You need to configure at least one supported media_player entity.
 
-- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/)
-- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/).
-
-  You also need to install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors) and its sensor **kodi_media_sensor_search**.
-
-  It is strongly recommended to use [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect) for this setup, otherwise if the file name is different in kodi playback **will** fail.
-
-_You can combine multiple supported entities_, in that case, entity for supported content will be chosen in order how you entered them.
-
-As an example, if content can be played / shown both by kodi and androidtv, and you entered kodi first, it will be shown by kodi. If it cannot be played by kodi but can be played by androidtv, androidtv will be used.
-
-This will also work with play button being shown, it will only show when you can actually play content on your device.
+- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#android-tv).
+- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/tree/main#kodi).
 
 Example of card configuration:
 
@@ -62,18 +52,59 @@ If you are using Home Assistant via HTTPS, you need to specify port `https` for 
 
 ## Detailed configuration instructions for end devices
 
-### Android TV
+_You can combine multiple supported entities_, in that case, entity for supported content will be chosen in order how you entered them.
 
-Difficulity to setup: Easy
+As an example, if content can be played / shown both by kodi and androidtv, and you entered kodi first, it will be shown by kodi. If it cannot be played by kodi but can be played by androidtv, androidtv will be used.
 
-Steps:
+This will also work with play button being shown, it will only show when you can actually play content on your device.
 
-- Setup [Android TV](https://www.home-assistant.io/integrations/androidtv/)
--
+Play button is only visible if all the conditions inside Availability section of end devices below are met.
+
+### Android TV or Fire TV
+
+**Difficulity to setup**: Easy
+
+**Steps**:
+
+- Setup [Android TV](https://www.home-assistant.io/integrations/androidtv/). You need just a [default configuration](https://www.home-assistant.io/integrations/androidtv/#configuration), no optional parameters needed.
+- Use entity_id of media_player provided by Android TV integration in card, example: `androidtv: media_player.living_room_nvidia_shield`.
+
+**Availability**:
+
+- Provided entity ID needs to exists
+- Provided entity ID needs to have attributes
+- Provided entity ID needs to have attribute adb_response
 
 ### Kodi
 
-TBD
+**Difficulity to setup**: Moderate
+
+**Steps**:
+
+- Install and configure [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect#download-and-installation) on Kodi itself.
+- Setup [Kodi](https://www.home-assistant.io/integrations/kodi/) for your device.
+- Install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) and its sensor **kodi_media_sensor_search**
+
+    <details>
+    <summary>Images of installation</summary>
+        
+        ![Click on add integration in integrations](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/1.png)
+
+        ![Find integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/2.png)
+
+        ![Configure integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/3.png)
+
+    </details>
+
+- Use entity_id of media_player provided by Kodi integration in card, example: `media_player.kodi_123456qwe789rty`.
+
+**Availability**:
+
+- Provided entity ID needs to exists
+- Provided entity ID has to have 'kodi\_' in the entity_id
+- Entity 'sensor.kodi_media_sensor_search' needs to exist
+- State of both entities cannot be 'unavailable'
+- State of kodi cannot be 'off'
 
 ## Ask for help or help development
 
