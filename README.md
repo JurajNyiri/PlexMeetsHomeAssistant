@@ -85,16 +85,16 @@ Play button is only visible if all the conditions inside Availability section of
 - Setup [Kodi](https://www.home-assistant.io/integrations/kodi/) for your device.
 - Install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) and its sensor **kodi_media_sensor_search**
 
-    <details>
+<details>
     <summary>Images of installation</summary>
-        
-        [Click on add integration in integrations](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/1.png)
 
-        [Find integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/2.png)
+[Click on add integration in integrations](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/1.png)
 
-        [Configure integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/3.png)
+[Find integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/2.png)
 
-    </details>
+[Configure integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/3.png)
+
+</details>
 
 - Use entity_id of media_player provided by Kodi integration in card, example: `media_player.kodi_123456qwe789rty`.
 
