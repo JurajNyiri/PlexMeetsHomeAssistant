@@ -12,8 +12,7 @@ class PlayController {
 	plex: Plex;
 
 	supported: any = {
-		// kodi: ['movie', 'episode'],
-		kodi: ['movie'],
+		kodi: ['movie', 'episode'],
 		androidtv: ['movie', 'show', 'season', 'episode']
 	};
 
@@ -50,6 +49,35 @@ class PlayController {
 				return false;
 			}
 		});
+		if (_.isEmpty(foundResult)) {
+			throw Error(`Title ${search} not found in Kodi.`);
+		}
+		return foundResult;
+	};
+
+	private getKodiTVShowSeason = async (tvshowID: number, seasonNumber: number): Promise<Record<string, any>> => {
+		// todo: check for specials if they work
+		await this.hass.callService('kodi_media_sensors', 'call_method', {
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			entity_id: 'sensor.kodi_media_sensor_search',
+			method: 'search',
+			item: {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_type: 'tvshow',
+				value: tvshowID
+			}
+		});
+		let foundResult = {};
+		const results = await this.getKodiSearchResults();
+		_.forEach(results, result => {
+			if (_.isEqual(result.season, seasonNumber)) {
+				foundResult = result;
+				return false;
+			}
+		});
+		if (_.isEmpty(foundResult)) {
+			throw Error(`Season ${seasonNumber} not found in Kodi for TV Show ${tvshowID}.`);
+		}
 		return foundResult;
 	};
 
@@ -57,7 +85,7 @@ class PlayController {
 		const playService = this.getPlayService(data);
 		switch (playService) {
 			case 'kodi':
-				await this.playViaKodi(data.title, data.type);
+				await this.playViaKodi(data, data.type);
 				break;
 			case 'androidtv':
 				await this.playViaAndroidTV(data.key.split('/')[3], instantPlay);
@@ -67,10 +95,9 @@ class PlayController {
 		}
 	};
 
-	private playViaKodi = async (title: string, type: string): Promise<void> => {
-		const kodiData = await this.getKodiSearch(title);
-		// todo: check if kodiData is not empty!
+	private playViaKodi = async (data: Record<string, any>, type: string): Promise<void> => {
 		if (type === 'movie') {
+			const kodiData = await this.getKodiSearch(data.title);
 			await this.hass.callService('kodi', 'call_method', {
 				// eslint-disable-next-line @typescript-eslint/camelcase
 				entity_id: this.entity.kodi,
@@ -80,7 +107,29 @@ class PlayController {
 				}
 			});
 		} else if (type === 'episode') {
-			console.log('TODO');
+			const kodiData = await this.getKodiSearch(data.grandparentTitle);
+			const episodesData = await this.getKodiTVShowSeason(kodiData.tvshowid, data.parentIndex);
+			let foundEpisode: any = {};
+			_.forEach(episodesData.episodes, episodeData => {
+				if (_.isEqual(episodeData.episode, data.index)) {
+					foundEpisode = episodeData;
+					return false;
+				}
+			});
+
+			if (_.isEmpty(foundEpisode)) {
+				throw Error(
+					`Episode ${data.index} not found in Kodi for TV Show ${data.grandparentTitle} (id: ${kodiData.tvshowid}) season ${data.parentIndex}.`
+				);
+			}
+			await this.hass.callService('kodi', 'call_method', {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: this.entity.kodi,
+				method: 'Player.Open',
+				item: {
+					episodeid: foundEpisode.episodeid
+				}
+			});
 		} else {
 			throw Error(`Plex type ${type} is not supported in Kodi.`);
 		}
