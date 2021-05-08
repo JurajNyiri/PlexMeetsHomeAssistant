@@ -66,6 +66,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 **Steps**:
 
+- Install plex application on your Android TV device
 - Setup [Android TV](https://www.home-assistant.io/integrations/androidtv/). You need just a [default configuration](https://www.home-assistant.io/integrations/androidtv/#configuration), no optional parameters needed.
 - Use entity_id of media_player provided by Android TV integration in card, example: `androidtv: media_player.living_room_nvidia_shield`.
 
