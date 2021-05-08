@@ -19455,6 +19455,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
+        this.looseSearch = false;
         this.movieElems = [];
         this.searchValue = '';
         this.activeMovieElemData = {};
@@ -19528,29 +19529,47 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }, 100);
             this.renderPage();
         };
+        this.searchInput = () => {
+            const searchContainer = document.createElement('div');
+            searchContainer.className = 'searchContainer';
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.value = this.searchValue;
+            searchInput.placeholder = `Search ${this.config.libraryName}...`;
+            searchInput.addEventListener('keyup', () => {
+                this.searchValue = searchInput.value;
+                this.renderPage();
+                this.focus();
+            });
+            searchContainer.appendChild(searchInput);
+            return searchContainer;
+        };
         this.renderPage = () => {
-            if (this)
-                this.innerHTML = this.loadCustomStyles();
-            this.card = document.createElement('ha-card');
-            this.card.style.transition = '0.5s';
-            this.card.style.overflow = 'hidden';
-            this.card.style.padding = '16px';
-            // card.header = this.config.libraryName;
+            if (this.content) {
+                this.content.remove();
+            }
+            if (!this.card) {
+                this.card = document.createElement('ha-card');
+                this.card.style.transition = '0.5s';
+                this.card.style.overflow = 'hidden';
+                this.card.style.padding = '16px';
+                this.card.appendChild(this.searchInput());
+                this.appendChild(this.card);
+            }
             this.content = document.createElement('div');
-            this.content.innerHTML = '';
+            this.content.innerHTML = this.loadCustomStyles();
             if (this.error !== '') {
-                this.content.innerHTML = `Error: ${this.error}`;
+                this.content.innerHTML += `Error: ${this.error}`;
             }
             else if (this.data[this.config.libraryName] && this.data[this.config.libraryName].length === 0) {
-                this.content.innerHTML = `Library ${escapeHtml(this.config.libraryName)} has no items.`;
+                this.content.innerHTML += `Library ${escapeHtml(this.config.libraryName)} has no items.`;
             }
             else if (this.loading) {
                 this.content.style.padding = '16px 16px 16px';
-                this.content.innerHTML =
+                this.content.innerHTML +=
                     '<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
             }
             this.card.appendChild(this.content);
-            this.appendChild(this.card);
             let count = 0;
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';
@@ -19582,22 +19601,27 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 });
             }, 1);
             if (this.data[this.config.libraryName]) {
-                const searchContainer = document.createElement('div');
-                searchContainer.className = 'searchContainer';
-                const searchInput = document.createElement('input');
-                searchInput.type = 'text';
-                searchInput.value = this.searchValue;
-                searchInput.placeholder = `Search ${this.config.libraryName}...`;
-                searchInput.addEventListener('keyup', () => {
-                    this.searchValue = searchInput.value;
-                });
-                searchContainer.appendChild(searchInput);
-                this.content.appendChild(searchContainer);
                 // eslint-disable-next-line consistent-return
+                const searchValues = lodash.split(this.searchValue, ' ');
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     if (!this.maxCount || count < this.maxCount) {
                         count += 1;
-                        this.content.appendChild(this.getMovieElement(movieData));
+                        if (this.looseSearch) {
+                            let found = false;
+                            // eslint-disable-next-line consistent-return
+                            lodash.forEach(searchValues, value => {
+                                if (!lodash.isEmpty(value) && lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(value))) {
+                                    found = true;
+                                    return false;
+                                }
+                            });
+                            if (found || lodash.isEmpty(searchValues[0])) {
+                                this.content.appendChild(this.getMovieElement(movieData));
+                            }
+                        }
+                        else if (lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(this.searchValue))) {
+                            this.content.appendChild(this.getMovieElement(movieData));
+                        }
                     }
                     else {
                         return true;
