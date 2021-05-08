@@ -10,8 +10,6 @@ Video of the card:
 
 More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#images).
 
-**This is an extremely early version of integration / card aimed mostly for experienced users and/or developers.**
-
 ## Installation
 
 - Add [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) to HACS, url: `https://github.com/JurajNyiri/PlexMeetsHomeAssistant`.
