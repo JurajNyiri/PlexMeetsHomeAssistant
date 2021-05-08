@@ -78,8 +78,11 @@ Play button is only visible if all the conditions inside Availability section of
 **Supported play types**:
 
 ✔️ Movies
+
 ✔️ Show
+
 ✔️ Season
+
 ✔️ Episodes
 
 ### Kodi
@@ -116,8 +119,11 @@ Play button is only visible if all the conditions inside Availability section of
 **Supported play types**:
 
 ✔️ Movies
+
 ❌ Show
+
 ❌ Season
+
 ❌ Episodes (Coming soon)
 
 ## Ask for help or help development
