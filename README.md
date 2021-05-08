@@ -60,6 +60,21 @@ entity:
 
 If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.
 
+## Detailed configuration instructions for end devices
+
+### Android TV
+
+Difficulity to setup: Easy
+
+Steps:
+
+- Setup [Android TV](https://www.home-assistant.io/integrations/androidtv/)
+-
+
+### Kodi
+
+TBD
+
 ## Ask for help or help development
 
 Join [Discord](https://discord.gg/5W9Ttp2R) or [Home Assistant Community](https://community.home-assistant.io/t/custom-component-card-plex-meets-home-assistant/304349).
