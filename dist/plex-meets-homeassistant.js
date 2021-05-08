@@ -18745,13 +18745,13 @@ class PlayController {
         };
         this.playViaKodi = async (title, type) => {
             const kodiData = await this.getKodiSearch(title);
+            // todo: check if kodiData is not empty!
             if (type === 'movie') {
                 await this.hass.callService('kodi', 'call_method', {
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     entity_id: this.entity.kodi,
                     method: 'Player.Open',
                     item: {
-                        // eslint-disable-next-line @typescript-eslint/camelcase
                         movieid: kodiData.movieid
                     }
                 });
