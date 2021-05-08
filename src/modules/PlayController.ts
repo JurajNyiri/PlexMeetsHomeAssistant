@@ -127,19 +127,27 @@ class PlayController {
 		}&commandID=1&containerKey=/playQueues/${playQueueID}?window=100%26own=1&key=/library/metadata/${playQueueSelectedMetadataItemID}&machineIdentifier=${await this.plex.getServerID()}&offset=0&port=${
 			this.plex.port
 		}&token=${this.plex.token}&type=video&protocol=${this.plex.protocol}`;
-		const plexResponse = await axios({
-			method: 'post',
-			url,
-			headers: {
-				'X-Plex-Target-Client-Identifier': this.entity.plexPlayer,
-				'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
+		try {
+			const plexResponse = await axios({
+				method: 'post',
+				url,
+				headers: {
+					'X-Plex-Target-Client-Identifier': this.entity.plexPlayer,
+					'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
+				}
+			});
+			if (plexResponse.status !== 200) {
+				throw Error('Error while asking plex to play a movie - server request error.');
 			}
-		});
-		if (plexResponse.status !== 200) {
-			throw Error('Error while asking plex to play a movie - server request error.');
-		}
-		if (!_.includes(plexResponse.data, 'status="OK"')) {
-			throw Error('Error while asking plex to play a movie - target device not available.');
+			if (!_.includes(plexResponse.data, 'status="OK"')) {
+				throw Error('Error while asking plex to play a movie - target device not available.');
+			}
+		} catch (err) {
+			if (_.includes(err.message, '404')) {
+				throw Error('Defined plexPlayer is currently not available for playback.');
+			} else {
+				throw err;
+			}
 		}
 	};
 
