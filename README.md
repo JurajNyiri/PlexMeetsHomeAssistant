@@ -75,6 +75,13 @@ Play button is only visible if all the conditions inside Availability section of
 - Provided entity ID needs to have attributes
 - Provided entity ID needs to have attribute adb_response
 
+**Supported play types**:
+
+✔️ Movies
+✔️ Show
+✔️ Season
+✔️ Episodes
+
 ### Kodi
 
 **Difficulty to setup**: Moderate
@@ -105,6 +112,13 @@ Play button is only visible if all the conditions inside Availability section of
 - Entity 'sensor.kodi_media_sensor_search' needs to exist
 - State of both entities cannot be 'unavailable'
 - State of kodi cannot be 'off'
+
+**Supported play types**:
+
+✔️ Movies
+❌ Show
+❌ Season
+❌ Episodes (Coming soon)
 
 ## Ask for help or help development
 
