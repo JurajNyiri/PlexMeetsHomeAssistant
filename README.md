@@ -62,7 +62,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ### Android TV or Fire TV
 
-**Difficulity to setup**: Easy
+**Difficulty to setup**: Easy
 
 **Steps**:
 
@@ -77,7 +77,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ### Kodi
 
-**Difficulity to setup**: Moderate
+**Difficulty to setup**: Moderate
 
 **Steps**:
 
