@@ -18671,10 +18671,19 @@ class Plex {
     constructor(ip, port = 32400, token, protocol = 'http') {
         this.serverInfo = {};
         this.clients = [];
+        this.init = async () => {
+            await this.getClients();
+            /*
+            setInterval(() => {
+                this.getClients();
+            }, 30000);
+            */
+        };
         this.getClients = async () => {
             const url = `${this.protocol}://${this.ip}:${this.port}/clients?X-Plex-Token=${this.token}`;
             const result = await axios.get(url);
-            return result;
+            this.clients = result.data.MediaContainer.Server;
+            return this.clients;
         };
         this.getServerID = async () => {
             if (lodash.isEmpty(this.serverInfo)) {
@@ -18907,9 +18916,15 @@ class PlayController {
             });
             return service;
         };
-        // todo: finish check
         this.isPlexPlayerSupported = () => {
-            return true;
+            let found = false;
+            lodash.forEach(this.plex.clients, plexClient => {
+                if (lodash.isEqual(plexClient.machineIdentifier, this.entity.plexPlayer)) {
+                    found = true;
+                    return false;
+                }
+            });
+            return found;
         };
         this.isPlaySupported = (data) => {
             return !lodash.isEmpty(this.getPlayService(data));
@@ -19539,6 +19554,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.loadInitialData = async () => {
             this.loading = true;
             this.renderPage();
+            if (this.plex) {
+                await this.plex.init();
+            }
             try {
                 if (this.plex) {
                     const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);

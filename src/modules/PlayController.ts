@@ -230,9 +230,15 @@ class PlayController {
 		return service;
 	};
 
-	// todo: finish check
 	isPlexPlayerSupported = (): boolean => {
-		return true;
+		let found = false;
+		_.forEach(this.plex.clients, plexClient => {
+			if (_.isEqual(plexClient.machineIdentifier, this.entity.plexPlayer)) {
+				found = true;
+				return false;
+			}
+		});
+		return found;
 	};
 
 	isPlaySupported = (data: Record<string, any>): boolean => {

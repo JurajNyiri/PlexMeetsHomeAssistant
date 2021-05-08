@@ -100,6 +100,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	loadInitialData = async (): Promise<void> => {
 		this.loading = true;
 		this.renderPage();
+		if (this.plex) {
+			await this.plex.init();
+		}
+
 		try {
 			if (this.plex) {
 				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);

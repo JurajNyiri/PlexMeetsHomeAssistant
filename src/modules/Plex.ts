@@ -13,12 +13,30 @@ class Plex {
 
 	serverInfo: Record<string, any> = {};
 
+	clients: Array<Record<string, any>> = [];
+
 	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http') {
 		this.ip = ip;
 		this.port = port;
 		this.token = token;
 		this.protocol = protocol;
 	}
+
+	init = async (): Promise<void> => {
+		await this.getClients();
+		/*
+		setInterval(() => {
+			this.getClients();
+		}, 30000);
+		*/
+	};
+
+	getClients = async (): Promise<Record<string, any>> => {
+		const url = `${this.protocol}://${this.ip}:${this.port}/clients?X-Plex-Token=${this.token}`;
+		const result = await axios.get(url);
+		this.clients = result.data.MediaContainer.Server;
+		return this.clients;
+	};
 
 	getServerID = async (): Promise<any> => {
 		if (_.isEmpty(this.serverInfo)) {
