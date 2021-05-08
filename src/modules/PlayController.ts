@@ -9,6 +9,8 @@ import { supported } from '../const';
 class PlayController {
 	entity: Record<string, any>;
 
+	plexPlayerEntity = '';
+
 	hass: HomeAssistant;
 
 	plex: Plex;
@@ -120,6 +122,7 @@ class PlayController {
 	};
 
 	private playViaPlexPlayer = async (movieID: number): Promise<void> => {
+		const machineID = !_.isEmpty(this.plexPlayerEntity) ? this.plexPlayerEntity : this.entity.plexPlayer;
 		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID);
 
 		const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/player/playback/playMedia?address=${
@@ -132,7 +135,7 @@ class PlayController {
 				method: 'post',
 				url,
 				headers: {
-					'X-Plex-Target-Client-Identifier': this.entity.plexPlayer,
+					'X-Plex-Target-Client-Identifier': machineID,
 					'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
 				}
 			});
@@ -238,6 +241,21 @@ class PlayController {
 				return false;
 			}
 		});
+		// Try to look into any other fields to identify machine ID
+		if (!found) {
+			_.forEach(this.plex.clients, plexClient => {
+				if (
+					_.isEqual(plexClient.product, this.entity.plexPlayer) ||
+					_.isEqual(plexClient.name, this.entity.plexPlayer) ||
+					_.isEqual(plexClient.host, this.entity.plexPlayer) ||
+					_.isEqual(plexClient.address, this.entity.plexPlayer)
+				) {
+					this.plexPlayerEntity = plexClient.machineIdentifier;
+					found = true;
+					return false;
+				}
+			});
+		}
 		return found;
 	};
 

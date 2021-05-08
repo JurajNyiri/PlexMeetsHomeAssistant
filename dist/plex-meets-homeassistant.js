@@ -18728,6 +18728,7 @@ class Plex {
 
 class PlayController {
     constructor(hass, plex, entity) {
+        this.plexPlayerEntity = '';
         this.supported = supported;
         this.getState = async (entityID) => {
             return this.hass.callApi('GET', `states/${entityID}`);
@@ -18819,6 +18820,7 @@ class PlayController {
             };
         };
         this.playViaPlexPlayer = async (movieID) => {
+            const machineID = !lodash.isEmpty(this.plexPlayerEntity) ? this.plexPlayerEntity : this.entity.plexPlayer;
             const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID);
             const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/player/playback/playMedia?address=${this.plex.ip}&commandID=1&containerKey=/playQueues/${playQueueID}?window=100%26own=1&key=/library/metadata/${playQueueSelectedMetadataItemID}&machineIdentifier=${await this.plex.getServerID()}&offset=0&port=${this.plex.port}&token=${this.plex.token}&type=video&protocol=${this.plex.protocol}`;
             try {
@@ -18826,7 +18828,7 @@ class PlayController {
                     method: 'post',
                     url,
                     headers: {
-                        'X-Plex-Target-Client-Identifier': this.entity.plexPlayer,
+                        'X-Plex-Target-Client-Identifier': machineID,
                         'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
                     }
                 });
@@ -18924,6 +18926,19 @@ class PlayController {
                     return false;
                 }
             });
+            // Try to look into any other fields to identify machine ID
+            if (!found) {
+                lodash.forEach(this.plex.clients, plexClient => {
+                    if (lodash.isEqual(plexClient.product, this.entity.plexPlayer) ||
+                        lodash.isEqual(plexClient.name, this.entity.plexPlayer) ||
+                        lodash.isEqual(plexClient.host, this.entity.plexPlayer) ||
+                        lodash.isEqual(plexClient.address, this.entity.plexPlayer)) {
+                        this.plexPlayerEntity = plexClient.machineIdentifier;
+                        found = true;
+                        return false;
+                    }
+                });
+            }
             return found;
         };
         this.isPlaySupported = (data) => {
