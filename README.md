@@ -128,7 +128,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ## Ask for help or help development
 
-Join [Discord](https://discord.gg/5W9Ttp2R) or [Home Assistant Community](https://community.home-assistant.io/t/custom-component-card-plex-meets-home-assistant/304349).
+Join [Discord](https://discord.gg/jqqz9jQXWx) or [Home Assistant Community](https://community.home-assistant.io/t/custom-component-card-plex-meets-home-assistant/304349).
 
 ## Images
 
