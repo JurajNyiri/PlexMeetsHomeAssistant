@@ -505,7 +505,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						playButton.addEventListener('click', event => {
 							event.stopPropagation();
 							if (this.plex && this.playController) {
-								this.playController.play(seasonData);
+								this.playController.play(seasonData, true);
 							}
 						});
 
@@ -792,7 +792,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			event.stopPropagation();
 
 			if (this.hassObj && this.playController) {
-				this.playController.play(data, data.type === 'movie');
+				this.playController.play(data, true);
 			}
 		});
 

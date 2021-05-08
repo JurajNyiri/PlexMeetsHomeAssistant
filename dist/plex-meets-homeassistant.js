@@ -18670,6 +18670,12 @@ var axios = axios_1;
 class Plex {
     constructor(ip, port = 32400, token, protocol = 'http') {
         this.serverInfo = {};
+        this.clients = [];
+        this.getClients = async () => {
+            const url = `${this.protocol}://${this.ip}:${this.port}/clients?X-Plex-Token=${this.token}`;
+            const result = await axios.get(url);
+            return result;
+        };
         this.getServerID = async () => {
             if (lodash.isEmpty(this.serverInfo)) {
                 await this.getServerInfo();
@@ -19902,7 +19908,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             playButton.addEventListener('click', event => {
                                 event.stopPropagation();
                                 if (this.plex && this.playController) {
-                                    this.playController.play(seasonData);
+                                    this.playController.play(seasonData, true);
                                 }
                             });
                             interactiveArea.append(playButton);
@@ -20151,7 +20157,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             playButton.addEventListener('click', event => {
                 event.stopPropagation();
                 if (this.hassObj && this.playController) {
-                    this.playController.play(data, data.type === 'movie');
+                    this.playController.play(data, true);
                 }
             });
             const titleElem = document.createElement('div');
