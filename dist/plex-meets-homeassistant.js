@@ -19227,6 +19227,17 @@ style.textContent = css `
 		scrollbar-width: none;
 	}
 
+	.searchContainer {
+		position: relative;
+		z-index: 3;
+	}
+
+	.searchContainer input {
+		width: 100%;
+		padding: 10px;
+		margin-bottom: 10px;
+	}
+
 	.detail {
 		visibility: hidden;
 		max-height: ${CSS_STYLE.expandedHeight + 16}px;
@@ -19539,6 +19550,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             this.card.appendChild(this.content);
             this.appendChild(this.card);
+            const searchContainer = document.createElement('div');
+            searchContainer.className = 'searchContainer';
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = `Search ${this.config.libraryName}...`;
+            searchInput.addEventListener('keyup', () => {
+                console.log(searchInput.value);
+            });
+            searchContainer.appendChild(searchInput);
+            this.content.appendChild(searchContainer);
             let count = 0;
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';

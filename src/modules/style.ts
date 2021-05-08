@@ -90,6 +90,17 @@ style.textContent = css`
 		scrollbar-width: none;
 	}
 
+	.searchContainer {
+		position: relative;
+		z-index: 3;
+	}
+
+	.searchContainer input {
+		width: 100%;
+		padding: 10px;
+		margin-bottom: 10px;
+	}
+
 	.detail {
 		visibility: hidden;
 		max-height: ${CSS_STYLE.expandedHeight + 16}px;

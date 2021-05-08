@@ -158,6 +158,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.card.appendChild(this.content);
 		this.appendChild(this.card);
 
+		const searchContainer = document.createElement('div');
+		searchContainer.className = 'searchContainer';
+
+		const searchInput = document.createElement('input');
+		searchInput.type = 'text';
+		searchInput.placeholder = `Search ${this.config.libraryName}...`;
+
+		searchInput.addEventListener('keyup', () => {
+			console.log(searchInput.value);
+		});
+
+		searchContainer.appendChild(searchInput);
+		this.content.appendChild(searchContainer);
+
 		let count = 0;
 
 		const contentbg = document.createElement('div');
