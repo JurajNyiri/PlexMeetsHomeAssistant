@@ -21,6 +21,7 @@ style.textContent = css`
 		width: calc(100% - 32px);
 		left: 0;
 		padding: 16px;
+		display: none;
 	}
 	.episodes {
 		z-index: 4;
