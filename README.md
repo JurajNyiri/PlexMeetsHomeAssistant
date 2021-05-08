@@ -4,13 +4,19 @@ Custom integration which integrates plex into Home Assistant and makes it possib
 
 Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect is also supported.
 
+Video of the card:
+
+[![Youtube video](https://img.youtube.com/vi/88e7lZUFD28/0.jpg)](https://youtu.be/88e7lZUFD28)
+
+More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#images).
+
 **This is an extremely early version of integration / card aimed mostly for experienced users and/or developers.**
 
 ## Installation
 
 - Add [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) to HACS, url: `https://github.com/JurajNyiri/PlexMeetsHomeAssistant`.
 
-![Adding lovelace custom repository](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/custom_repo/4.png)
+![Adding lovelace custom repository](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/custom_repo/1.png)
 
 - Reload browser, clear cache as usual
 - Create a new Home Assistant tab, turn on panel mode
