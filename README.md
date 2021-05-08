@@ -1,6 +1,8 @@
 # PlexMeetsHomeAssistant
 
-Custom integration which integrates plex into Home Assistant and makes it possible to launch movies or tv shows on TV with a simple click
+Custom integration which integrates plex into Home Assistant and makes it possible to launch movies or tv shows on TV with a simple click.
+
+Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect is also supported.
 
 **This is an extremely early version of integration / card aimed mostly for experienced users and/or developers.**
 
@@ -46,6 +48,7 @@ maxCount: 10
 entity:
   kodi: media_player.kodi_123456qwe789rty
   androidtv: media_player.living_room_nvidia_shield
+  plexPlayer: 192.168.13.38
 ```
 
 If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.
@@ -123,6 +126,65 @@ Play button is only visible if all the conditions inside Availability section of
 ❌ Show
 
 ❌ Season
+
+✅ Episodes
+
+### All other plex clients
+
+**Difficulty to setup**: Very Easy to Moderate
+
+**Steps**:
+
+_Easy setup_:
+
+Notice: While easy, it might not work if you have multiple devices with the same name, or you buy a second device with the same name in the future. Some plex clients also incorrectly report theirs IP Address, so addition by that might not be working. Take a look at Machine ID setup below if this is a concern for you.
+
+- Open Plex app on the device you wish to add
+- Open your Plex web GUI
+- Click on cast on the top right corner and note down name of your device
+
+![Plex cast](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/plex_player/1.png)
+
+- Add it to card, example:
+
+```
+entity:
+  plexPlayer: TV 2020
+```
+
+Instead of device name, you can also enter device IP address or product name.
+
+- Save card configuration, if you see play buttons everywhere configuration was successful.
+
+If you do not see play button, or have multiple devices with the same name, follow Machine ID setup below.
+
+_Machine ID setup_:
+
+- Open Plex app on the device you wish to add
+- Open your Plex web GUI
+- Modify URL so that just after the port, just after the first slash, you enter `clients?X-Plex-Token=PLEX_TOKEN`. Replace PLEX_TOKEN with your plex token. Example final URL `http://192.168.13.37:32400/clients?X-Plex-Token=qweRTY123456`.
+- You will get a list of all currently connected Plex clients.
+- Find the client you wish to add, and copy machineIdentifier key without quotes.
+- Add machineIdentifier into card, for example:
+
+```
+entity:
+  plexPlayer: mYaweS0meMacHin3Id3ntiFI3r
+```
+
+- Save card configuration, if you see play buttons everywhere configuration was successful.
+
+**Availability**:
+
+- Plex needs to run on the defined device
+
+**Supported play types**:
+
+✅ Movies
+
+✅ Show
+
+✅ Season
 
 ✅ Episodes
 
