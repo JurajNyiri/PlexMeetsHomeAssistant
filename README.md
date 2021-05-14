@@ -1,6 +1,6 @@
 # PlexMeetsHomeAssistant
 
-Custom integration which integrates plex into Home Assistant and makes it possible to launch movies or tv shows on TV with a simple click.
+Custom Home Assistant card which integrates plex into Home Assistant and makes it possible to launch movies or tv shows on TV with a simple click.
 
 Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect is also supported.
 
@@ -209,7 +209,7 @@ Join [Discord](https://discord.gg/jqqz9jQXWx) or [Home Assistant Community](http
 
 Author is in no way affiliated with Kodi, Plex, Roku, Android TV, Google or any other companies mentioned above.
 
-Author does not guarantee functionality of this integration and is not responsible for any damage.
+Author does not guarantee functionality of this card and is not responsible for any damage.
 
 All product names, trademarks and registered trademarks in this repository, are property of their respective owners.
 
