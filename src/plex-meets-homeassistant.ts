@@ -65,8 +65,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	config: Record<string, any> = {};
 
-	requestTimeout = 3000;
-
 	loading = false;
 
 	maxCount: false | number = false;
@@ -100,12 +98,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	loadInitialData = async (): Promise<void> => {
 		this.loading = true;
 		this.renderPage();
-		if (this.plex) {
-			await this.plex.init();
-		}
-
 		try {
 			if (this.plex) {
+				await this.plex.init();
 				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
 				// eslint-disable-next-line @typescript-eslint/camelcase
 				this.data.serverID = serverID;
@@ -123,7 +118,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				throw Error('Plex not initialized.');
 			}
 		} catch (err) {
-			// todo: proper timeout here
 			this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
 			this.renderPage();
 		}

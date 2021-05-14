@@ -15,6 +15,8 @@ class Plex {
 
 	clients: Array<Record<string, any>> = [];
 
+	requestTimeout = 5000;
+
 	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http') {
 		this.ip = ip;
 		this.port = port;
@@ -33,8 +35,14 @@ class Plex {
 
 	getClients = async (): Promise<Record<string, any>> => {
 		const url = `${this.protocol}://${this.ip}:${this.port}/clients?X-Plex-Token=${this.token}`;
-		const result = await axios.get(url);
-		this.clients = result.data.MediaContainer.Server;
+		try {
+			const result = await axios.get(url, {
+				timeout: this.requestTimeout
+			});
+			this.clients = result.data.MediaContainer.Server;
+		} catch (err) {
+			throw Error(`${err.message} while requesting URL "${url}".`);
+		}
 		return this.clients;
 	};
 
@@ -47,13 +55,21 @@ class Plex {
 
 	getServerInfo = async (): Promise<any> => {
 		const url = `${this.protocol}://${this.ip}:${this.port}/?X-Plex-Token=${this.token}`;
-		this.serverInfo = (await axios.get(url)).data.MediaContainer;
+		this.serverInfo = (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer;
 		return this.serverInfo;
 	};
 
 	getSections = async (): Promise<any> => {
 		const url = `${this.protocol}://${this.ip}:${this.port}/library/sections?X-Plex-Token=${this.token}`;
-		return (await axios.get(url)).data.MediaContainer.Directory;
+		return (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer.Directory;
 	};
 
 	getSectionsData = async (): Promise<any> => {
@@ -62,7 +78,10 @@ class Plex {
 		_.forEach(sections, section => {
 			sectionsRequests.push(
 				axios.get(
-					`${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`
+					`${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`,
+					{
+						timeout: this.requestTimeout
+					}
 				)
 			);
 		});
@@ -71,7 +90,11 @@ class Plex {
 
 	getLibraryData = async (id: number): Promise<any> => {
 		const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}/children?X-Plex-Token=${this.token}`;
-		return (await axios.get(url)).data.MediaContainer.Metadata;
+		return (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer.Metadata;
 	};
 
 	private exportSectionsData = (sectionsData: Array<any>): Array<any> => {
