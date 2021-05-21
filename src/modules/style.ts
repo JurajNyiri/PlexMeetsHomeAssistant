@@ -168,6 +168,20 @@ style.textContent = css`
 		color: hsla(0, 0%, 100%, 0.45);
 		position: relative;
 	}
+	.toViewEpisode {
+		position: relative;
+		height: 28px;
+		width: 28px;
+		float: right;
+		display: block;
+		background: #e5a00d;
+		font-weight: bold;
+		color: black;
+		transition: 0.5s;
+		right: -14px;
+		top: -14px;
+		transform: rotate(45deg);
+	}
 	.toViewSeason {
 		position: relative;
 		top: 5px;
@@ -233,6 +247,7 @@ style.textContent = css`
 		background-size: contain;
 		border-radius: 5px;
 		transition: 0.5s;
+		overflow: hidden;
 	}
 	.seasonElem {
 		background-repeat: no-repeat;
@@ -270,9 +285,12 @@ style.textContent = css`
 		height: 40px;
 		border: 2px solid white;
 		border-radius: 100%;
-		margin: auto;
 		cursor: pointer;
 		transition: 0.2s;
+		margin: 0 auto;
+		display: block;
+		position: relative;
+		top: calc(50% - 20px);
 	}
 	button[name='playButton']:hover {
 		background: orange !important;

@@ -588,6 +588,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 														episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
 														episodeElem.dataset.clicked = 'false';
 
+														if (typeof episodeData.lastViewedAt === 'undefined') {
+															const toViewElem = document.createElement('div');
+															toViewElem.className = 'toViewEpisode';
+															episodeElem.appendChild(toViewElem);
+														}
+
 														if (this.playController && this.playController.isPlaySupported(episodeData)) {
 															const episodeInteractiveArea = document.createElement('div');
 															episodeInteractiveArea.className = 'interactiveArea';
