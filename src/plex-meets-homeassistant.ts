@@ -248,7 +248,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			// eslint-disable-next-line consistent-return
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				if (!this.maxCount || count < this.maxCount) {
-					count += 1;
 					if (this.looseSearch) {
 						let found = false;
 						// eslint-disable-next-line consistent-return
@@ -260,9 +259,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						});
 						if (found || _.isEmpty(searchValues[0])) {
 							this.content.appendChild(this.getMovieElement(movieData));
+							count += 1;
 						}
 					} else if (_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue))) {
 						this.content.appendChild(this.getMovieElement(movieData));
+						count += 1;
 					}
 				} else {
 					return true;
