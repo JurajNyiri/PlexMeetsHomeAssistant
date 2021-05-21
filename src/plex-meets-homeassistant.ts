@@ -11,6 +11,10 @@ import style from './modules/style';
 class PlexMeetsHomeAssistant extends HTMLElement {
 	plexProtocol: 'http' | 'https' = 'http';
 
+	columnsCount = 0;
+
+	renderedItems = 0;
+
 	plex: Plex | undefined;
 
 	maxRenderCount: number | boolean = false;
@@ -99,6 +103,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	loadInitialData = async (): Promise<void> => {
 		window.addEventListener('scroll', () => {
+			const loadAdditionalRowsCount = 2; // todo: make this configurable
 			const height = Math.max(
 				document.body.scrollHeight,
 				document.body.offsetHeight,
@@ -107,7 +112,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				document.documentElement.offsetHeight
 			);
 			if (window.innerHeight + window.scrollY > height - 300) {
-				console.log('scrolled');
+				this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
+
+				this.renderMovieElems();
+				this.calculatePositions();
 			}
 		});
 		this.loading = true;
@@ -192,7 +200,65 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		return searchContainer;
 	};
 
+	renderMovieElems = (): void => {
+		if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
+			let count = 0;
+			// eslint-disable-next-line consistent-return
+			const searchValues = _.split(this.searchValue, ' ');
+			// eslint-disable-next-line consistent-return
+			let lastRowTop = 0;
+
+			const loadAdditionalRowsCount = 2; // todo: make this configurable
+			// eslint-disable-next-line consistent-return
+			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
+				if (
+					(!this.maxCount || this.renderedItems < this.maxCount) &&
+					(!this.maxRenderCount || this.renderedItems < this.maxRenderCount)
+				) {
+					const movieElem = this.getMovieElement(movieData);
+					let shouldRender = false;
+					if (this.looseSearch) {
+						let found = false;
+						// eslint-disable-next-line consistent-return
+						_.forEach(searchValues, value => {
+							if (!_.isEmpty(value) && _.includes(_.toUpper(movieData.title), _.toUpper(value))) {
+								found = true;
+								return false;
+							}
+						});
+						if (found || _.isEmpty(searchValues[0])) {
+							shouldRender = true;
+						}
+					} else if (_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue))) {
+						shouldRender = true;
+					}
+					if (shouldRender) {
+						count += 1;
+						if (count > this.renderedItems) {
+							this.content.appendChild(movieElem);
+							this.renderedItems += 1;
+						}
+					}
+					if (lastRowTop !== movieElem.getBoundingClientRect().top) {
+						if (lastRowTop !== 0 && this.columnsCount === 0) {
+							this.columnsCount = this.renderedItems - 1;
+						}
+						lastRowTop = movieElem.getBoundingClientRect().top;
+						if (!isScrolledIntoView(movieElem) && !this.maxRenderCount) {
+							this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
+							console.log(`Set max render this.renderedItems to ${this.maxRenderCount}`);
+						}
+					}
+				} else {
+					return true;
+				}
+			});
+		}
+	};
+
 	renderPage = (): void => {
+		this.renderedItems = 0;
+		this.columnsCount = 0;
 		const spinner = document.createElement('div');
 		spinner.style.display = 'flex';
 		spinner.style.alignItems = 'center';
@@ -224,7 +290,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		this.card.appendChild(this.content);
-		let count = 0;
 
 		const contentbg = document.createElement('div');
 		contentbg.className = 'contentbg';
@@ -260,64 +325,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.minimizeAll();
 			});
 		}, 1);
-		if (this.data[this.config.libraryName]) {
-			// eslint-disable-next-line consistent-return
-			const searchValues = _.split(this.searchValue, ' ');
-			// eslint-disable-next-line consistent-return
-			let rowsRendered = 0;
-			let lastRowTop = 0;
-			let columnsCount = 0;
-
-			const loadAdditionalRowsCount = 2; // todo: make this configurable
-			// eslint-disable-next-line consistent-return
-			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
-				if ((!this.maxCount || count < this.maxCount) && (!this.maxRenderCount || count < this.maxRenderCount)) {
-					const movieElem = this.getMovieElement(movieData);
-					let shouldRender = false;
-					if (this.looseSearch) {
-						let found = false;
-						// eslint-disable-next-line consistent-return
-						_.forEach(searchValues, value => {
-							if (!_.isEmpty(value) && _.includes(_.toUpper(movieData.title), _.toUpper(value))) {
-								found = true;
-								return false;
-							}
-						});
-						if (found || _.isEmpty(searchValues[0])) {
-							shouldRender = true;
-						}
-					} else if (_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue))) {
-						shouldRender = true;
-					}
-					if (shouldRender) {
-						this.content.appendChild(movieElem);
-						count += 1;
-					}
-					if (lastRowTop !== movieElem.getBoundingClientRect().top) {
-						if (lastRowTop !== 0 && columnsCount === 0) {
-							columnsCount = count - 1;
-						}
-						lastRowTop = movieElem.getBoundingClientRect().top;
-						rowsRendered += 1;
-						if (!isScrolledIntoView(movieElem) && !this.maxRenderCount) {
-							this.maxRenderCount = count - 1 + columnsCount * loadAdditionalRowsCount;
-							console.log(`Set max render count to ${this.maxRenderCount}`);
-						}
-					}
-				} else {
-					return true;
-				}
-			});
-		}
 
 		const endElem = document.createElement('div');
 		endElem.className = 'clear';
 		this.content.appendChild(endElem);
 
-		if ((!this.maxCount || count < this.maxCount) && !(!this.maxRenderCount || count < this.maxRenderCount)) {
-			this.content.appendChild(spinner);
-		}
-
+		this.renderMovieElems();
 		this.calculatePositions();
 		this.loadCustomStyles();
 	};

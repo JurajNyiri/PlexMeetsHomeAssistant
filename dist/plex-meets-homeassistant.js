@@ -19606,6 +19606,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
+        this.columnsCount = 0;
+        this.renderedItems = 0;
         this.maxRenderCount = false;
         this.seasonContainerClickEnabled = true;
         this.looseSearch = false;
@@ -19625,9 +19627,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.contentBGHeight = 0;
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
+                const loadAdditionalRowsCount = 2; // todo: make this configurable
                 const height = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
                 if (window.innerHeight + window.scrollY > height - 300) {
-                    console.log('scrolled');
+                    this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
+                    this.renderMovieElems();
+                    this.calculatePositions();
                 }
             });
             this.loading = true;
@@ -19702,7 +19707,63 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             searchContainer.appendChild(searchInput);
             return searchContainer;
         };
+        this.renderMovieElems = () => {
+            if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
+                let count = 0;
+                // eslint-disable-next-line consistent-return
+                const searchValues = lodash.split(this.searchValue, ' ');
+                // eslint-disable-next-line consistent-return
+                let lastRowTop = 0;
+                const loadAdditionalRowsCount = 2; // todo: make this configurable
+                // eslint-disable-next-line consistent-return
+                lodash.forEach(this.data[this.config.libraryName], (movieData) => {
+                    if ((!this.maxCount || this.renderedItems < this.maxCount) &&
+                        (!this.maxRenderCount || this.renderedItems < this.maxRenderCount)) {
+                        const movieElem = this.getMovieElement(movieData);
+                        let shouldRender = false;
+                        if (this.looseSearch) {
+                            let found = false;
+                            // eslint-disable-next-line consistent-return
+                            lodash.forEach(searchValues, value => {
+                                if (!lodash.isEmpty(value) && lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(value))) {
+                                    found = true;
+                                    return false;
+                                }
+                            });
+                            if (found || lodash.isEmpty(searchValues[0])) {
+                                shouldRender = true;
+                            }
+                        }
+                        else if (lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(this.searchValue))) {
+                            shouldRender = true;
+                        }
+                        if (shouldRender) {
+                            count += 1;
+                            if (count > this.renderedItems) {
+                                this.content.appendChild(movieElem);
+                                this.renderedItems += 1;
+                            }
+                        }
+                        if (lastRowTop !== movieElem.getBoundingClientRect().top) {
+                            if (lastRowTop !== 0 && this.columnsCount === 0) {
+                                this.columnsCount = this.renderedItems - 1;
+                            }
+                            lastRowTop = movieElem.getBoundingClientRect().top;
+                            if (!isScrolledIntoView(movieElem) && !this.maxRenderCount) {
+                                this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
+                                console.log(`Set max render this.renderedItems to ${this.maxRenderCount}`);
+                            }
+                        }
+                    }
+                    else {
+                        return true;
+                    }
+                });
+            }
+        };
         this.renderPage = () => {
+            this.renderedItems = 0;
+            this.columnsCount = 0;
             const spinner = document.createElement('div');
             spinner.style.display = 'flex';
             spinner.style.alignItems = 'center';
@@ -19732,7 +19793,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.content.appendChild(spinner);
             }
             this.card.appendChild(this.content);
-            let count = 0;
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';
             this.content.appendChild(contentbg);
@@ -19762,59 +19822,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.minimizeAll();
                 });
             }, 1);
-            if (this.data[this.config.libraryName]) {
-                // eslint-disable-next-line consistent-return
-                const searchValues = lodash.split(this.searchValue, ' ');
-                let lastRowTop = 0;
-                let columnsCount = 0;
-                const loadAdditionalRowsCount = 2; // todo: make this configurable
-                // eslint-disable-next-line consistent-return
-                lodash.forEach(this.data[this.config.libraryName], (movieData) => {
-                    if ((!this.maxCount || count < this.maxCount) && (!this.maxRenderCount || count < this.maxRenderCount)) {
-                        const movieElem = this.getMovieElement(movieData);
-                        let shouldRender = false;
-                        if (this.looseSearch) {
-                            let found = false;
-                            // eslint-disable-next-line consistent-return
-                            lodash.forEach(searchValues, value => {
-                                if (!lodash.isEmpty(value) && lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(value))) {
-                                    found = true;
-                                    return false;
-                                }
-                            });
-                            if (found || lodash.isEmpty(searchValues[0])) {
-                                shouldRender = true;
-                            }
-                        }
-                        else if (lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(this.searchValue))) {
-                            shouldRender = true;
-                        }
-                        if (shouldRender) {
-                            this.content.appendChild(movieElem);
-                            count += 1;
-                        }
-                        if (lastRowTop !== movieElem.getBoundingClientRect().top) {
-                            if (lastRowTop !== 0 && columnsCount === 0) {
-                                columnsCount = count - 1;
-                            }
-                            lastRowTop = movieElem.getBoundingClientRect().top;
-                            if (!isScrolledIntoView(movieElem) && !this.maxRenderCount) {
-                                this.maxRenderCount = count - 1 + columnsCount * loadAdditionalRowsCount;
-                                console.log(`Set max render count to ${this.maxRenderCount}`);
-                            }
-                        }
-                    }
-                    else {
-                        return true;
-                    }
-                });
-            }
             const endElem = document.createElement('div');
             endElem.className = 'clear';
             this.content.appendChild(endElem);
-            if ((!this.maxCount || count < this.maxCount) && !(!this.maxRenderCount || count < this.maxRenderCount)) {
-                this.content.appendChild(spinner);
-            }
+            this.renderMovieElems();
             this.calculatePositions();
             this.loadCustomStyles();
         };
