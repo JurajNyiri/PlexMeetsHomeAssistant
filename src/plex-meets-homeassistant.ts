@@ -111,7 +111,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				document.documentElement.scrollHeight,
 				document.documentElement.offsetHeight
 			);
-			if (window.innerHeight + window.scrollY > height - 300) {
+			if (window.innerHeight + window.scrollY > height - 300 && this.renderedItems > 0) {
 				this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
 
 				this.renderMovieElems();
@@ -244,9 +244,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							this.columnsCount = this.renderedItems - 1;
 						}
 						lastRowTop = movieElem.getBoundingClientRect().top;
-						if (!isScrolledIntoView(movieElem) && !this.maxRenderCount) {
+						if (!isScrolledIntoView(movieElem) && !this.maxRenderCount && this.renderedItems > 0) {
 							this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
-							console.log(`Set max render this.renderedItems to ${this.maxRenderCount}`);
 						}
 					}
 				} else {
