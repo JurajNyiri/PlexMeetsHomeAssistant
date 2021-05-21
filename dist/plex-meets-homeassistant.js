@@ -19624,6 +19624,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.previousPositions = [];
         this.contentBGHeight = 0;
         this.loadInitialData = async () => {
+            window.addEventListener('scroll', () => {
+                const height = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
+                if (window.innerHeight + window.scrollY > height - 300) {
+                    console.log('scrolled');
+                }
+            });
             this.loading = true;
             this.renderPage();
             try {
