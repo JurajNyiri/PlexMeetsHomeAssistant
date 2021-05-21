@@ -396,6 +396,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	minimizeAll = (): void => {
+		if (this.activeMovieElem) {
+			this.activeMovieElem.style.display = `block`;
+		}
+
 		this.activeMovieElem = undefined;
 		for (let i = 0; i < this.movieElems.length; i += 1) {
 			if (parseInt(this.movieElems[i].style.width, 10) > CSS_STYLE.width) {
@@ -603,6 +607,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 									seasonElem.dataset.clicked = 'true';
 									this.activeMovieElem.style.top = `${top - 1000}px`;
+									setTimeout(() => {
+										if (this.activeMovieElem) {
+											this.activeMovieElem.style.display = 'none';
+										}
+									}, 500);
 
 									this.scrollDownInactiveSeasons();
 
@@ -705,7 +714,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									seasonContainer.style.top = `${seasonContainer.dataset.top}px`;
 									this.minimizeSeasons();
 									this.hideEpisodes();
-									this.activeMovieElem.style.top = `${top + 16}px`;
+									this.activeMovieElem.style.display = `block`;
+									setTimeout(() => {
+										if (this.activeMovieElem) {
+											this.activeMovieElem.style.top = `${top + 16}px`;
+										}
+									}, 10);
+
 									if (this.detailElem && (this.detailElem.children[1] as HTMLElement)) {
 										const { year } = (this.detailElem.children[1] as HTMLElement).dataset;
 										if (year) {
