@@ -19628,8 +19628,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
                 const loadAdditionalRowsCount = 2; // todo: make this configurable
-                const height = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
-                if (window.innerHeight + window.scrollY > height - 300 && this.renderedItems > 0) {
+                const height = Math.max(this.content.scrollHeight, this.content.offsetHeight, this.content.clientHeight, this.content.scrollHeight, this.content.offsetHeight);
+                if (window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 && this.renderedItems > 0) {
                     this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
                     this.renderMovieElems();
                     this.calculatePositions();
