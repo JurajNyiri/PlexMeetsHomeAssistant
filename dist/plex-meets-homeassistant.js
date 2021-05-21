@@ -18998,6 +18998,10 @@ const escapeHtml = (unsafe) => {
     }
     return '';
 };
+const getHeight = (el) => {
+    const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
+    return height;
+};
 const getOffset = (el) => {
     let x = 0;
     let y = 0;
@@ -19629,7 +19633,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
                 const loadAdditionalRowsCount = 2; // todo: make this configurable
-                const height = Math.max(this.content.scrollHeight, this.content.offsetHeight, this.content.clientHeight, this.content.scrollHeight, this.content.offsetHeight);
+                const height = getHeight(this.content);
                 if (window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 && this.renderedItems > 0) {
                     this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
                     this.renderMovieElems();
@@ -19687,7 +19691,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     if (renderNeeded) {
                         this.renderPage();
                         const contentbg = this.getElementsByClassName('contentbg');
-                        this.contentBGHeight = contentbg[0].scrollHeight;
+                        this.contentBGHeight = getHeight(contentbg[0]);
                     }
                 }
             }, 100);
@@ -19710,6 +19714,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.renderMovieElems = () => {
             if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
+                console.log('renderMovieElems');
                 let count = 0;
                 // eslint-disable-next-line consistent-return
                 const searchValues = lodash.split(this.searchValue, ' ');
@@ -19760,6 +19765,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                 });
             }
+            const contentbg = this.getElementsByClassName('contentbg')[0];
+            this.contentBGHeight = getHeight(contentbg);
         };
         this.renderPage = () => {
             this.renderedItems = 0;
@@ -20216,20 +20223,26 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.resizeBackground = () => {
+            console.log('resizeBackground');
             if (this.seasonsElem && this.episodesElem && this.card) {
                 const contentbg = this.getElementsByClassName('contentbg')[0];
+                console.log(contentbg);
                 if (this.contentBGHeight === 0) {
-                    this.contentBGHeight = contentbg.scrollHeight;
+                    this.contentBGHeight = getHeight(contentbg);
                 }
                 const requiredSeasonBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
                 const requiredEpisodeBodyHeight = parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
                 if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
+                    console.log(`${requiredSeasonBodyHeight} > ${this.contentBGHeight}`);
+                    console.log('1');
                     this.card.style.height = `${requiredSeasonBodyHeight + 16}px`;
                 }
                 else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
+                    console.log('2');
                     this.card.style.height = `${requiredEpisodeBodyHeight + 16}px`;
                 }
                 else {
+                    console.log('3');
                     this.card.style.height = '100%';
                 }
             }

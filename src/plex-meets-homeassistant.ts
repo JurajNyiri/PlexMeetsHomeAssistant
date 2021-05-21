@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
-import { escapeHtml, getOffset, isScrolledIntoView } from './modules/utils';
+import { escapeHtml, getOffset, isScrolledIntoView, getHeight } from './modules/utils';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -104,13 +104,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	loadInitialData = async (): Promise<void> => {
 		window.addEventListener('scroll', () => {
 			const loadAdditionalRowsCount = 2; // todo: make this configurable
-			const height = Math.max(
-				this.content.scrollHeight,
-				this.content.offsetHeight,
-				this.content.clientHeight,
-				this.content.scrollHeight,
-				this.content.offsetHeight
-			);
+			const height = getHeight(this.content);
 			if (window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 && this.renderedItems > 0) {
 				this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
 
@@ -173,7 +167,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				if (renderNeeded) {
 					this.renderPage();
 					const contentbg = this.getElementsByClassName('contentbg');
-					this.contentBGHeight = (contentbg[0] as HTMLElement).scrollHeight;
+					this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
 				}
 			}
 		}, 100);
@@ -202,6 +196,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	renderMovieElems = (): void => {
 		if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
+			console.log('renderMovieElems');
 			let count = 0;
 			// eslint-disable-next-line consistent-return
 			const searchValues = _.split(this.searchValue, ' ');
@@ -253,6 +248,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 			});
 		}
+
+		const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
+		this.contentBGHeight = getHeight(contentbg);
 	};
 
 	renderPage = (): void => {
@@ -767,10 +765,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	resizeBackground = (): void => {
+		console.log('resizeBackground');
 		if (this.seasonsElem && this.episodesElem && this.card) {
 			const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
+			console.log(contentbg);
 			if (this.contentBGHeight === 0) {
-				this.contentBGHeight = contentbg.scrollHeight;
+				this.contentBGHeight = getHeight(contentbg);
 			}
 			const requiredSeasonBodyHeight =
 				parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
@@ -778,10 +778,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
 
 			if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
+				console.log(`${requiredSeasonBodyHeight} > ${this.contentBGHeight}`);
+				console.log('1');
 				this.card.style.height = `${requiredSeasonBodyHeight + 16}px`;
 			} else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
+				console.log('2');
 				this.card.style.height = `${requiredEpisodeBodyHeight + 16}px`;
 			} else {
+				console.log('3');
 				this.card.style.height = '100%';
 			}
 		}

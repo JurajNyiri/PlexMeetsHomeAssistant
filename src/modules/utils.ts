@@ -15,6 +15,11 @@ const escapeHtml = (unsafe: any): string => {
 	return '';
 };
 
+const getHeight = (el: HTMLElement): number => {
+	const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
+	return height;
+};
+
 const getOffset = (el: Element): Record<string, any> => {
 	let x = 0;
 	let y = 0;
@@ -48,4 +53,4 @@ const isScrolledIntoView = (elem: HTMLElement): boolean => {
 };
 
 // eslint-disable-next-line import/prefer-default-export
-export { escapeHtml, getOffset, isScrolledIntoView };
+export { escapeHtml, getOffset, isScrolledIntoView, getHeight };
