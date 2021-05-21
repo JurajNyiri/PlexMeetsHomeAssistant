@@ -19415,6 +19415,19 @@ style.textContent = css `
 		color: hsla(0, 0%, 100%, 0.45);
 		position: relative;
 	}
+	.toViewSeason {
+		position: relative;
+		top: 5px;
+		right: 5px;
+		float: right;
+		display: block;
+		border-radius: 5px;
+		background: #e5a00d;
+		font-weight: bold;
+		color: black;
+		padding: 1px 6px;
+		transition: 0.5s;
+	}
 	.seasonTitleElem {
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -19495,9 +19508,6 @@ style.textContent = css `
 		width: 100%;
 		height: 100%;
 		transition: 0.5s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);
@@ -19771,6 +19781,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     const seasonTitleElem = child.children[1];
                     const seasonEpisodesCount = child.children[2];
                     seasonElem.style.display = 'block';
+                    if (typeof seasonElem.children[0].children[0] !== 'undefined') {
+                        seasonElem.children[0].children[0].style.display = 'block';
+                    }
                     const moveElem = (elem) => {
                         const seasonElemLocal = elem;
                         seasonElemLocal.style.marginTop = '0';
@@ -19948,6 +19961,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         }
                         const interactiveArea = document.createElement('div');
                         interactiveArea.className = 'interactiveArea';
+                        if (seasonData.leafCount - seasonData.viewedLeafCount > 0) {
+                            const toViewElem = document.createElement('div');
+                            toViewElem.className = 'toViewSeason';
+                            toViewElem.innerHTML = (seasonData.leafCount - seasonData.viewedLeafCount).toString();
+                            interactiveArea.appendChild(toViewElem);
+                        }
                         if (this.playController && this.playController.isPlaySupported(seasonData)) {
                             const playButton = this.getPlayButton();
                             playButton.addEventListener('click', event => {
@@ -19977,6 +19996,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 }, 500);
                                 if (this.activeMovieElem) {
                                     if (seasonElem.dataset.clicked === 'false') {
+                                        if (typeof seasonElem.children[0].children[0] !== 'undefined') {
+                                            seasonElem.children[0].children[0].style.display = 'none';
+                                        }
                                         seasonElem.dataset.clicked = 'true';
                                         this.activeMovieElem.style.top = `${top - 1000}px`;
                                         this.scrollDownInactiveSeasons();

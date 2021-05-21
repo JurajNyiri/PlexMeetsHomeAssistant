@@ -168,6 +168,19 @@ style.textContent = css`
 		color: hsla(0, 0%, 100%, 0.45);
 		position: relative;
 	}
+	.toViewSeason {
+		position: relative;
+		top: 5px;
+		right: 5px;
+		float: right;
+		display: block;
+		border-radius: 5px;
+		background: #e5a00d;
+		font-weight: bold;
+		color: black;
+		padding: 1px 6px;
+		transition: 0.5s;
+	}
 	.seasonTitleElem {
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -248,9 +261,6 @@ style.textContent = css`
 		width: 100%;
 		height: 100%;
 		transition: 0.5s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);

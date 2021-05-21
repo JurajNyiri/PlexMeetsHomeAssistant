@@ -304,6 +304,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				const seasonEpisodesCount = (child as HTMLElement).children[2] as HTMLElement;
 				seasonElem.style.display = 'block';
 
+				if (typeof seasonElem.children[0].children[0] !== 'undefined') {
+					(seasonElem.children[0].children[0] as HTMLElement).style.display = 'block';
+				}
+
 				const moveElem = (elem: HTMLElement): void => {
 					const seasonElemLocal = elem;
 					seasonElemLocal.style.marginTop = '0';
@@ -497,6 +501,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 					const interactiveArea = document.createElement('div');
 					interactiveArea.className = 'interactiveArea';
+					if (seasonData.leafCount - seasonData.viewedLeafCount > 0) {
+						const toViewElem = document.createElement('div');
+						toViewElem.className = 'toViewSeason';
+						toViewElem.innerHTML = (seasonData.leafCount - seasonData.viewedLeafCount).toString();
+						interactiveArea.appendChild(toViewElem);
+					}
 
 					if (this.playController && this.playController.isPlaySupported(seasonData)) {
 						const playButton = this.getPlayButton();
@@ -531,6 +541,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							}, 500);
 							if (this.activeMovieElem) {
 								if (seasonElem.dataset.clicked === 'false') {
+									if (typeof seasonElem.children[0].children[0] !== 'undefined') {
+										(seasonElem.children[0].children[0] as HTMLElement).style.display = 'none';
+									}
+
 									seasonElem.dataset.clicked = 'true';
 									this.activeMovieElem.style.top = `${top - 1000}px`;
 
