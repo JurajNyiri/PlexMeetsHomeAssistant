@@ -880,7 +880,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.maxCount = config.maxCount;
 		}
 
-		this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
+		this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
 	};
 
 	getCardSize = (): number => {

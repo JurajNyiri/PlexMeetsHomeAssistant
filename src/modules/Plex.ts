@@ -17,11 +17,14 @@ class Plex {
 
 	requestTimeout = 5000;
 
-	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http') {
+	sort: string;
+
+	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http', sort = 'titleSort:asc') {
 		this.ip = ip;
 		this.port = port;
 		this.token = token;
 		this.protocol = protocol;
+		this.sort = sort;
 	}
 
 	init = async (): Promise<void> => {
@@ -76,13 +79,12 @@ class Plex {
 		const sections = await this.getSections();
 		const sectionsRequests: Array<Promise<any>> = [];
 		_.forEach(sections, section => {
+			let url = `${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`;
+			url += `&sort=${this.sort}`;
 			sectionsRequests.push(
-				axios.get(
-					`${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`,
-					{
-						timeout: this.requestTimeout
-					}
-				)
+				axios.get(url, {
+					timeout: this.requestTimeout
+				})
 			);
 		});
 		return this.exportSectionsData(await Promise.all(sectionsRequests));

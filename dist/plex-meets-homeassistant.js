@@ -18668,7 +18668,7 @@ var axios = axios_1;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 class Plex {
-    constructor(ip, port = 32400, token, protocol = 'http') {
+    constructor(ip, port = 32400, token, protocol = 'http', sort = 'titleSort:asc') {
         this.serverInfo = {};
         this.clients = [];
         this.requestTimeout = 5000;
@@ -18716,7 +18716,9 @@ class Plex {
             const sections = await this.getSections();
             const sectionsRequests = [];
             lodash.forEach(sections, section => {
-                sectionsRequests.push(axios.get(`${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`, {
+                let url = `${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`;
+                url += `&sort=${this.sort}`;
+                sectionsRequests.push(axios.get(url, {
                     timeout: this.requestTimeout
                 }));
             });
@@ -18739,6 +18741,7 @@ class Plex {
         this.port = port;
         this.token = token;
         this.protocol = protocol;
+        this.sort = sort;
     }
 }
 
@@ -20309,7 +20312,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.maxCount) {
                 this.maxCount = config.maxCount;
             }
-            this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol);
+            this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
         };
         this.getCardSize = () => {
             return 3;
