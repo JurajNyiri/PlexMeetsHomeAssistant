@@ -288,9 +288,10 @@ style.textContent = css`
 		cursor: pointer;
 		transition: 0.2s;
 		margin: 0 auto;
+		left: calc(50% - 20px);
 		display: block;
-		position: relative;
 		top: calc(50% - 20px);
+		position: absolute;
 	}
 	button[name='playButton']:hover {
 		background: orange !important;
