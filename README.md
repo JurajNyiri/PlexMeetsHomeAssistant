@@ -34,7 +34,7 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 **maxCount**: _Optional_ Maximum number of items to display in card.
 
-**sort**: _Optional_ Define sort by. See See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#sorting)
+**sort**: _Optional_ Define sort by. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#sorting)
 
 **entity**: You need to configure at least one supported media_player entity.
 
