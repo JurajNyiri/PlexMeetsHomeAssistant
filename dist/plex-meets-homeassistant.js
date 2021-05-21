@@ -19606,6 +19606,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
+        this.maxRenderCount = false;
         this.seasonContainerClickEnabled = true;
         this.looseSearch = false;
         this.movieElems = [];
@@ -19696,6 +19697,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return searchContainer;
         };
         this.renderPage = () => {
+            const spinner = document.createElement('div');
+            spinner.style.display = 'flex';
+            spinner.style.alignItems = 'center';
+            spinner.style.justifyContent = 'center';
+            spinner.innerHTML = '<div class="lds-ring"><div></div><div></div><div></div><div></div></div>';
             if (this.content) {
                 this.content.remove();
             }
@@ -19717,8 +19723,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else if (this.loading) {
                 this.content.style.padding = '16px 16px 16px';
-                this.content.innerHTML +=
-                    '<div style="display: flex; align-items: center; justify-content: center;"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
+                this.content.appendChild(spinner);
             }
             this.card.appendChild(this.content);
             let count = 0;
@@ -19756,11 +19761,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const searchValues = lodash.split(this.searchValue, ' ');
                 let lastRowTop = 0;
                 let columnsCount = 0;
-                let maxRenderCount = false;
                 const loadAdditionalRowsCount = 2; // todo: make this configurable
                 // eslint-disable-next-line consistent-return
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
-                    if ((!this.maxCount || count < this.maxCount) && (!maxRenderCount || count < maxRenderCount)) {
+                    if ((!this.maxCount || count < this.maxCount) && (!this.maxRenderCount || count < this.maxRenderCount)) {
                         const movieElem = this.getMovieElement(movieData);
                         let shouldRender = false;
                         if (this.looseSearch) {
@@ -19788,9 +19792,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 columnsCount = count - 1;
                             }
                             lastRowTop = movieElem.getBoundingClientRect().top;
-                            if (!isScrolledIntoView(movieElem) && !maxRenderCount) {
-                                maxRenderCount = count - 1 + columnsCount * loadAdditionalRowsCount;
-                                console.log(`Set max render count to ${maxRenderCount}`);
+                            if (!isScrolledIntoView(movieElem) && !this.maxRenderCount) {
+                                this.maxRenderCount = count - 1 + columnsCount * loadAdditionalRowsCount;
+                                console.log(`Set max render count to ${this.maxRenderCount}`);
                             }
                         }
                     }
@@ -19802,6 +19806,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const endElem = document.createElement('div');
             endElem.className = 'clear';
             this.content.appendChild(endElem);
+            if ((!this.maxCount || count < this.maxCount) && !(!this.maxRenderCount || count < this.maxRenderCount)) {
+                this.content.appendChild(spinner);
+            }
             this.calculatePositions();
             this.loadCustomStyles();
         };
