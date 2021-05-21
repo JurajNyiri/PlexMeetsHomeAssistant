@@ -12,10 +12,7 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 ## Installation
 
-- Add [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) to HACS, url: `https://github.com/JurajNyiri/PlexMeetsHomeAssistant`.
-
-![Adding lovelace custom repository](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/custom_repo/1.png)
-
+- Install **Plex Meets Home Assistant** from HACS.
 - Reload browser, clear cache as usual
 - Create a new Home Assistant tab, turn on panel mode
 - Add a new card, see configuration below.
