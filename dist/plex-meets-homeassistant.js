@@ -20305,6 +20305,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             });
             const playButton = this.getPlayButton();
             const interactiveArea = document.createElement('div');
+            if (data.leafCount - data.viewedLeafCount > 0) {
+                const toViewElem = document.createElement('div');
+                toViewElem.className = 'toViewSeason';
+                toViewElem.innerHTML = (data.leafCount - data.viewedLeafCount).toString();
+                interactiveArea.appendChild(toViewElem);
+            }
             interactiveArea.className = 'interactiveArea';
             if (this.playController && this.playController.isPlaySupported(data)) {
                 interactiveArea.append(playButton);
