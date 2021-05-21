@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-env browser */
 import _ from 'lodash';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe: any): string => {
@@ -34,5 +35,17 @@ const getOffset = (el: Element): Record<string, any> => {
 	return { top: y, left: x };
 };
 
+const isScrolledIntoView = (elem: HTMLElement): boolean => {
+	const rect = elem.getBoundingClientRect();
+	const elemTop = rect.top;
+	const elemBottom = rect.bottom;
+
+	// Only completely visible elements return true:
+	const isVisible = elemTop >= 0 && elemBottom <= window.innerHeight;
+	// Partially visible elements return true:
+	// isVisible = elemTop < window.innerHeight && elemBottom >= 0;
+	return isVisible;
+};
+
 // eslint-disable-next-line import/prefer-default-export
-export { escapeHtml, getOffset };
+export { escapeHtml, getOffset, isScrolledIntoView };

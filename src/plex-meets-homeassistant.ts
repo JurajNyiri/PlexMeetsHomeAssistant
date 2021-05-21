@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
-import { escapeHtml, getOffset } from './modules/utils';
+import { escapeHtml, getOffset, isScrolledIntoView } from './modules/utils';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -246,8 +246,18 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			// eslint-disable-next-line consistent-return
 			const searchValues = _.split(this.searchValue, ' ');
 			// eslint-disable-next-line consistent-return
+			let rowsRendered = 0;
+			let lastRowTop = 0;
+			let columnsCount = 0;
+			const keepRendering = true;
+			let maxRenderCount: any = false;
+
+			const loadAdditionalRowsCount = 2; // todo: make this configurable
+			// eslint-disable-next-line consistent-return
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
-				if (!this.maxCount || count < this.maxCount) {
+				if (keepRendering && (!this.maxCount || count < this.maxCount) && (!maxRenderCount || count < maxRenderCount)) {
+					const movieElem = this.getMovieElement(movieData);
+					let shouldRender = false;
 					if (this.looseSearch) {
 						let found = false;
 						// eslint-disable-next-line consistent-return
@@ -258,12 +268,25 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							}
 						});
 						if (found || _.isEmpty(searchValues[0])) {
-							this.content.appendChild(this.getMovieElement(movieData));
-							count += 1;
+							shouldRender = true;
 						}
 					} else if (_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue))) {
-						this.content.appendChild(this.getMovieElement(movieData));
+						shouldRender = true;
+					}
+					if (shouldRender) {
+						this.content.appendChild(movieElem);
 						count += 1;
+					}
+					if (lastRowTop !== movieElem.getBoundingClientRect().top) {
+						if (lastRowTop !== 0 && columnsCount === 0) {
+							columnsCount = count - 1;
+						}
+						lastRowTop = movieElem.getBoundingClientRect().top;
+						rowsRendered += 1;
+						if (!isScrolledIntoView(movieElem) && !maxRenderCount) {
+							maxRenderCount = count - 1 + columnsCount * loadAdditionalRowsCount;
+							console.log(`Set max render count to ${maxRenderCount}`);
+						}
 					}
 				} else {
 					return true;
