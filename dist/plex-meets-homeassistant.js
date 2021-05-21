@@ -19854,8 +19854,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             clearInterval(this.showSeasonElemTimeout);
             clearInterval(this.seasonTitleColorTimeout);
             clearInterval(this.moveElemTimeout);
-            clearInterval(this.hideSeasonsTimeout);
-            clearInterval(this.hideEpisodesTimeout);
             clearInterval(this.scrollDownInactiveSeasonsTimeout);
             clearInterval(this.episodesLoadTimeout);
             clearInterval(this.episodesElemFreshlyLoadedTimeout);
