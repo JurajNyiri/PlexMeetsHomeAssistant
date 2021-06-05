@@ -21,7 +21,6 @@ class PlayController {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
-		console.log(entity);
 	}
 
 	private getState = async (entityID: string): Promise<Record<string, any>> => {
@@ -87,7 +86,7 @@ class PlayController {
 		const entity = this.getPlayService(data);
 		switch (entity.key) {
 			case 'kodi':
-				await this.playViaKodi(data, data.type);
+				await this.playViaKodi(entity.value, data, data.type);
 				break;
 			case 'androidtv':
 				await this.playViaAndroidTV(entity.value, data.key.split('/')[3], instantPlay);
@@ -155,12 +154,12 @@ class PlayController {
 		}
 	};
 
-	private playViaKodi = async (data: Record<string, any>, type: string): Promise<void> => {
+	private playViaKodi = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
 		if (type === 'movie') {
 			const kodiData = await this.getKodiSearch(data.title);
 			await this.hass.callService('kodi', 'call_method', {
 				// eslint-disable-next-line @typescript-eslint/camelcase
-				entity_id: this.entity.kodi,
+				entity_id: entityName,
 				method: 'Player.Open',
 				item: {
 					movieid: kodiData.movieid
@@ -184,7 +183,7 @@ class PlayController {
 			}
 			await this.hass.callService('kodi', 'call_method', {
 				// eslint-disable-next-line @typescript-eslint/camelcase
-				entity_id: this.entity.kodi,
+				entity_id: entityName,
 				method: 'Player.Open',
 				item: {
 					episodeid: foundEpisode.episodeid
@@ -196,7 +195,6 @@ class PlayController {
 	};
 
 	private playViaAndroidTV = async (entityName: string, mediaID: number, instantPlay = false): Promise<void> => {
-		console.log(entityName);
 		const serverID = await this.plex.getServerID();
 		let command = `am start`;
 
@@ -248,8 +246,6 @@ class PlayController {
 				}
 			}
 		});
-		console.log('service');
-		console.log(service);
 		return service;
 	};
 

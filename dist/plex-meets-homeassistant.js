@@ -18808,7 +18808,7 @@ class PlayController {
             const entity = this.getPlayService(data);
             switch (entity.key) {
                 case 'kodi':
-                    await this.playViaKodi(data, data.type);
+                    await this.playViaKodi(entity.value, data, data.type);
                     break;
                 case 'androidtv':
                     await this.playViaAndroidTV(entity.value, data.key.split('/')[3], instantPlay);
@@ -18867,12 +18867,12 @@ class PlayController {
                 }
             }
         };
-        this.playViaKodi = async (data, type) => {
+        this.playViaKodi = async (entityName, data, type) => {
             if (type === 'movie') {
                 const kodiData = await this.getKodiSearch(data.title);
                 await this.hass.callService('kodi', 'call_method', {
                     // eslint-disable-next-line @typescript-eslint/camelcase
-                    entity_id: this.entity.kodi,
+                    entity_id: entityName,
                     method: 'Player.Open',
                     item: {
                         movieid: kodiData.movieid
@@ -18894,7 +18894,7 @@ class PlayController {
                 }
                 await this.hass.callService('kodi', 'call_method', {
                     // eslint-disable-next-line @typescript-eslint/camelcase
-                    entity_id: this.entity.kodi,
+                    entity_id: entityName,
                     method: 'Player.Open',
                     item: {
                         episodeid: foundEpisode.episodeid
@@ -18906,7 +18906,6 @@ class PlayController {
             }
         };
         this.playViaAndroidTV = async (entityName, mediaID, instantPlay = false) => {
-            console.log(entityName);
             const serverID = await this.plex.getServerID();
             let command = `am start`;
             if (instantPlay) {
@@ -18951,8 +18950,6 @@ class PlayController {
                     }
                 }
             });
-            console.log('service');
-            console.log(service);
             return service;
         };
         this.isPlexPlayerSupported = (entityName) => {
@@ -18998,7 +18995,6 @@ class PlayController {
         this.hass = hass;
         this.plex = plex;
         this.entity = entity;
-        console.log(entity);
     }
 }
 
@@ -19732,7 +19728,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.renderMovieElems = () => {
             if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
-                console.log('renderMovieElems');
                 let count = 0;
                 // eslint-disable-next-line consistent-return
                 const searchValues = lodash.split(this.searchValue, ' ');
@@ -20241,26 +20236,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.resizeBackground = () => {
-            console.log('resizeBackground');
             if (this.seasonsElem && this.episodesElem && this.card) {
                 const contentbg = this.getElementsByClassName('contentbg')[0];
-                console.log(contentbg);
                 if (this.contentBGHeight === 0) {
                     this.contentBGHeight = getHeight(contentbg);
                 }
                 const requiredSeasonBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
                 const requiredEpisodeBodyHeight = parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
                 if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
-                    console.log(`${requiredSeasonBodyHeight} > ${this.contentBGHeight}`);
-                    console.log('1');
                     this.card.style.height = `${requiredSeasonBodyHeight + 16}px`;
                 }
                 else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
-                    console.log('2');
                     this.card.style.height = `${requiredEpisodeBodyHeight + 16}px`;
                 }
                 else {
-                    console.log('3');
                     this.card.style.height = '100%';
                 }
             }
