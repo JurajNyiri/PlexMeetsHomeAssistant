@@ -44,10 +44,9 @@ const getOffset = (el: Element): Record<string, any> => {
 };
 
 const findTrailerURL = (movieData: Record<string, any>): string => {
-	console.log(movieData.Extras);
-	console.log(movieData.Extras.Metadata);
 	let foundURL = '';
 	if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
+		// eslint-disable-next-line consistent-return
 		_.forEach(movieData.Extras.Metadata, extra => {
 			if (extra.subtype === 'trailer') {
 				foundURL = extra.Media[0].Part[0].key;

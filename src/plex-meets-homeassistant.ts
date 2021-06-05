@@ -861,8 +861,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}
 
-				console.log();
-
 				const extras = movieDetails.Extras.Metadata;
 
 				this.episodesElemFreshlyLoaded = true;
