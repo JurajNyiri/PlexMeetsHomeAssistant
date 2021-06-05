@@ -4,15 +4,25 @@ import { CSS_STYLE } from '../const';
 const style = document.createElement('style');
 
 style.textContent = css`
+	.maxZIndex {
+		z-index: 6 !important;
+	}
+	.transparent {
+		visibility: hidden !important;
+	}
 	.detailPlayAction {
-		top: 10px;
+		margin-top: 10px;
 		color: rgb(15 17 19);
 		font-weight: bold;
+		float: left;
 		padding: 5px 10px;
 		border-radius: 5px;
 		cursor: pointer;
 		position: relative;
 		background: orange;
+		border: none;
+		visibility: hidden;
+		transition: 2s;
 	}
 	.seasons {
 		z-index: 5;
@@ -271,6 +281,23 @@ style.textContent = css`
 		margin-bottom: 20px;
 		margin-right: 10px;
 		transition: 0.5s;
+	}
+	.no-transparency {
+		background-color: rgba(0, 0, 0, 1) !important;
+	}
+	.videobg1 {
+		position: absolute;
+		background-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.2));
+		height: 50%;
+		top: 0;
+		width: 100%;
+	}
+	.videobg2 {
+		position: absolute;
+		background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 1));
+		height: 50%;
+		top: 50%;
+		width: 100%;
 	}
 	.video {
 		position: absolute;

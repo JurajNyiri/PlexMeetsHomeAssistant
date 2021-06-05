@@ -19381,15 +19381,25 @@ const css = (strings, ...values) => {
 /* eslint-env browser */
 const style = document.createElement('style');
 style.textContent = css `
+	.maxZIndex {
+		z-index: 6 !important;
+	}
+	.transparent {
+		visibility: hidden !important;
+	}
 	.detailPlayAction {
-		top: 10px;
+		margin-top: 10px;
 		color: rgb(15 17 19);
 		font-weight: bold;
+		float: left;
 		padding: 5px 10px;
 		border-radius: 5px;
 		cursor: pointer;
 		position: relative;
 		background: orange;
+		border: none;
+		visibility: hidden;
+		transition: 2s;
 	}
 	.seasons {
 		z-index: 5;
@@ -19648,6 +19658,23 @@ style.textContent = css `
 		margin-bottom: 20px;
 		margin-right: 10px;
 		transition: 0.5s;
+	}
+	.no-transparency {
+		background-color: rgba(0, 0, 0, 1) !important;
+	}
+	.videobg1 {
+		position: absolute;
+		background-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.2));
+		height: 50%;
+		top: 0;
+		width: 100%;
+	}
+	.videobg2 {
+		position: absolute;
+		background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 1));
+		height: 50%;
+		top: 50%;
+		width: 100%;
 	}
 	.video {
 		position: absolute;
@@ -19938,8 +19965,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.detailElem = document.createElement('div');
             this.detailElem.className = 'detail';
             this.detailElem.innerHTML =
-                "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div>";
+                "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div><button class='detailPlayAction'>Fullscreen Trailer</button>";
             this.content.appendChild(this.detailElem);
+            const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
+            fullscreenTrailer.addEventListener('click', () => {
+                if (this.videoElem) {
+                    const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
+                    const video = videoPlayer.children[0];
+                    video.requestFullscreen();
+                }
+            });
             this.seasonsElem = document.createElement('div');
             this.seasonsElem.className = 'seasons';
             this.seasonsElem.addEventListener('click', () => {
@@ -19960,6 +19995,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.hideBackground();
                 this.minimizeAll();
             });
+            const videoBG1 = document.createElement('div');
+            videoBG1.className = 'videobg1';
+            this.videoElem.appendChild(videoBG1);
+            const videoBG2 = document.createElement('div');
+            videoBG2.className = 'videobg2';
+            this.videoElem.appendChild(videoBG2);
+            const videoPlayer = document.createElement('div');
+            videoPlayer.className = 'videoPlayer';
+            this.videoElem.appendChild(videoPlayer);
             this.content.appendChild(this.videoElem);
             // todo: figure out why timeout is needed here and do it properly
             setTimeout(() => {
@@ -20034,7 +20078,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.hideVideo = () => {
             if (this.videoElem) {
-                this.videoElem.innerHTML = '';
+                const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
+                videoPlayer.innerHTML = '';
+                this.videoElem.classList.remove('maxZIndex');
+                const videobg1 = this.getElementsByClassName('videobg1')[0];
+                const videobg2 = this.getElementsByClassName('videobg2')[0];
+                videobg1.classList.remove('transparent');
+                videobg2.classList.remove('transparent');
             }
         };
         this.minimizeAll = () => {
@@ -20128,6 +20178,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.renderNewElementsIfNeededTimeout = setTimeout(() => {
                 this.renderNewElementsIfNeeded();
             }, 1000);
+            const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
+            fullscreenTrailer.style.visibility = 'hidden';
         };
         this.showDetails = async (data) => {
             this.detailsShown = true;
@@ -20337,6 +20389,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     if (this.videoElem) {
                         const trailerURL = findTrailerURL(movieDetails);
                         if (trailerURL !== '') {
+                            const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                             const video = document.createElement('video');
                             video.style.height = '100%';
                             video.style.width = '100%';
@@ -20345,13 +20398,43 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             source.type = 'video/mp4';
                             source.src = this.plex.authorizeURL(`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`);
                             video.appendChild(source);
-                            this.videoElem.appendChild(video);
+                            videoPlayer.appendChild(video);
                             video.load();
                             video.play();
                             let playingFired = false;
+                            video.addEventListener('click', event => {
+                                const isFullScreen = video.offsetWidth > this.getElementsByClassName('searchContainer')[0].offsetWidth;
+                                if (isFullScreen) {
+                                    event.stopPropagation();
+                                }
+                            });
+                            video.addEventListener('fullscreenchange', () => {
+                                const isFullScreen = video.offsetWidth > this.getElementsByClassName('searchContainer')[0].offsetWidth;
+                                if (this.videoElem) {
+                                    const videobg1 = this.getElementsByClassName('videobg1')[0];
+                                    const videobg2 = this.getElementsByClassName('videobg2')[0];
+                                    if (isFullScreen) {
+                                        videobg1.classList.add('transparent');
+                                        videobg2.classList.add('transparent');
+                                        this.videoElem.classList.add('maxZIndex');
+                                        video.controls = true;
+                                    }
+                                    else {
+                                        videobg1.classList.remove('transparent');
+                                        videobg2.classList.remove('transparent');
+                                        this.videoElem.classList.remove('maxZIndex');
+                                        video.controls = false;
+                                    }
+                                }
+                            });
                             video.addEventListener('playing', () => {
                                 if (this.videoElem && !playingFired) {
+                                    const contentbg = this.getElementsByClassName('contentbg')[0];
+                                    const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
+                                    fullscreenTrailer.style.visibility = 'visible';
+                                    contentbg.classList.add('no-transparency');
                                     playingFired = true;
+                                    this.videoElem.style.width = `${this.getElementsByClassName('searchContainer')[0].offsetWidth}px`;
                                     this.videoElem.style.visibility = 'visible';
                                     this.videoElem.style.top = `${top}px`;
                                 }
@@ -20413,9 +20496,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             contentbg[0].style.backgroundColor = 'rgba(0,0,0,0.9)';
         };
         this.hideBackground = () => {
-            const contentbg = this.getElementsByClassName('contentbg');
-            contentbg[0].style.zIndex = '1';
-            contentbg[0].style.backgroundColor = 'rgba(0,0,0,0)';
+            const contentbg = this.getElementsByClassName('contentbg')[0];
+            contentbg.classList.remove('no-transparency');
+            contentbg.style.zIndex = '1';
+            contentbg.style.backgroundColor = 'rgba(0,0,0,0)';
         };
         this.activateMovieElem = (movieElem) => {
             const movieElemLocal = movieElem;
