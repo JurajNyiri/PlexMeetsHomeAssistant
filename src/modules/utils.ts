@@ -43,6 +43,21 @@ const getOffset = (el: Element): Record<string, any> => {
 	return { top: y, left: x };
 };
 
+const findTrailerURL = (movieData: Record<string, any>): string => {
+	console.log(movieData.Extras);
+	console.log(movieData.Extras.Metadata);
+	let foundURL = '';
+	if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
+		_.forEach(movieData.Extras.Metadata, extra => {
+			if (extra.subtype === 'trailer') {
+				foundURL = extra.Media[0].Part[0].key;
+				return false;
+			}
+		});
+	}
+	return foundURL;
+};
+
 const createEpisodesView = (
 	playController: PlayController,
 	plexProtocol: string,
@@ -136,4 +151,4 @@ const isScrolledIntoView = (elem: HTMLElement): boolean => {
 };
 
 // eslint-disable-next-line import/prefer-default-export
-export { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView };
+export { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView, findTrailerURL };

@@ -5,7 +5,14 @@ import _ from 'lodash';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
-import { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView } from './modules/utils';
+import {
+	escapeHtml,
+	getOffset,
+	isScrolledIntoView,
+	getHeight,
+	createEpisodesView,
+	findTrailerURL
+} from './modules/utils';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -334,14 +341,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.hideBackground();
 			this.minimizeAll();
 		});
-		const player = document.createElement('video');
-		player.style.height = '100%';
-		player.style.width = '100%';
-		player.controls = true;
-		const source = document.createElement('source');
-		source.type = 'video/mp4';
-		player.appendChild(source);
-		this.videoElem.appendChild(player);
 		this.content.appendChild(this.videoElem);
 
 		// todo: figure out why timeout is needed here and do it properly
@@ -421,6 +420,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
+	hideVideo = (): void => {
+		if (this.videoElem) {
+			this.videoElem.innerHTML = '';
+		}
+	};
+
 	minimizeAll = (): void => {
 		this.detailsShown = false;
 		if (this.activeMovieElem) {
@@ -442,6 +447,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.hideSeasons();
 		this.hideEpisodes();
 		this.hideDetails();
+		this.hideVideo();
 		clearInterval(this.showDetailsTimeout);
 		clearInterval(this.showSeasonElemTimeout);
 		clearInterval(this.seasonTitleColorTimeout);
@@ -759,15 +765,31 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			} else {
 				const movieDetails = await this.plex.getDetails(data.key.split('/')[3]);
 				if (this.videoElem) {
-					const videoElem = this.videoElem.children[0] as HTMLVideoElement;
-					const sourceElem = videoElem.children[0] as HTMLSourceElement;
+					const trailerURL = findTrailerURL(movieDetails);
+					if (trailerURL !== '') {
+						const video = document.createElement('video');
+						video.style.height = '100%';
+						video.style.width = '100%';
+						video.controls = false;
+						const source = document.createElement('source');
+						source.type = 'video/mp4';
+						source.src = this.plex.authorizeURL(
+							`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`
+						);
+						video.appendChild(source);
+						this.videoElem.appendChild(video);
 
-					sourceElem.src = this.plex.authorizeURL(
-						`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`
-					);
-
-					videoElem.load();
-					videoElem.play();
+						video.load();
+						video.play();
+						let playingFired = false;
+						video.addEventListener('playing', () => {
+							if (this.videoElem && !playingFired) {
+								playingFired = true;
+								this.videoElem.style.visibility = 'visible';
+								this.videoElem.style.top = `${top}px`;
+							}
+						});
+					}
 				}
 
 				console.log();

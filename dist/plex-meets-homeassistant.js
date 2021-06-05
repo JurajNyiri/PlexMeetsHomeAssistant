@@ -19053,6 +19053,20 @@ const getOffset = (el) => {
     }
     return { top: y, left: x };
 };
+const findTrailerURL = (movieData) => {
+    console.log(movieData.Extras);
+    console.log(movieData.Extras.Metadata);
+    let foundURL = '';
+    if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
+        lodash.forEach(movieData.Extras.Metadata, extra => {
+            if (extra.subtype === 'trailer') {
+                foundURL = extra.Media[0].Part[0].key;
+                return false;
+            }
+        });
+    }
+    return foundURL;
+};
 const createEpisodesView = (playController, plexProtocol, ip, port, token, data) => {
     const episodeContainer = document.createElement('div');
     episodeContainer.className = 'episodeContainer';
@@ -19387,7 +19401,7 @@ style.textContent = css `
 		display: none;
 	}
 	.episodes {
-		z-index: 4;
+		z-index: 5;
 		position: absolute;
 		top: ${CSS_STYLE.expandedHeight + 16}px;
 		width: calc(100% - 32px);
@@ -19513,7 +19527,7 @@ style.textContent = css `
 		position: absolute;
 		left: 247px;
 		width: calc(100% - 267px);
-		z-index: 4;
+		z-index: 5;
 		transition: 0.5s;
 		color: rgba(255, 255, 255, 0);
 	}
@@ -19637,10 +19651,11 @@ style.textContent = css `
 	}
 	.video {
 		position: absolute;
-		z-index: 5;
+		z-index: 3;
+		visibility: hidden;
 	}
 	.movieExtras {
-		z-index: 4;
+		z-index: 5;
 		position: absolute;
 		top: 340px;
 		width: calc(100% - 32px);
@@ -19945,14 +19960,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.hideBackground();
                 this.minimizeAll();
             });
-            const player = document.createElement('video');
-            player.style.height = '100%';
-            player.style.width = '100%';
-            player.controls = true;
-            const source = document.createElement('source');
-            source.type = 'video/mp4';
-            player.appendChild(source);
-            this.videoElem.appendChild(player);
             this.content.appendChild(this.videoElem);
             // todo: figure out why timeout is needed here and do it properly
             setTimeout(() => {
@@ -20025,6 +20032,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 });
             }
         };
+        this.hideVideo = () => {
+            if (this.videoElem) {
+                this.videoElem.innerHTML = '';
+            }
+        };
         this.minimizeAll = () => {
             this.detailsShown = false;
             if (this.activeMovieElem) {
@@ -20045,6 +20057,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.hideSeasons();
             this.hideEpisodes();
             this.hideDetails();
+            this.hideVideo();
             clearInterval(this.showDetailsTimeout);
             clearInterval(this.showSeasonElemTimeout);
             clearInterval(this.seasonTitleColorTimeout);
@@ -20322,11 +20335,28 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 else {
                     const movieDetails = await this.plex.getDetails(data.key.split('/')[3]);
                     if (this.videoElem) {
-                        const videoElem = this.videoElem.children[0];
-                        const sourceElem = videoElem.children[0];
-                        sourceElem.src = this.plex.authorizeURL(`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`);
-                        videoElem.load();
-                        videoElem.play();
+                        const trailerURL = findTrailerURL(movieDetails);
+                        if (trailerURL !== '') {
+                            const video = document.createElement('video');
+                            video.style.height = '100%';
+                            video.style.width = '100%';
+                            video.controls = false;
+                            const source = document.createElement('source');
+                            source.type = 'video/mp4';
+                            source.src = this.plex.authorizeURL(`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`);
+                            video.appendChild(source);
+                            this.videoElem.appendChild(video);
+                            video.load();
+                            video.play();
+                            let playingFired = false;
+                            video.addEventListener('playing', () => {
+                                if (this.videoElem && !playingFired) {
+                                    playingFired = true;
+                                    this.videoElem.style.visibility = 'visible';
+                                    this.videoElem.style.top = `${top}px`;
+                                }
+                            });
+                        }
                     }
                     console.log();
                     const extras = movieDetails.Extras.Metadata;

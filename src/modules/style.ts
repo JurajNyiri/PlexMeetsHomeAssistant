@@ -24,7 +24,7 @@ style.textContent = css`
 		display: none;
 	}
 	.episodes {
-		z-index: 4;
+		z-index: 5;
 		position: absolute;
 		top: ${CSS_STYLE.expandedHeight + 16}px;
 		width: calc(100% - 32px);
@@ -150,7 +150,7 @@ style.textContent = css`
 		position: absolute;
 		left: 247px;
 		width: calc(100% - 267px);
-		z-index: 4;
+		z-index: 5;
 		transition: 0.5s;
 		color: rgba(255, 255, 255, 0);
 	}
@@ -274,10 +274,11 @@ style.textContent = css`
 	}
 	.video {
 		position: absolute;
-		z-index: 5;
+		z-index: 3;
+		visibility: hidden;
 	}
 	.movieExtras {
-		z-index: 4;
+		z-index: 5;
 		position: absolute;
 		top: 340px;
 		width: calc(100% - 32px);
