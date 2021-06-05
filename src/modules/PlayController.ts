@@ -1,5 +1,6 @@
 /* eslint-disable consistent-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-env browser */
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
 import axios from 'axios';
@@ -51,6 +52,8 @@ class PlayController {
 			}
 		});
 		if (_.isEmpty(foundResult)) {
+			// eslint-disable-next-line no-alert
+			alert(`Title ${search} not found in Kodi.`);
 			throw Error(`Title ${search} not found in Kodi.`);
 		}
 		return foundResult;

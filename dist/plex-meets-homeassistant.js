@@ -18775,6 +18775,8 @@ class PlayController {
                 }
             });
             if (lodash.isEmpty(foundResult)) {
+                // eslint-disable-next-line no-alert
+                alert(`Title ${search} not found in Kodi.`);
                 throw Error(`Title ${search} not found in Kodi.`);
             }
             return foundResult;
