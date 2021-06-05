@@ -10,6 +10,10 @@ Video of the card:
 
 More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#images).
 
+## Important notice
+
+**If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.**
+
 ## Installation
 
 - Install **Plex Meets Home Assistant** from HACS.
@@ -83,8 +87,6 @@ entity:
 In this example, it will try to first play via kodi, in bedroom. If that kodi is unavailable or off, it tries in living room kodi.
 If that fails, it moves on to android tvs, starting with living room, continuing with bedroom and ending with kitchen.
 Finally, if a possible player still has not been found (all kodis and shields are off) it tries to play via plexPlayer, trying TV 2020 and if not found, IP 192.168.13.50.
-
-If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.
 
 ## Detailed configuration instructions for end devices
 
