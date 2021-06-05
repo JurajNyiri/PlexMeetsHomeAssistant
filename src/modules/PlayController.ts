@@ -21,6 +21,7 @@ class PlayController {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
+		console.log(entity);
 	}
 
 	private getState = async (entityID: string): Promise<Record<string, any>> => {
@@ -83,16 +84,16 @@ class PlayController {
 	};
 
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
-		const playService = this.getPlayService(data);
-		switch (playService) {
+		const entity = this.getPlayService(data);
+		switch (entity.key) {
 			case 'kodi':
 				await this.playViaKodi(data, data.type);
 				break;
 			case 'androidtv':
-				await this.playViaAndroidTV(data.key.split('/')[3], instantPlay);
+				await this.playViaAndroidTV(entity.value, data.key.split('/')[3], instantPlay);
 				break;
 			case 'plexPlayer':
-				await this.playViaPlexPlayer(data.key.split('/')[3]);
+				await this.playViaPlexPlayer(entity.value, data.key.split('/')[3]);
 				break;
 			default:
 				throw Error(`No service available to play ${data.title}!`);
@@ -121,8 +122,8 @@ class PlayController {
 		};
 	};
 
-	private playViaPlexPlayer = async (movieID: number): Promise<void> => {
-		const machineID = !_.isEmpty(this.plexPlayerEntity) ? this.plexPlayerEntity : this.entity.plexPlayer;
+	private playViaPlexPlayer = async (entityName: string, movieID: number): Promise<void> => {
+		const machineID = this.getPlexPlayerMachineIdentifier(entityName);
 		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID);
 
 		const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/player/playback/playMedia?address=${
@@ -194,7 +195,8 @@ class PlayController {
 		}
 	};
 
-	private playViaAndroidTV = async (mediaID: number, instantPlay = false): Promise<void> => {
+	private playViaAndroidTV = async (entityName: string, mediaID: number, instantPlay = false): Promise<void> => {
+		console.log(entityName);
 		const serverID = await this.plex.getServerID();
 		let command = `am start`;
 
@@ -206,81 +208,99 @@ class PlayController {
 
 		this.hass.callService('androidtv', 'adb_command', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
-			entity_id: this.entity.androidtv,
+			entity_id: entityName,
 			command: 'HOME'
 		});
 		this.hass.callService('androidtv', 'adb_command', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
-			entity_id: this.entity.androidtv,
+			entity_id: entityName,
 			command
 		});
 	};
 
-	private getPlayService = (data: Record<string, any>): string => {
-		let service = '';
+	private getPlayService = (data: Record<string, any>): Record<string, string> => {
+		let service: Record<string, string> = {};
 		_.forEach(this.entity, (value, key) => {
-			if (_.includes(this.supported[key], data.type)) {
-				if (
-					(key === 'kodi' && this.isKodiSupported()) ||
-					(key === 'androidtv' && this.isAndroidTVSupported()) ||
-					(key === 'plexPlayer' && this.isPlexPlayerSupported())
-				) {
-					service = key;
-					return false;
+			if (_.isEmpty(service)) {
+				const entityVal = value;
+				if (_.isArray(entityVal)) {
+					_.forEach(entityVal, entity => {
+						if (_.includes(this.supported[key], data.type)) {
+							if (
+								(key === 'kodi' && this.isKodiSupported(entity)) ||
+								(key === 'androidtv' && this.isAndroidTVSupported(entity)) ||
+								(key === 'plexPlayer' && this.isPlexPlayerSupported(entity))
+							) {
+								service = { key, value: entity };
+								return false;
+							}
+						}
+					});
+				} else if (_.includes(this.supported[key], data.type)) {
+					if (
+						(key === 'kodi' && this.isKodiSupported(entityVal)) ||
+						(key === 'androidtv' && this.isAndroidTVSupported(entityVal)) ||
+						(key === 'plexPlayer' && this.isPlexPlayerSupported(entityVal))
+					) {
+						service = { key, value: entityVal };
+						return false;
+					}
 				}
 			}
 		});
+		console.log('service');
+		console.log(service);
 		return service;
 	};
 
-	isPlexPlayerSupported = (): boolean => {
+	isPlexPlayerSupported = (entityName: string): boolean => {
 		let found = false;
+		if (this.getPlexPlayerMachineIdentifier(entityName)) {
+			found = true;
+		}
+		return found;
+	};
+
+	private getPlexPlayerMachineIdentifier = (entityName: string): string => {
+		let machineIdentifier = '';
 		_.forEach(this.plex.clients, plexClient => {
-			if (_.isEqual(plexClient.machineIdentifier, this.entity.plexPlayer)) {
-				found = true;
+			if (
+				_.isEqual(plexClient.machineIdentifier, entityName) ||
+				_.isEqual(plexClient.product, entityName) ||
+				_.isEqual(plexClient.name, entityName) ||
+				_.isEqual(plexClient.host, entityName) ||
+				_.isEqual(plexClient.address, entityName)
+			) {
+				machineIdentifier = plexClient.machineIdentifier;
 				return false;
 			}
 		});
-		// Try to look into any other fields to identify machine ID
-		if (!found) {
-			_.forEach(this.plex.clients, plexClient => {
-				if (
-					_.isEqual(plexClient.product, this.entity.plexPlayer) ||
-					_.isEqual(plexClient.name, this.entity.plexPlayer) ||
-					_.isEqual(plexClient.host, this.entity.plexPlayer) ||
-					_.isEqual(plexClient.address, this.entity.plexPlayer)
-				) {
-					this.plexPlayerEntity = plexClient.machineIdentifier;
-					found = true;
-					return false;
-				}
-			});
-		}
-		return found;
+		return machineIdentifier;
 	};
 
 	isPlaySupported = (data: Record<string, any>): boolean => {
 		return !_.isEmpty(this.getPlayService(data));
 	};
 
-	private isKodiSupported = (): boolean => {
-		if (this.entity.kodi) {
+	private isKodiSupported = (entityName: string): boolean => {
+		if (entityName) {
 			return (
-				this.hass.states[this.entity.kodi] &&
+				this.hass.states[entityName] &&
 				this.hass.states['sensor.kodi_media_sensor_search'] &&
 				this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable' &&
-				this.hass.states[this.entity.kodi].state !== 'off' &&
-				this.hass.states[this.entity.kodi].state !== 'unavailable'
+				this.hass.states[entityName].state !== 'off' &&
+				this.hass.states[entityName].state !== 'unavailable'
 			);
 		}
 		return false;
 	};
 
-	private isAndroidTVSupported = (): boolean => {
+	private isAndroidTVSupported = (entityName: string): boolean => {
 		return (
-			this.hass.states[this.entity.androidtv] &&
-			this.hass.states[this.entity.androidtv].attributes &&
-			this.hass.states[this.entity.androidtv].attributes.adb_response !== undefined
+			this.hass.states[entityName] &&
+			!_.isEqual(this.hass.states[entityName].state, 'off') &&
+			this.hass.states[entityName].attributes &&
+			this.hass.states[entityName].attributes.adb_response !== undefined
 		);
 	};
 }
