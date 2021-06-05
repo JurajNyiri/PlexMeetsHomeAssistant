@@ -90,6 +90,15 @@ class Plex {
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
 	};
 
+	getDetails = async (id: number): Promise<any> => {
+		const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}?includeConcerts=1&includeExtras=1&includeOnDeck=1&includePopularLeaves=1&includePreferences=1&includeReviews=1&includeChapters=1&includeStations=1&includeExternalMedia=1&asyncAugmentMetadata=1&asyncCheckFiles=1&asyncRefreshAnalysis=1&asyncRefreshLocalMediaAgent=1&X-Plex-Token=${this.token}`;
+		return (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer.Metadata[0];
+	};
+
 	getLibraryData = async (id: number): Promise<any> => {
 		const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}/children?X-Plex-Token=${this.token}`;
 		return (
