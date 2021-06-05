@@ -19726,15 +19726,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.error = '';
         this.previousPositions = [];
         this.contentBGHeight = 0;
+        this.renderNewElementsIfNeeded = () => {
+            const loadAdditionalRowsCount = 2; // todo: make this configurable
+            const height = getHeight(this.content);
+            if (this.detailElem &&
+                (this.detailElem.style.visibility === 'hidden' || this.detailElem.style.visibility === '') &&
+                window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
+                this.renderedItems > 0) {
+                this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
+                this.renderMovieElems();
+                this.calculatePositions();
+            }
+        };
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
-                const loadAdditionalRowsCount = 2; // todo: make this configurable
-                const height = getHeight(this.content);
-                if (window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 && this.renderedItems > 0) {
-                    this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
-                    this.renderMovieElems();
-                    this.calculatePositions();
-                }
+                this.renderNewElementsIfNeeded();
             });
             this.loading = true;
             this.renderPage();
@@ -20073,6 +20079,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.detailElem.style.zIndex = '0';
                 this.detailElem.style.visibility = 'hidden';
             }
+            this.renderNewElementsIfNeeded();
         };
         this.showDetails = async (data) => {
             const top = this.getTop();
