@@ -67,6 +67,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	seasonsElemHidden = true;
 
+	videoElem: HTMLElement | undefined;
+
 	episodesElem: HTMLElement | undefined;
 
 	episodesElemHidden = true;
@@ -325,6 +327,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.minimizeAll();
 		});
 		this.content.appendChild(this.episodesElem);
+
+		this.videoElem = document.createElement('div');
+		this.videoElem.className = 'video';
+		this.videoElem.addEventListener('click', () => {
+			this.hideBackground();
+			this.minimizeAll();
+		});
+		const player = document.createElement('video');
+		player.style.height = '100%';
+		player.style.width = '100%';
+		player.controls = true;
+		const source = document.createElement('source');
+		source.type = 'video/mp4';
+		player.appendChild(source);
+		this.videoElem.appendChild(player);
+		this.content.appendChild(this.videoElem);
 
 		// todo: figure out why timeout is needed here and do it properly
 		setTimeout(() => {
@@ -740,6 +758,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}, 200);
 			} else {
 				const movieDetails = await this.plex.getDetails(data.key.split('/')[3]);
+				if (this.videoElem) {
+					const videoElem = this.videoElem.children[0] as HTMLVideoElement;
+					const sourceElem = videoElem.children[0] as HTMLSourceElement;
+
+					sourceElem.src = this.plex.authorizeURL(
+						`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`
+					);
+
+					videoElem.load();
+					videoElem.play();
+				}
+
+				console.log();
 
 				const extras = movieDetails.Extras.Metadata;
 

@@ -272,6 +272,10 @@ style.textContent = css`
 		margin-right: 10px;
 		transition: 0.5s;
 	}
+	.video {
+		position: absolute;
+		z-index: 5;
+	}
 	.movieExtras {
 		z-index: 4;
 		position: absolute;

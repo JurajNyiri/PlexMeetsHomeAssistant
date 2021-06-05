@@ -18681,7 +18681,7 @@ class Plex {
             */
         };
         this.getClients = async () => {
-            const url = `${this.protocol}://${this.ip}:${this.port}/clients?X-Plex-Token=${this.token}`;
+            const url = this.authorizeURL(`${this.getBasicURL()}/clients`);
             try {
                 const result = await axios.get(url, {
                     timeout: this.requestTimeout
@@ -18700,14 +18700,14 @@ class Plex {
             return this.serverInfo.machineIdentifier;
         };
         this.getServerInfo = async () => {
-            const url = `${this.protocol}://${this.ip}:${this.port}/?X-Plex-Token=${this.token}`;
+            const url = this.authorizeURL(`${this.getBasicURL()}/`);
             this.serverInfo = (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer;
             return this.serverInfo;
         };
         this.getSections = async () => {
-            const url = `${this.protocol}://${this.ip}:${this.port}/library/sections?X-Plex-Token=${this.token}`;
+            const url = this.authorizeURL(`${this.getBasicURL()}/library/sections`);
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Directory;
@@ -18716,7 +18716,7 @@ class Plex {
             const sections = await this.getSections();
             const sectionsRequests = [];
             lodash.forEach(sections, section => {
-                let url = `${this.protocol}://${this.ip}:${this.port}/library/sections/${section.key}/all?X-Plex-Token=${this.token}`;
+                let url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${section.key}/all`);
                 url += `&sort=${this.sort}`;
                 sectionsRequests.push(axios.get(url, {
                     timeout: this.requestTimeout
@@ -18724,14 +18724,26 @@ class Plex {
             });
             return this.exportSectionsData(await Promise.all(sectionsRequests));
         };
+        this.getBasicURL = () => {
+            return `${this.protocol}://${this.ip}:${this.port}`;
+        };
+        this.authorizeURL = (url) => {
+            if (!lodash.includes(url, 'X-Plex-Token')) {
+                if (lodash.includes(url, '?')) {
+                    return `${url}&X-Plex-Token=${this.token}`;
+                }
+                return `${url}?X-Plex-Token=${this.token}`;
+            }
+            return url;
+        };
         this.getDetails = async (id) => {
-            const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}?includeConcerts=1&includeExtras=1&includeOnDeck=1&includePopularLeaves=1&includePreferences=1&includeReviews=1&includeChapters=1&includeStations=1&includeExternalMedia=1&asyncAugmentMetadata=1&asyncCheckFiles=1&asyncRefreshAnalysis=1&asyncRefreshLocalMediaAgent=1&X-Plex-Token=${this.token}`;
+            const url = this.authorizeURL(`${this.getBasicURL()}/library/metadata/${id}?includeConcerts=1&includeExtras=1&includeOnDeck=1&includePopularLeaves=1&includePreferences=1&includeReviews=1&includeChapters=1&includeStations=1&includeExternalMedia=1&asyncAugmentMetadata=1&asyncCheckFiles=1&asyncRefreshAnalysis=1&asyncRefreshLocalMediaAgent=1`);
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Metadata[0];
         };
         this.getLibraryData = async (id) => {
-            const url = `${this.protocol}://${this.ip}:${this.port}/library/metadata/${id}/children?X-Plex-Token=${this.token}`;
+            const url = this.authorizeURL(`${this.getBasicURL()}/library/metadata/${id}/children`);
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Metadata;
@@ -19623,6 +19635,10 @@ style.textContent = css `
 		margin-right: 10px;
 		transition: 0.5s;
 	}
+	.video {
+		position: absolute;
+		z-index: 5;
+	}
 	.movieExtras {
 		z-index: 4;
 		position: absolute;
@@ -19923,6 +19939,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.minimizeAll();
             });
             this.content.appendChild(this.episodesElem);
+            this.videoElem = document.createElement('div');
+            this.videoElem.className = 'video';
+            this.videoElem.addEventListener('click', () => {
+                this.hideBackground();
+                this.minimizeAll();
+            });
+            const player = document.createElement('video');
+            player.style.height = '100%';
+            player.style.width = '100%';
+            player.controls = true;
+            const source = document.createElement('source');
+            source.type = 'video/mp4';
+            player.appendChild(source);
+            this.videoElem.appendChild(player);
+            this.content.appendChild(this.videoElem);
             // todo: figure out why timeout is needed here and do it properly
             setTimeout(() => {
                 contentbg.addEventListener('click', () => {
@@ -20290,6 +20321,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 else {
                     const movieDetails = await this.plex.getDetails(data.key.split('/')[3]);
+                    if (this.videoElem) {
+                        const videoElem = this.videoElem.children[0];
+                        const sourceElem = videoElem.children[0];
+                        sourceElem.src = this.plex.authorizeURL(`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`);
+                        videoElem.load();
+                        videoElem.play();
+                    }
+                    console.log();
                     const extras = movieDetails.Extras.Metadata;
                     this.episodesElemFreshlyLoaded = true;
                     if (this.episodesElem) {
