@@ -49,11 +49,40 @@ port: 32400
 libraryName: Movies
 protocol: http
 maxCount: 10
+sort: title:desc
 entity:
   kodi: media_player.kodi_123456qwe789rty
   androidtv: media_player.living_room_nvidia_shield
   plexPlayer: 192.168.13.38
 ```
+
+Example using lists:
+
+```
+type: 'custom:plex-meets-homeassistant'
+token: QWdsqEXAMPLETOKENqwerty
+ip: 192.168.13.37
+port: 32400
+libraryName: Movies
+protocol: http
+maxCount: 10
+sort: title:desc
+entity:
+  kodi:
+    - media_player.kodi_bedroom
+    - media_player.kodi_living_room
+  androidtv:
+    - media_player.living_room_nvidia_shield
+    - media_player.bedroom_nvidia_shield
+    - media_player.kithen_nvidia_shield
+  plexPlayer:
+    - TV 2020
+    - 192.168.13.50
+```
+
+In this example, it will try to first play via kodi, in bedroom. If that kodi is unavailable or off, it tries in living room kodi.
+If that fails, it moves on to android tvs, starting with living room, continuing with bedroom and ending with kitchen.
+Finally, if a possible player still has not been found (all kodis and shields are off) it tries to play via plexPlayer, trying TV 2020 and if not found, IP 192.168.13.50.
 
 If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.
 
