@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
-import { escapeHtml, getOffset, isScrolledIntoView, getHeight } from './modules/utils';
+import { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView } from './modules/utils';
 import style from './modules/style';
 
 class PlexMeetsHomeAssistant extends HTMLElement {
@@ -637,58 +637,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													this.episodesElem.style.transition = `0s`;
 													this.episodesElem.style.top = `${top + 2000}px`;
 													_.forEach(episodesData, episodeData => {
-														if (this.episodesElem) {
-															const episodeContainer = document.createElement('div');
-															episodeContainer.className = 'episodeContainer';
-															episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
-															const episodeThumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${episodeData.thumb}&X-Plex-Token=${this.config.token}`;
-
-															const episodeElem = document.createElement('div');
-															episodeElem.className = 'episodeElem';
-															episodeElem.style.width = `${CSS_STYLE.episodeWidth}px`;
-															episodeElem.style.height = `${CSS_STYLE.episodeHeight}px`;
-															episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
-															episodeElem.dataset.clicked = 'false';
-
-															if (typeof episodeData.lastViewedAt === 'undefined') {
-																const toViewElem = document.createElement('div');
-																toViewElem.className = 'toViewEpisode';
-																episodeElem.appendChild(toViewElem);
-															}
-
-															if (this.playController && this.playController.isPlaySupported(episodeData)) {
-																const episodeInteractiveArea = document.createElement('div');
-																episodeInteractiveArea.className = 'interactiveArea';
-
-																const episodePlayButton = document.createElement('button');
-																episodePlayButton.name = 'playButton';
-																episodePlayButton.addEventListener('click', episodeEvent => {
-																	episodeEvent.stopPropagation();
-																	if (this.plex && this.playController) {
-																		this.playController.play(episodeData, true);
-																	}
-																});
-
-																episodeInteractiveArea.append(episodePlayButton);
-																episodeElem.append(episodeInteractiveArea);
-															}
-															episodeContainer.append(episodeElem);
-
-															const episodeTitleElem = document.createElement('div');
-															episodeTitleElem.className = 'episodeTitleElem';
-															episodeTitleElem.innerHTML = escapeHtml(episodeData.title);
-															episodeContainer.append(episodeTitleElem);
-
-															const episodeNumber = document.createElement('div');
-															episodeNumber.className = 'episodeNumber';
-															episodeNumber.innerHTML = escapeHtml(`Episode ${escapeHtml(episodeData.index)}`);
-															episodeContainer.append(episodeNumber);
-
-															episodeContainer.addEventListener('click', episodeEvent => {
-																episodeEvent.stopPropagation();
-															});
-
-															this.episodesElem.append(episodeContainer);
+														if (this.episodesElem && this.playController) {
+															this.episodesElem.append(
+																createEpisodesView(
+																	this.playController,
+																	this.plexProtocol,
+																	this.config.ip,
+																	this.config.port,
+																	this.config.token,
+																	episodeData
+																)
+															);
 														}
 													});
 													clearInterval(this.episodesLoadTimeout);
@@ -762,7 +721,47 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}, 200);
 			} else {
-				console.log(await this.plex.getDetails(data.key.split('/')[3]));
+				const movieDetails = await this.plex.getDetails(data.key.split('/')[3]);
+
+				const extras = movieDetails.Extras.Metadata;
+
+				this.episodesElemFreshlyLoaded = true;
+				if (this.episodesElem) {
+					this.episodesElemHidden = false;
+					this.episodesElem.style.display = 'block';
+					this.episodesElem.innerHTML = '';
+					this.episodesElem.style.transition = `0s`;
+					this.episodesElem.style.top = `${top + 2000}px`;
+
+					_.forEach(extras, extrasData => {
+						if (this.episodesElem && this.playController) {
+							this.episodesElem.append(
+								createEpisodesView(
+									this.playController,
+									this.plexProtocol,
+									this.config.ip,
+									this.config.port,
+									this.config.token,
+									extrasData
+								)
+							);
+						}
+					});
+
+					clearInterval(this.episodesLoadTimeout);
+					this.episodesLoadTimeout = setTimeout(() => {
+						if (this.episodesElem) {
+							this.episodesElem.style.transition = `0.7s`;
+							this.episodesElem.style.top = `${top + CSS_STYLE.expandedHeight + 16}px`;
+
+							this.resizeBackground();
+						}
+					}, 200);
+					clearInterval(this.episodesElemFreshlyLoadedTimeout);
+					this.episodesElemFreshlyLoadedTimeout = setTimeout(() => {
+						this.episodesElemFreshlyLoaded = false;
+					}, 700);
+				}
 			}
 		}
 	};

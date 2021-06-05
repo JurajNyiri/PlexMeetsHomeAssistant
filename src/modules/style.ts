@@ -272,6 +272,14 @@ style.textContent = css`
 		margin-right: 10px;
 		transition: 0.5s;
 	}
+	.movieExtras {
+		z-index: 4;
+		position: absolute;
+		top: 340px;
+		width: calc(100% - 32px);
+		left: 0;
+		padding: 16px;
+	}
 	.interactiveArea {
 		position: relative;
 		width: 100%;
