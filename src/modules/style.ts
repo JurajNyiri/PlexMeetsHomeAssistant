@@ -258,7 +258,8 @@ style.textContent = css`
 	.movieElem {
 		margin-bottom: 5px;
 		background-repeat: no-repeat;
-		background-size: contain;
+		background-size: cover;
+		overflow: hidden;
 		border-radius: 5px;
 		transition: 0.5s;
 		position: absolute;

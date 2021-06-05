@@ -19538,7 +19538,8 @@ style.textContent = css `
 	.movieElem {
 		margin-bottom: 5px;
 		background-repeat: no-repeat;
-		background-size: contain;
+		background-size: cover;
+		overflow: hidden;
 		border-radius: 5px;
 		transition: 0.5s;
 		position: absolute;
@@ -20328,7 +20329,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             });
             const playButton = this.getPlayButton();
             const interactiveArea = document.createElement('div');
-            if (data.leafCount - data.viewedLeafCount > 0) {
+            if (!(data.viewCount && data.viewCount > 0) && data.type === 'movie') {
+                const toViewElem = document.createElement('div');
+                toViewElem.className = 'toViewEpisode';
+                interactiveArea.appendChild(toViewElem);
+            }
+            if (data.leafCount - data.viewedLeafCount > 0 && data.type === 'show') {
                 const toViewElem = document.createElement('div');
                 toViewElem.className = 'toViewSeason';
                 toViewElem.innerHTML = (data.leafCount - data.viewedLeafCount).toString();
