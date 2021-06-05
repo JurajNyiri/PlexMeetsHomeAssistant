@@ -19707,6 +19707,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
+        this.detailsShown = false;
         this.columnsCount = 0;
         this.renderedItems = 0;
         this.maxRenderCount = false;
@@ -19729,8 +19730,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.renderNewElementsIfNeeded = () => {
             const loadAdditionalRowsCount = 2; // todo: make this configurable
             const height = getHeight(this.content);
-            if (this.detailElem &&
-                (this.detailElem.style.visibility === 'hidden' || this.detailElem.style.visibility === '') &&
+            if (!this.detailsShown &&
                 window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
                 this.renderedItems > 0) {
                 this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
@@ -19995,6 +19995,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.minimizeAll = () => {
+            this.detailsShown = false;
             if (this.activeMovieElem) {
                 this.activeMovieElem.style.display = `block`;
             }
@@ -20079,9 +20080,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.detailElem.style.zIndex = '0';
                 this.detailElem.style.visibility = 'hidden';
             }
-            this.renderNewElementsIfNeeded();
+            clearTimeout(this.renderNewElementsIfNeededTimeout);
+            this.renderNewElementsIfNeededTimeout = setTimeout(() => {
+                this.renderNewElementsIfNeeded();
+            }, 1000);
         };
         this.showDetails = async (data) => {
+            this.detailsShown = true;
             const top = this.getTop();
             if (this.detailElem) {
                 this.detailElem.style.transition = '0s';
@@ -20361,7 +20366,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else {
                 const top = this.getTop();
-                this.minimizeAll();
                 this.showDetails(this.activeMovieElemData);
                 this.showBackground();
                 movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;

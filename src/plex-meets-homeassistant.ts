@@ -11,6 +11,10 @@ import style from './modules/style';
 class PlexMeetsHomeAssistant extends HTMLElement {
 	plexProtocol: 'http' | 'https' = 'http';
 
+	detailsShown = false;
+
+	renderNewElementsIfNeededTimeout: any;
+
 	columnsCount = 0;
 
 	renderedItems = 0;
@@ -105,8 +109,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const loadAdditionalRowsCount = 2; // todo: make this configurable
 		const height = getHeight(this.content);
 		if (
-			this.detailElem &&
-			(this.detailElem.style.visibility === 'hidden' || this.detailElem.style.visibility === '') &&
+			!this.detailsShown &&
 			window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
 			this.renderedItems > 0
 		) {
@@ -401,6 +404,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	minimizeAll = (): void => {
+		this.detailsShown = false;
 		if (this.activeMovieElem) {
 			this.activeMovieElem.style.display = `block`;
 		}
@@ -490,10 +494,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.detailElem.style.zIndex = '0';
 			this.detailElem.style.visibility = 'hidden';
 		}
-		this.renderNewElementsIfNeeded();
+		clearTimeout(this.renderNewElementsIfNeededTimeout);
+		this.renderNewElementsIfNeededTimeout = setTimeout(() => {
+			this.renderNewElementsIfNeeded();
+		}, 1000);
 	};
 
 	showDetails = async (data: any): Promise<void> => {
+		this.detailsShown = true;
 		const top = this.getTop();
 		if (this.detailElem) {
 			this.detailElem.style.transition = '0s';
@@ -828,7 +836,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.hideBackground();
 		} else {
 			const top = this.getTop();
-			this.minimizeAll();
 			this.showDetails(this.activeMovieElemData);
 			this.showBackground();
 			movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;
