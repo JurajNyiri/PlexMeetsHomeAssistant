@@ -122,6 +122,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
 			this.renderedItems > 0
 		) {
+			console.log('renderNewElementsIfNeeded');
 			this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
 
 			this.renderMovieElems();
@@ -165,7 +166,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		// todo: find a better way to detect resize...
 		setInterval(() => {
-			if (this.movieElems.length > 0) {
+			const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+			let isFullScreen = false;
+			if (videoPlayer.children.length > 0) {
+				const video = videoPlayer.children[0] as any;
+				isFullScreen =
+					video.offsetWidth > (this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth;
+			}
+
+			if (this.movieElems.length > 0 && !isFullScreen) {
 				let renderNeeded = false;
 				if (this.previousPositions.length === 0) {
 					for (let i = 0; i < this.movieElems.length; i += 1) {
@@ -191,7 +200,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
 				}
 			}
-		}, 100);
+		}, 250);
 
 		this.renderPage();
 	};
@@ -323,8 +332,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		fullscreenTrailer.addEventListener('click', () => {
 			if (this.videoElem) {
 				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-				const video = videoPlayer.children[0] as HTMLVideoElement;
-				video.requestFullscreen();
+				const video = videoPlayer.children[0] as any;
+				if (video.requestFullscreen) {
+					video.requestFullscreen();
+				} else if (video.webkitRequestFullscreen) {
+					video.webkitRequestFullscreen();
+				} else if (video.msRequestFullscreen) {
+					video.msRequestFullscreen();
+				}
 			}
 		});
 

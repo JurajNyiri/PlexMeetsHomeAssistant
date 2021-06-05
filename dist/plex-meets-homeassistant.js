@@ -19790,6 +19790,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (!this.detailsShown &&
                 window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
                 this.renderedItems > 0) {
+                console.log('renderNewElementsIfNeeded');
                 this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
                 this.renderMovieElems();
                 this.calculatePositions();
@@ -19829,7 +19830,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.previousPositions = [];
             // todo: find a better way to detect resize...
             setInterval(() => {
-                if (this.movieElems.length > 0) {
+                const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
+                let isFullScreen = false;
+                if (videoPlayer.children.length > 0) {
+                    const video = videoPlayer.children[0];
+                    isFullScreen =
+                        video.offsetWidth > this.getElementsByClassName('searchContainer')[0].offsetWidth;
+                }
+                if (this.movieElems.length > 0 && !isFullScreen) {
                     let renderNeeded = false;
                     if (this.previousPositions.length === 0) {
                         for (let i = 0; i < this.movieElems.length; i += 1) {
@@ -19853,7 +19861,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.contentBGHeight = getHeight(contentbg[0]);
                     }
                 }
-            }, 100);
+            }, 250);
             this.renderPage();
         };
         this.searchInput = () => {
@@ -19971,7 +19979,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 if (this.videoElem) {
                     const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                     const video = videoPlayer.children[0];
-                    video.requestFullscreen();
+                    if (video.requestFullscreen) {
+                        video.requestFullscreen();
+                    }
+                    else if (video.webkitRequestFullscreen) {
+                        video.webkitRequestFullscreen();
+                    }
+                    else if (video.msRequestFullscreen) {
+                        video.msRequestFullscreen();
+                    }
                 }
             });
             this.seasonsElem = document.createElement('div');
