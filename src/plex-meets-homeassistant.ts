@@ -143,7 +143,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		try {
 			if (this.plex) {
 				await this.plex.init();
-				const continueWatching = await this.plex.getContinueWatching('3,5,6');
+				const continueWatching = await this.plex.getContinueWatching();
 				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
 				// eslint-disable-next-line @typescript-eslint/camelcase
 				this.data.serverID = serverID;
@@ -151,7 +151,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.data[section.title1] = section.Metadata;
 				});
 
-				this.data.Deck = continueWatching.MediaContainer.Metadata;
+				this.data.Deck = continueWatching.Metadata;
 
 				if (this.data[this.config.libraryName] === undefined) {
 					this.error = `Library name ${this.config.libraryName} does not exist.`;

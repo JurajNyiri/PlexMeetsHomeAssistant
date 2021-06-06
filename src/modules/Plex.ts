@@ -94,16 +94,21 @@ class Plex {
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
 	};
 
-	getContinueWatching = async (sections: string): Promise<any> => {
-		const cleanedUpSections = sections.replace(' ', '');
+	getContinueWatching = async (): Promise<any> => {
+		const sections = await this.getSections();
+		let sectionsString = '';
+		_.forEach(sections, section => {
+			sectionsString += `${section.key},`;
+		});
+		sectionsString = sectionsString.slice(0, -1);
 		const url = this.authorizeURL(
-			`${this.getBasicURL()}/hubs/continueWatching/items?contentDirectoryID=${cleanedUpSections}`
+			`${this.getBasicURL()}/hubs/continueWatching/items?contentDirectoryID=${sectionsString}`
 		);
 		return (
 			await axios.get(url, {
 				timeout: this.requestTimeout
 			})
-		).data;
+		).data.MediaContainer;
 	};
 
 	getBasicURL = (): string => {
