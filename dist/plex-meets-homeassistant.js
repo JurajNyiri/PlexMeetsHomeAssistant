@@ -19986,10 +19986,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.detailElem = document.createElement('div');
             this.detailElem.className = 'detail';
             this.detailElem.innerHTML =
-                "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div><button class='detailPlayAction'>Fullscreen Trailer</button>";
+                "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div><button class='detailPlayAction'>Fullscreen Trailer</button><div class='clear'></div>";
+            this.detailElem.addEventListener('click', () => {
+                this.hideBackground();
+                this.minimizeAll();
+            });
             this.content.appendChild(this.detailElem);
             const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
-            fullscreenTrailer.addEventListener('click', () => {
+            fullscreenTrailer.addEventListener('click', event => {
+                event.stopPropagation();
                 if (this.videoElem) {
                     const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                     const video = videoPlayer.children[0];
