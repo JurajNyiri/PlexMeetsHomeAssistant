@@ -19958,7 +19958,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             let found = false;
                             // eslint-disable-next-line consistent-return
                             lodash.forEach(searchValues, value => {
-                                if (!lodash.isEmpty(value) && lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(value))) {
+                                if ((!lodash.isEmpty(value) && lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(value))) ||
+                                    lodash.includes(lodash.toUpper(movieData.parentTitle), lodash.toUpper(value)) ||
+                                    lodash.includes(lodash.toUpper(movieData.grandparentTitle), lodash.toUpper(value))) {
                                     found = true;
                                     return false;
                                 }
@@ -19967,7 +19969,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 shouldRender = true;
                             }
                         }
-                        else if (lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(this.searchValue))) {
+                        else if (lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(this.searchValue)) ||
+                            lodash.includes(lodash.toUpper(movieData.parentTitle), lodash.toUpper(this.searchValue)) ||
+                            lodash.includes(lodash.toUpper(movieData.grandparentTitle), lodash.toUpper(this.searchValue))) {
                             shouldRender = true;
                         }
                         if (shouldRender) {

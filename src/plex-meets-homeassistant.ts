@@ -253,7 +253,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						let found = false;
 						// eslint-disable-next-line consistent-return
 						_.forEach(searchValues, value => {
-							if (!_.isEmpty(value) && _.includes(_.toUpper(movieData.title), _.toUpper(value))) {
+							if (
+								(!_.isEmpty(value) && _.includes(_.toUpper(movieData.title), _.toUpper(value))) ||
+								_.includes(_.toUpper(movieData.parentTitle), _.toUpper(value)) ||
+								_.includes(_.toUpper(movieData.grandparentTitle), _.toUpper(value))
+							) {
 								found = true;
 								return false;
 							}
@@ -261,7 +265,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						if (found || _.isEmpty(searchValues[0])) {
 							shouldRender = true;
 						}
-					} else if (_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue))) {
+					} else if (
+						_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue)) ||
+						_.includes(_.toUpper(movieData.parentTitle), _.toUpper(this.searchValue)) ||
+						_.includes(_.toUpper(movieData.grandparentTitle), _.toUpper(this.searchValue))
+					) {
 						shouldRender = true;
 					}
 					if (shouldRender) {
