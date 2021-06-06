@@ -876,6 +876,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 									this.videoElem.classList.remove('maxZIndex');
 									video.controls = false;
+									window.scroll({
+										top: getOffset(this.activeMovieElem as Element).top - 70,
+										behavior: 'smooth'
+									});
 								}
 							}
 						});
