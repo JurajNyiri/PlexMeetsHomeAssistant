@@ -46,8 +46,9 @@ const getOffset = (el: Element): Record<string, any> => {
 const isVideoFullScreen = (_this: any): boolean => {
 	const videoPlayer = _this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
 	const video = videoPlayer.children[0] as any;
+	const body = document.getElementsByTagName('body')[0];
 	return (
-		video.offsetWidth > (_this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth ||
+		(video.offsetWidth === body.offsetHeight && video.offsetHeight === body.offsetHeight) ||
 		(_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen'))
 	);
 };

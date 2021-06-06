@@ -167,36 +167,38 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		// todo: find a better way to detect resize...
 		setInterval(() => {
-			const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-			let isFullScreen = false;
-			if (videoPlayer.children.length > 0) {
-				isFullScreen = isVideoFullScreen(this);
-			}
+			if (!this.detailsShown) {
+				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+				let isFullScreen = false;
+				if (videoPlayer.children.length > 0) {
+					isFullScreen = isVideoFullScreen(this);
+				}
 
-			if (this.movieElems.length > 0 && !isFullScreen) {
-				let renderNeeded = false;
-				if (this.previousPositions.length === 0) {
+				if (this.movieElems.length > 0 && !isFullScreen) {
+					let renderNeeded = false;
+					if (this.previousPositions.length === 0) {
+						for (let i = 0; i < this.movieElems.length; i += 1) {
+							this.previousPositions[i] = {};
+							this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
+							this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
+						}
+					}
 					for (let i = 0; i < this.movieElems.length; i += 1) {
-						this.previousPositions[i] = {};
-						this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
-						this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
+						if (
+							this.previousPositions[i] &&
+							this.movieElems[i].dataset.clicked !== 'true' &&
+							(this.previousPositions[i].top !== this.movieElems[i].parentElement.offsetTop ||
+								this.previousPositions[i].left !== this.movieElems[i].parentElement.offsetLeft)
+						) {
+							renderNeeded = true;
+							this.previousPositions = [];
+						}
 					}
-				}
-				for (let i = 0; i < this.movieElems.length; i += 1) {
-					if (
-						this.previousPositions[i] &&
-						this.movieElems[i].dataset.clicked !== 'true' &&
-						(this.previousPositions[i].top !== this.movieElems[i].parentElement.offsetTop ||
-							this.previousPositions[i].left !== this.movieElems[i].parentElement.offsetLeft)
-					) {
-						renderNeeded = true;
-						this.previousPositions = [];
+					if (renderNeeded) {
+						this.renderPage();
+						const contentbg = this.getElementsByClassName('contentbg');
+						this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
 					}
-				}
-				if (renderNeeded) {
-					this.renderPage();
-					const contentbg = this.getElementsByClassName('contentbg');
-					this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
 				}
 			}
 		}, 250);
