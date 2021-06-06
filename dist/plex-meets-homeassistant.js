@@ -19053,6 +19053,12 @@ const getOffset = (el) => {
     }
     return { top: y, left: x };
 };
+const isVideoFullScreen = (_this) => {
+    const videoPlayer = _this.getElementsByClassName('videoPlayer')[0];
+    const video = videoPlayer.children[0];
+    return (video.offsetWidth > _this.getElementsByClassName('searchContainer')[0].offsetWidth ||
+        (_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen')));
+};
 const findTrailerURL = (movieData) => {
     let foundURL = '';
     if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
@@ -19628,6 +19634,10 @@ style.textContent = css `
 		margin-bottom: 15px;
 		transition: 0.5s;
 	}
+	.simulatedFullScreen {
+		background: black;
+		height: 100%;
+	}
 	.episodeElem {
 		background-repeat: no-repeat;
 		background-size: contain;
@@ -19834,9 +19844,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                 let isFullScreen = false;
                 if (videoPlayer.children.length > 0) {
-                    const video = videoPlayer.children[0];
-                    isFullScreen =
-                        video.offsetWidth > this.getElementsByClassName('searchContainer')[0].offsetWidth;
+                    isFullScreen = isVideoFullScreen(this);
                 }
                 if (this.movieElems.length > 0 && !isFullScreen) {
                     let renderNeeded = false;
@@ -19989,6 +19997,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     else if (video.msRequestFullscreen) {
                         video.msRequestFullscreen();
                     }
+                    else {
+                        const videobg1 = this.getElementsByClassName('videobg1')[0];
+                        const videobg2 = this.getElementsByClassName('videobg2')[0];
+                        videobg1.classList.add('transparent');
+                        videobg2.classList.add('transparent');
+                        this.videoElem.classList.add('maxZIndex');
+                        this.videoElem.classList.add('simulatedFullScreen');
+                        video.controls = true;
+                    }
                 }
             });
             this.seasonsElem = document.createElement('div');
@@ -20007,9 +20024,25 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.content.appendChild(this.episodesElem);
             this.videoElem = document.createElement('div');
             this.videoElem.className = 'video';
-            this.videoElem.addEventListener('click', () => {
-                this.hideBackground();
-                this.minimizeAll();
+            this.videoElem.addEventListener('click', event => {
+                const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
+                const video = videoPlayer.children[0];
+                if (isVideoFullScreen(this)) {
+                    event.stopPropagation();
+                    if (this.videoElem) {
+                        this.videoElem.classList.remove('maxZIndex');
+                        this.videoElem.classList.remove('simulatedFullScreen');
+                    }
+                    const videobg1 = this.getElementsByClassName('videobg1')[0];
+                    const videobg2 = this.getElementsByClassName('videobg2')[0];
+                    videobg1.classList.remove('transparent');
+                    videobg2.classList.remove('transparent');
+                    video.controls = false;
+                }
+                else {
+                    this.hideBackground();
+                    this.minimizeAll();
+                }
             });
             const videoBG1 = document.createElement('div');
             videoBG1.className = 'videobg1';
@@ -20097,6 +20130,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                 videoPlayer.innerHTML = '';
                 this.videoElem.classList.remove('maxZIndex');
+                this.videoElem.classList.remove('simulatedFullScreen');
                 const videobg1 = this.getElementsByClassName('videobg1')[0];
                 const videobg2 = this.getElementsByClassName('videobg2')[0];
                 videobg1.classList.remove('transparent');
@@ -20418,18 +20452,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             video.load();
                             video.play();
                             let playingFired = false;
+                            const videobg1 = this.getElementsByClassName('videobg1')[0];
+                            const videobg2 = this.getElementsByClassName('videobg2')[0];
                             video.addEventListener('click', event => {
-                                const isFullScreen = video.offsetWidth > this.getElementsByClassName('searchContainer')[0].offsetWidth;
-                                if (isFullScreen) {
+                                if (isVideoFullScreen(this)) {
                                     event.stopPropagation();
                                 }
                             });
                             video.addEventListener('fullscreenchange', () => {
-                                const isFullScreen = video.offsetWidth > this.getElementsByClassName('searchContainer')[0].offsetWidth;
                                 if (this.videoElem) {
-                                    const videobg1 = this.getElementsByClassName('videobg1')[0];
-                                    const videobg2 = this.getElementsByClassName('videobg2')[0];
-                                    if (isFullScreen) {
+                                    if (isVideoFullScreen(this)) {
                                         videobg1.classList.add('transparent');
                                         videobg2.classList.add('transparent');
                                         this.videoElem.classList.add('maxZIndex');

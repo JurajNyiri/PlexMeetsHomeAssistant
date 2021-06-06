@@ -43,6 +43,15 @@ const getOffset = (el: Element): Record<string, any> => {
 	return { top: y, left: x };
 };
 
+const isVideoFullScreen = (_this: any): boolean => {
+	const videoPlayer = _this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+	const video = videoPlayer.children[0] as any;
+	return (
+		video.offsetWidth > (_this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth ||
+		(_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen'))
+	);
+};
+
 const findTrailerURL = (movieData: Record<string, any>): string => {
 	let foundURL = '';
 	if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
@@ -150,4 +159,4 @@ const isScrolledIntoView = (elem: HTMLElement): boolean => {
 };
 
 // eslint-disable-next-line import/prefer-default-export
-export { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView, findTrailerURL };
+export { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView, findTrailerURL, isVideoFullScreen };

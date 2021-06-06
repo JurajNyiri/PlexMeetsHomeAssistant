@@ -252,6 +252,10 @@ style.textContent = css`
 		margin-bottom: 15px;
 		transition: 0.5s;
 	}
+	.simulatedFullScreen {
+		background: black;
+		height: 100%;
+	}
 	.episodeElem {
 		background-repeat: no-repeat;
 		background-size: contain;
