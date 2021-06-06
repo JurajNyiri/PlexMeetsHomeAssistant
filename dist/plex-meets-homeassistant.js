@@ -20459,7 +20459,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                     event.stopPropagation();
                                 }
                             });
-                            video.addEventListener('fullscreenchange', () => {
+                            const fullScreenChangeAction = () => {
                                 if (this.videoElem) {
                                     if (isVideoFullScreen(this)) {
                                         videobg1.classList.add('transparent');
@@ -20478,7 +20478,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         });
                                     }
                                 }
-                            });
+                            };
+                            video.addEventListener('fullscreenchange', fullScreenChangeAction);
+                            video.addEventListener('mozfullscreenchange', fullScreenChangeAction);
+                            video.addEventListener('webkitfullscreenchange', fullScreenChangeAction);
+                            video.addEventListener('msfullscreenchange', fullScreenChangeAction);
                             video.addEventListener('playing', () => {
                                 if (this.videoElem && !playingFired) {
                                     const contentbg = this.getElementsByClassName('contentbg')[0];
