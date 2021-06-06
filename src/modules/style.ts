@@ -257,6 +257,7 @@ style.textContent = css`
 		background-size: contain;
 		border-radius: 5px;
 		transition: 0.5s;
+		background: black;
 		overflow: hidden;
 	}
 	.seasonElem {
