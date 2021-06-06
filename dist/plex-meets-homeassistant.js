@@ -18729,6 +18729,12 @@ class Plex {
             });
             return this.exportSectionsData(await Promise.all(sectionsRequests));
         };
+        this.getRecentyAdded = async () => {
+            const url = this.authorizeURL(`${this.getBasicURL()}/hubs/home/recentlyAdded?type=2&X-Plex-Container-Start=0&X-Plex-Container-Size=50`);
+            return (await axios.get(url, {
+                timeout: this.requestTimeout
+            })).data.MediaContainer;
+        };
         this.getContinueWatching = async () => {
             const sections = await this.getSections();
             let sectionsString = '';
@@ -19869,6 +19875,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 if (this.plex) {
                     await this.plex.init();
                     const continueWatching = await this.plex.getContinueWatching();
+                    const recentlyAdded = await this.plex.getRecentyAdded();
                     const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     this.data.serverID = serverID;
@@ -19876,6 +19883,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.data[section.title1] = section.Metadata;
                     });
                     this.data.Deck = continueWatching.Metadata;
+                    this.data['Recently Added'] = recentlyAdded.Metadata;
                     if (this.data[this.config.libraryName] === undefined) {
                         this.error = `Library name ${this.config.libraryName} does not exist.`;
                     }

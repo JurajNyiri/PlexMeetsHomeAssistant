@@ -94,6 +94,17 @@ class Plex {
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
 	};
 
+	getRecentyAdded = async (): Promise<any> => {
+		const url = this.authorizeURL(
+			`${this.getBasicURL()}/hubs/home/recentlyAdded?type=2&X-Plex-Container-Start=0&X-Plex-Container-Size=50`
+		);
+		return (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer;
+	};
+
 	getContinueWatching = async (): Promise<any> => {
 		const sections = await this.getSections();
 		let sectionsString = '';

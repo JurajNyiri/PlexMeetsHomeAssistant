@@ -144,6 +144,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (this.plex) {
 				await this.plex.init();
 				const continueWatching = await this.plex.getContinueWatching();
+				const recentlyAdded = await this.plex.getRecentyAdded();
 				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
 				// eslint-disable-next-line @typescript-eslint/camelcase
 				this.data.serverID = serverID;
@@ -152,6 +153,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				});
 
 				this.data.Deck = continueWatching.Metadata;
+				this.data['Recently Added'] = recentlyAdded.Metadata;
 
 				if (this.data[this.config.libraryName] === undefined) {
 					this.error = `Library name ${this.config.libraryName} does not exist.`;
