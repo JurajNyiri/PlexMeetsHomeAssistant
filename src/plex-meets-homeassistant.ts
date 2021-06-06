@@ -123,7 +123,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
 			this.renderedItems > 0
 		) {
-			console.log('renderNewElementsIfNeeded');
 			this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
 
 			this.renderMovieElems();
@@ -616,7 +615,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.detailElem.children[0].innerHTML = escapeHtml(data.title);
 					this.detailElem.children[1].innerHTML = escapeHtml(data.year);
 					(this.detailElem.children[1] as HTMLElement).dataset.year = escapeHtml(data.year);
-					console.log(data.rating);
 					this.detailElem.children[2].innerHTML = `${(data.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
 								parseInt(escapeHtml(data.duration), 10) / 60 / 1000
