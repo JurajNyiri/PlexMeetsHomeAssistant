@@ -1171,6 +1171,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			interactiveArea.appendChild(toViewElem);
 		}
 
+		if (data.viewOffset > 0 && data.duration > 0) {
+			const toViewElem = document.createElement('div');
+			toViewElem.className = 'viewProgress';
+			toViewElem.style.width = `${(data.viewOffset / data.duration) * 100}%`;
+			interactiveArea.appendChild(toViewElem);
+		}
+
 		interactiveArea.className = 'interactiveArea';
 		if (this.playController && this.playController.isPlaySupported(data)) {
 			interactiveArea.append(playButton);

@@ -188,6 +188,12 @@ style.textContent = css`
 		white-space: nowrap;
 		overflow: hidden;
 	}
+	.viewProgress {
+		background: #e5a00d;
+		height: 3px;
+		bottom: 0;
+		position: absolute;
+	}
 	.toViewEpisode {
 		position: relative;
 		height: 28px;
