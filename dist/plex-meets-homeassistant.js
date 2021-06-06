@@ -18672,6 +18672,7 @@ class Plex {
         this.serverInfo = {};
         this.clients = [];
         this.requestTimeout = 5000;
+        this.sections = [];
         this.init = async () => {
             await this.getClients();
             /*
@@ -18707,10 +18708,14 @@ class Plex {
             return this.serverInfo;
         };
         this.getSections = async () => {
-            const url = this.authorizeURL(`${this.getBasicURL()}/library/sections`);
-            return (await axios.get(url, {
-                timeout: this.requestTimeout
-            })).data.MediaContainer.Directory;
+            if (lodash.isEmpty(this.sections)) {
+                const url = this.authorizeURL(`${this.getBasicURL()}/library/sections`);
+                const sectionsData = await axios.get(url, {
+                    timeout: this.requestTimeout
+                });
+                this.sections = sectionsData.data.MediaContainer.Directory;
+            }
+            return this.sections;
         };
         this.getSectionsData = async () => {
             const sections = await this.getSections();
@@ -18723,6 +18728,13 @@ class Plex {
                 }));
             });
             return this.exportSectionsData(await Promise.all(sectionsRequests));
+        };
+        this.getContinueWatching = async (sections) => {
+            const cleanedUpSections = sections.replace(' ', '');
+            const url = this.authorizeURL(`${this.getBasicURL()}/hubs/continueWatching/items?contentDirectoryID=${cleanedUpSections}`);
+            return (await axios.get(url, {
+                timeout: this.requestTimeout
+            })).data;
         };
         this.getBasicURL = () => {
             return `${this.protocol}://${this.ip}:${this.port}`;
@@ -19052,6 +19064,17 @@ const getOffset = (el) => {
         }
     }
     return { top: y, left: x };
+};
+const hasEpisodes = (media) => {
+    let result = false;
+    // eslint-disable-next-line consistent-return
+    lodash.forEach(media, data => {
+        if (lodash.isEqual(data.type, 'episode')) {
+            result = true;
+            return false;
+        }
+    });
+    return result;
 };
 const isVideoFullScreen = (_this) => {
     const videoPlayer = _this.getElementsByClassName('videoPlayer')[0];
@@ -19423,6 +19446,13 @@ style.textContent = css `
 		padding: 16px;
 		display: none;
 	}
+	.additionalElem {
+		color: hsla(0, 0%, 100%, 0.45);
+		position: relative;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+	}
 	.ratingDetail {
 		background: #ffffff24;
 		padding: 5px 10px;
@@ -19560,6 +19590,9 @@ style.textContent = css `
 	.yearElem {
 		color: hsla(0, 0%, 100%, 0.45);
 		position: relative;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
 	}
 	.toViewEpisode {
 		position: relative;
@@ -19824,12 +19857,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             try {
                 if (this.plex) {
                     await this.plex.init();
+                    const continueWatching = await this.plex.getContinueWatching('3,5,6');
                     const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     this.data.serverID = serverID;
                     lodash.forEach(plexSections, section => {
                         this.data[section.title1] = section.Metadata;
                     });
+                    this.data.deck = continueWatching.MediaContainer.Metadata;
                     if (this.data[this.config.libraryName] === undefined) {
                         this.error = `Library name ${this.config.libraryName} does not exist.`;
                     }
@@ -19906,11 +19941,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 // eslint-disable-next-line consistent-return
                 let lastRowTop = 0;
                 const loadAdditionalRowsCount = 2; // todo: make this configurable
+                const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
                 // eslint-disable-next-line consistent-return
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     if ((!this.maxCount || this.renderedItems < this.maxCount) &&
                         (!this.maxRenderCount || this.renderedItems < this.maxRenderCount)) {
-                        const movieElem = this.getMovieElement(movieData);
+                        const movieElem = this.getMovieElement(movieData, hasEpisodesResult);
                         let shouldRender = false;
                         if (this.looseSearch) {
                             let found = false;
@@ -20695,12 +20731,24 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             return 0;
         };
-        this.getMovieElement = (data) => {
-            const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+        this.getMovieElement = (data, hasAdditionalData = false) => {
+            console.log(data);
+            let thumbURL = '';
+            if (lodash.isEqual(data.type, 'episode')) {
+                thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
+            }
+            else {
+                thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+            }
             const container = document.createElement('div');
             container.className = 'container';
             container.style.width = `${CSS_STYLE.width}px`;
-            container.style.height = `${CSS_STYLE.height + 30}px`;
+            if (hasAdditionalData) {
+                container.style.height = `${CSS_STYLE.height + 50}px`;
+            }
+            else {
+                container.style.height = `${CSS_STYLE.height + 30}px`;
+            }
             const movieElem = document.createElement('div');
             movieElem.className = 'movieElem';
             movieElem.style.width = `${CSS_STYLE.width}px`;
@@ -20738,15 +20786,31 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
             });
             const titleElem = document.createElement('div');
-            titleElem.innerHTML = escapeHtml(data.title);
+            if (lodash.isEqual(data.type, 'episode')) {
+                titleElem.innerHTML = escapeHtml(data.grandparentTitle);
+            }
+            else {
+                titleElem.innerHTML = escapeHtml(data.title);
+            }
             titleElem.className = 'titleElem';
             titleElem.style.marginTop = `${CSS_STYLE.height}px`;
             const yearElem = document.createElement('div');
-            yearElem.innerHTML = escapeHtml(data.year);
+            if (lodash.isEqual(data.type, 'episode')) {
+                yearElem.innerHTML = escapeHtml(data.title);
+            }
+            else {
+                yearElem.innerHTML = escapeHtml(data.year);
+            }
             yearElem.className = 'yearElem';
+            const additionalElem = document.createElement('div');
+            if (lodash.isEqual(data.type, 'episode')) {
+                additionalElem.innerHTML = escapeHtml(`S${data.parentIndex} E${data.index}`);
+                additionalElem.className = 'additionalElem';
+            }
             container.appendChild(movieElem);
             container.appendChild(titleElem);
             container.appendChild(yearElem);
+            container.appendChild(additionalElem);
             return container;
         };
         this.loadCustomStyles = () => {

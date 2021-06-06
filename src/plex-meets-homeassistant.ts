@@ -12,7 +12,8 @@ import {
 	getHeight,
 	createEpisodesView,
 	findTrailerURL,
-	isVideoFullScreen
+	isVideoFullScreen,
+	hasEpisodes
 } from './modules/utils';
 import style from './modules/style';
 
@@ -142,12 +143,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		try {
 			if (this.plex) {
 				await this.plex.init();
+				const continueWatching = await this.plex.getContinueWatching('3,5,6');
 				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
 				// eslint-disable-next-line @typescript-eslint/camelcase
 				this.data.serverID = serverID;
 				_.forEach(plexSections, section => {
 					this.data[section.title1] = section.Metadata;
 				});
+
+				this.data.deck = continueWatching.MediaContainer.Metadata;
 
 				if (this.data[this.config.libraryName] === undefined) {
 					this.error = `Library name ${this.config.libraryName} does not exist.`;
@@ -236,13 +240,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			let lastRowTop = 0;
 
 			const loadAdditionalRowsCount = 2; // todo: make this configurable
+			const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
 			// eslint-disable-next-line consistent-return
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				if (
 					(!this.maxCount || this.renderedItems < this.maxCount) &&
 					(!this.maxRenderCount || this.renderedItems < this.maxRenderCount)
 				) {
-					const movieElem = this.getMovieElement(movieData);
+					const movieElem = this.getMovieElement(movieData, hasEpisodesResult);
 					let shouldRender = false;
 					if (this.looseSearch) {
 						let found = false;
@@ -1117,13 +1122,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		return 0;
 	};
 
-	getMovieElement = (data: any): HTMLDivElement => {
-		const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+	getMovieElement = (data: any, hasAdditionalData = false): HTMLDivElement => {
+		console.log(data);
+		let thumbURL = '';
+		if (_.isEqual(data.type, 'episode')) {
+			thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
+		} else {
+			thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+		}
 
 		const container = document.createElement('div');
 		container.className = 'container';
 		container.style.width = `${CSS_STYLE.width}px`;
-		container.style.height = `${CSS_STYLE.height + 30}px`;
+		if (hasAdditionalData) {
+			container.style.height = `${CSS_STYLE.height + 50}px`;
+		} else {
+			container.style.height = `${CSS_STYLE.height + 30}px`;
+		}
 
 		const movieElem = document.createElement('div');
 		movieElem.className = 'movieElem';
@@ -1172,17 +1187,32 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		});
 
 		const titleElem = document.createElement('div');
-		titleElem.innerHTML = escapeHtml(data.title);
+		if (_.isEqual(data.type, 'episode')) {
+			titleElem.innerHTML = escapeHtml(data.grandparentTitle);
+		} else {
+			titleElem.innerHTML = escapeHtml(data.title);
+		}
 		titleElem.className = 'titleElem';
 		titleElem.style.marginTop = `${CSS_STYLE.height}px`;
 
 		const yearElem = document.createElement('div');
-		yearElem.innerHTML = escapeHtml(data.year);
+		if (_.isEqual(data.type, 'episode')) {
+			yearElem.innerHTML = escapeHtml(data.title);
+		} else {
+			yearElem.innerHTML = escapeHtml(data.year);
+		}
 		yearElem.className = 'yearElem';
+
+		const additionalElem = document.createElement('div');
+		if (_.isEqual(data.type, 'episode')) {
+			additionalElem.innerHTML = escapeHtml(`S${data.parentIndex} E${data.index}`);
+			additionalElem.className = 'additionalElem';
+		}
 
 		container.appendChild(movieElem);
 		container.appendChild(titleElem);
 		container.appendChild(yearElem);
+		container.appendChild(additionalElem);
 
 		return container;
 	};

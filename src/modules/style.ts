@@ -40,6 +40,13 @@ style.textContent = css`
 		padding: 16px;
 		display: none;
 	}
+	.additionalElem {
+		color: hsla(0, 0%, 100%, 0.45);
+		position: relative;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+	}
 	.ratingDetail {
 		background: #ffffff24;
 		padding: 5px 10px;
@@ -177,6 +184,9 @@ style.textContent = css`
 	.yearElem {
 		color: hsla(0, 0%, 100%, 0.45);
 		position: relative;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
 	}
 	.toViewEpisode {
 		position: relative;

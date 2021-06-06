@@ -43,6 +43,18 @@ const getOffset = (el: Element): Record<string, any> => {
 	return { top: y, left: x };
 };
 
+const hasEpisodes = (media: Array<Record<string, any>>): boolean => {
+	let result = false;
+	// eslint-disable-next-line consistent-return
+	_.forEach(media, data => {
+		if (_.isEqual(data.type, 'episode')) {
+			result = true;
+			return false;
+		}
+	});
+	return result;
+};
+
 const isVideoFullScreen = (_this: any): boolean => {
 	const videoPlayer = _this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
 	const video = videoPlayer.children[0] as any;
@@ -160,4 +172,13 @@ const isScrolledIntoView = (elem: HTMLElement): boolean => {
 };
 
 // eslint-disable-next-line import/prefer-default-export
-export { escapeHtml, getOffset, isScrolledIntoView, getHeight, createEpisodesView, findTrailerURL, isVideoFullScreen };
+export {
+	escapeHtml,
+	getOffset,
+	isScrolledIntoView,
+	getHeight,
+	createEpisodesView,
+	findTrailerURL,
+	isVideoFullScreen,
+	hasEpisodes
+};

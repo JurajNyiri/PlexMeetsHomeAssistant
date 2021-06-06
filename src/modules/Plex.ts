@@ -19,6 +19,8 @@ class Plex {
 
 	sort: string;
 
+	sections: Array<Record<string, any>> = [];
+
 	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http', sort = 'titleSort:asc') {
 		this.ip = ip;
 		this.port = port;
@@ -67,12 +69,14 @@ class Plex {
 	};
 
 	getSections = async (): Promise<any> => {
-		const url = this.authorizeURL(`${this.getBasicURL()}/library/sections`);
-		return (
-			await axios.get(url, {
+		if (_.isEmpty(this.sections)) {
+			const url = this.authorizeURL(`${this.getBasicURL()}/library/sections`);
+			const sectionsData = await axios.get(url, {
 				timeout: this.requestTimeout
-			})
-		).data.MediaContainer.Directory;
+			});
+			this.sections = sectionsData.data.MediaContainer.Directory;
+		}
+		return this.sections;
 	};
 
 	getSectionsData = async (): Promise<any> => {
@@ -88,6 +92,18 @@ class Plex {
 			);
 		});
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
+	};
+
+	getContinueWatching = async (sections: string): Promise<any> => {
+		const cleanedUpSections = sections.replace(' ', '');
+		const url = this.authorizeURL(
+			`${this.getBasicURL()}/hubs/continueWatching/items?contentDirectoryID=${cleanedUpSections}`
+		);
+		return (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data;
 	};
 
 	getBasicURL = (): string => {
