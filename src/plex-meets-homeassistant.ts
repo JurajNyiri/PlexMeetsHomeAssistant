@@ -658,7 +658,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	showDetails = async (data: any): Promise<void> => {
-		console.log(data);
 		this.detailsShown = true;
 		const top = this.getTop();
 		if (this.detailElem) {
@@ -1131,7 +1130,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	getMovieElement = (data: any, hasAdditionalData = false): HTMLDivElement => {
-		console.log(data);
 		let thumbURL = '';
 		if (_.isEqual(data.type, 'episode')) {
 			thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;

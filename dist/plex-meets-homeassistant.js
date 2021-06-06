@@ -20332,7 +20332,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             fullscreenTrailer.style.visibility = 'hidden';
         };
         this.showDetails = async (data) => {
-            console.log(data);
             this.detailsShown = true;
             const top = this.getTop();
             if (this.detailElem) {
@@ -20742,7 +20741,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return 0;
         };
         this.getMovieElement = (data, hasAdditionalData = false) => {
-            console.log(data);
             let thumbURL = '';
             if (lodash.isEqual(data.type, 'episode')) {
                 thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
