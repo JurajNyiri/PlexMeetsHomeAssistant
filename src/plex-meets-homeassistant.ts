@@ -616,6 +616,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.detailElem.children[0].innerHTML = escapeHtml(data.title);
 					this.detailElem.children[1].innerHTML = escapeHtml(data.year);
 					(this.detailElem.children[1] as HTMLElement).dataset.year = escapeHtml(data.year);
+					console.log(data.rating);
 					this.detailElem.children[2].innerHTML = `${(data.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
 								parseInt(escapeHtml(data.duration), 10) / 60 / 1000
@@ -625,9 +626,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							? `<span class='contentRatingDetail'>${escapeHtml(data.contentRating)}</span>`
 							: '') +
 						(data.rating !== undefined
-							? `<span class='ratingDetail'>${data.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${escapeHtml(
-									data.rating
-							  )}</span>`
+							? `<span class='ratingDetail'>${data.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${Math.round(
+									parseFloat(escapeHtml(data.rating)) * 10
+							  ) / 10}</span>`
 							: '')}<div class='clear'></div>`;
 					this.detailElem.children[3].innerHTML = escapeHtml(data.summary);
 					/* todo temp disabled
