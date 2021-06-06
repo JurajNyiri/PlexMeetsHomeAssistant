@@ -11,18 +11,16 @@ style.textContent = css`
 		visibility: hidden !important;
 	}
 	.detailPlayAction {
-		margin-top: 10px;
 		color: rgb(15 17 19);
 		font-weight: bold;
 		float: left;
-		padding: 5px 10px;
+		padding: 7px 10px;
 		border-radius: 5px;
 		cursor: pointer;
 		position: relative;
 		background: orange;
 		border: none;
 		visibility: hidden;
-		transition: 2s;
 	}
 	.seasons {
 		z-index: 5;
@@ -49,6 +47,7 @@ style.textContent = css`
 		white-space: nowrap;
 		margin-bottom: 10px;
 		float: left;
+		margin-right: 10px;
 	}
 	.contentRatingDetail {
 		background: #ffffff24;
@@ -73,6 +72,7 @@ style.textContent = css`
 	}
 	.detail .metaInfo {
 		display: block;
+		float: left;
 	}
 	.detail h2 {
 		text-overflow: ellipsis;
@@ -251,6 +251,11 @@ style.textContent = css`
 		margin-right: 16px;
 		margin-bottom: 15px;
 		transition: 0.5s;
+	}
+	.metaInfoDetails {
+		color: hsla(0, 0%, 98%, 0.45);
+		text-transform: uppercase;
+		margin-top: 10px;
 	}
 	.simulatedFullScreen {
 		background: black;

@@ -19394,18 +19394,16 @@ style.textContent = css `
 		visibility: hidden !important;
 	}
 	.detailPlayAction {
-		margin-top: 10px;
 		color: rgb(15 17 19);
 		font-weight: bold;
 		float: left;
-		padding: 5px 10px;
+		padding: 7px 10px;
 		border-radius: 5px;
 		cursor: pointer;
 		position: relative;
 		background: orange;
 		border: none;
 		visibility: hidden;
-		transition: 2s;
 	}
 	.seasons {
 		z-index: 5;
@@ -19432,6 +19430,7 @@ style.textContent = css `
 		white-space: nowrap;
 		margin-bottom: 10px;
 		float: left;
+		margin-right: 10px;
 	}
 	.contentRatingDetail {
 		background: #ffffff24;
@@ -19456,6 +19455,7 @@ style.textContent = css `
 	}
 	.detail .metaInfo {
 		display: block;
+		float: left;
 	}
 	.detail h2 {
 		text-overflow: ellipsis;
@@ -19634,6 +19634,11 @@ style.textContent = css `
 		margin-right: 16px;
 		margin-bottom: 15px;
 		transition: 0.5s;
+	}
+	.metaInfoDetails {
+		color: hsla(0, 0%, 98%, 0.45);
+		text-transform: uppercase;
+		margin-top: 10px;
 	}
 	.simulatedFullScreen {
 		background: black;
@@ -19985,8 +19990,47 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.content.appendChild(contentbg);
             this.detailElem = document.createElement('div');
             this.detailElem.className = 'detail';
-            this.detailElem.innerHTML =
-                "<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div><button class='detailPlayAction'>Fullscreen Trailer</button><div class='clear'></div>";
+            this.detailElem.innerHTML = `<h1 class='detailsTitle'></h1>
+			<h2 class='detailsYear'></h2>
+			<span class='metaInfo'></span>
+			<button class='detailPlayAction'>Fullscreen Trailer</button>
+			<div class='clear'></div>
+			<span class='detailDesc'></span>
+			<div class='clear'></div>
+			<table>
+				<tr>
+					<td class='metaInfoDetails'>
+						Directed by
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+				<tr>
+					<td class='metaInfoDetails'>
+						Written by
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+				<tr>
+					<td class='metaInfoDetails'>
+						Studio
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+				<tr>
+					<td class='metaInfoDetails'>
+						Genre
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+			</table>`;
             this.detailElem.addEventListener('click', () => {
                 this.hideBackground();
                 this.minimizeAll();
@@ -20242,6 +20286,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             fullscreenTrailer.style.visibility = 'hidden';
         };
         this.showDetails = async (data) => {
+            console.log(data);
             this.detailsShown = true;
             const top = this.getTop();
             if (this.detailElem) {
@@ -20253,10 +20298,53 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.detailElem.style.visibility = 'visible';
                         this.detailElem.style.transition = '0.7s';
                         this.detailElem.style.top = `${top}px`;
-                        this.detailElem.children[0].innerHTML = escapeHtml(data.title);
-                        this.detailElem.children[1].innerHTML = escapeHtml(data.year);
-                        this.detailElem.children[1].dataset.year = escapeHtml(data.year);
-                        this.detailElem.children[2].innerHTML = `${(data.duration !== undefined
+                        const directorElem = this.getElementsByClassName('metaInfoDetailsData')[0];
+                        if (directorElem.parentElement) {
+                            if (data.Director && data.Director.length > 0) {
+                                directorElem.innerHTML = escapeHtml(data.Director[0].tag);
+                                directorElem.parentElement.style.display = 'table-row';
+                            }
+                            else {
+                                directorElem.parentElement.style.display = 'none';
+                            }
+                        }
+                        const writerElem = this.getElementsByClassName('metaInfoDetailsData')[1];
+                        if (writerElem.parentElement) {
+                            if (data.Writer && data.Writer.length > 0) {
+                                writerElem.innerHTML = escapeHtml(data.Writer[0].tag);
+                                writerElem.parentElement.style.display = 'table-row';
+                            }
+                            else {
+                                writerElem.parentElement.style.display = 'none';
+                            }
+                        }
+                        const studioElem = this.getElementsByClassName('metaInfoDetailsData')[2];
+                        if (studioElem.parentElement) {
+                            if (data.studio) {
+                                studioElem.innerHTML = escapeHtml(data.studio);
+                                studioElem.parentElement.style.display = 'table-row';
+                            }
+                            else {
+                                studioElem.parentElement.style.display = 'none';
+                            }
+                        }
+                        const genreElem = this.getElementsByClassName('metaInfoDetailsData')[3];
+                        if (genreElem.parentElement) {
+                            if (data.Genre && data.Genre.length > 0) {
+                                let genre = '';
+                                lodash.forEach(data.Genre, tag => {
+                                    genre += `${tag.tag}, `;
+                                });
+                                genreElem.innerHTML = escapeHtml(genre.slice(0, -2));
+                                genreElem.parentElement.style.display = 'table-row';
+                            }
+                            else {
+                                genreElem.parentElement.style.display = 'none';
+                            }
+                        }
+                        this.getElementsByClassName('detailsTitle')[0].innerHTML = escapeHtml(data.title);
+                        this.getElementsByClassName('detailsYear')[0].innerHTML = escapeHtml(data.year);
+                        this.getElementsByClassName('metaInfo')[0].innerHTML = `${(data.duration !== undefined
                             ? `<span class='minutesDetail'>${Math.round(parseInt(escapeHtml(data.duration), 10) / 60 / 1000)} min</span>`
                             : '') +
                             (data.contentRating !== undefined
@@ -20265,7 +20353,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             (data.rating !== undefined
                                 ? `<span class='ratingDetail'>${data.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${Math.round(parseFloat(escapeHtml(data.rating)) * 10) / 10}</span>`
                                 : '')}<div class='clear'></div>`;
-                        this.detailElem.children[3].innerHTML = escapeHtml(data.summary);
+                        this.getElementsByClassName('detailDesc')[0].innerHTML = escapeHtml(data.summary);
                         /* todo temp disabled
                         if (data.type === 'movie') {
                             (this.detailElem.children[5] as HTMLElement).style.visibility = 'visible';

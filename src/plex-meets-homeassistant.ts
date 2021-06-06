@@ -326,8 +326,47 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.detailElem = document.createElement('div');
 		this.detailElem.className = 'detail';
-		this.detailElem.innerHTML =
-			"<h1></h1><h2></h2><span class='metaInfo'></span><span class='detailDesc'></span><div class='clear'></div><button class='detailPlayAction'>Fullscreen Trailer</button><div class='clear'></div>";
+		this.detailElem.innerHTML = `<h1 class='detailsTitle'></h1>
+			<h2 class='detailsYear'></h2>
+			<span class='metaInfo'></span>
+			<button class='detailPlayAction'>Fullscreen Trailer</button>
+			<div class='clear'></div>
+			<span class='detailDesc'></span>
+			<div class='clear'></div>
+			<table>
+				<tr>
+					<td class='metaInfoDetails'>
+						Directed by
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+				<tr>
+					<td class='metaInfoDetails'>
+						Written by
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+				<tr>
+					<td class='metaInfoDetails'>
+						Studio
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+				<tr>
+					<td class='metaInfoDetails'>
+						Genre
+					</td>
+					<td class='metaInfoDetailsData'>
+						...
+					</td>
+				</tr>
+			</table>`;
 
 		this.detailElem.addEventListener('click', () => {
 			this.hideBackground();
@@ -606,6 +645,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	showDetails = async (data: any): Promise<void> => {
+		console.log(data);
 		this.detailsShown = true;
 		const top = this.getTop();
 		if (this.detailElem) {
@@ -618,10 +658,50 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.detailElem.style.transition = '0.7s';
 					this.detailElem.style.top = `${top}px`;
 
-					this.detailElem.children[0].innerHTML = escapeHtml(data.title);
-					this.detailElem.children[1].innerHTML = escapeHtml(data.year);
-					(this.detailElem.children[1] as HTMLElement).dataset.year = escapeHtml(data.year);
-					this.detailElem.children[2].innerHTML = `${(data.duration !== undefined
+					const directorElem = this.getElementsByClassName('metaInfoDetailsData')[0] as HTMLElement;
+					if (directorElem.parentElement) {
+						if (data.Director && data.Director.length > 0) {
+							directorElem.innerHTML = escapeHtml(data.Director[0].tag);
+							directorElem.parentElement.style.display = 'table-row';
+						} else {
+							directorElem.parentElement.style.display = 'none';
+						}
+					}
+
+					const writerElem = this.getElementsByClassName('metaInfoDetailsData')[1] as HTMLElement;
+					if (writerElem.parentElement) {
+						if (data.Writer && data.Writer.length > 0) {
+							writerElem.innerHTML = escapeHtml(data.Writer[0].tag);
+							writerElem.parentElement.style.display = 'table-row';
+						} else {
+							writerElem.parentElement.style.display = 'none';
+						}
+					}
+					const studioElem = this.getElementsByClassName('metaInfoDetailsData')[2] as HTMLElement;
+					if (studioElem.parentElement) {
+						if (data.studio) {
+							studioElem.innerHTML = escapeHtml(data.studio);
+							studioElem.parentElement.style.display = 'table-row';
+						} else {
+							studioElem.parentElement.style.display = 'none';
+						}
+					}
+					const genreElem = this.getElementsByClassName('metaInfoDetailsData')[3] as HTMLElement;
+					if (genreElem.parentElement) {
+						if (data.Genre && data.Genre.length > 0) {
+							let genre = '';
+							_.forEach(data.Genre, tag => {
+								genre += `${tag.tag}, `;
+							});
+							genreElem.innerHTML = escapeHtml(genre.slice(0, -2));
+							genreElem.parentElement.style.display = 'table-row';
+						} else {
+							genreElem.parentElement.style.display = 'none';
+						}
+					}
+					(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(data.title);
+					(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(data.year);
+					(this.getElementsByClassName('metaInfo')[0] as HTMLElement).innerHTML = `${(data.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
 								parseInt(escapeHtml(data.duration), 10) / 60 / 1000
 						  )} min</span>`
@@ -634,7 +714,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									parseFloat(escapeHtml(data.rating)) * 10
 							  ) / 10}</span>`
 							: '')}<div class='clear'></div>`;
-					this.detailElem.children[3].innerHTML = escapeHtml(data.summary);
+					(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(data.summary);
+
 					/* todo temp disabled
 					if (data.type === 'movie') {
 						(this.detailElem.children[5] as HTMLElement).style.visibility = 'visible';
