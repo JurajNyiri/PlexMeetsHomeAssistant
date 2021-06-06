@@ -19870,7 +19870,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     lodash.forEach(plexSections, section => {
                         this.data[section.title1] = section.Metadata;
                     });
-                    this.data.deck = continueWatching.MediaContainer.Metadata;
+                    this.data.Deck = continueWatching.MediaContainer.Metadata;
                     if (this.data[this.config.libraryName] === undefined) {
                         this.error = `Library name ${this.config.libraryName} does not exist.`;
                     }

@@ -31,6 +31,8 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 **port**: Enter port of your plex sever.
 
+**libraryName**: Name of the library you wish to render. Available special libraries: _Deck_
+
 **protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
 
 **maxCount**: _Optional_ Maximum number of items to display in card.
@@ -67,7 +69,7 @@ type: 'custom:plex-meets-homeassistant'
 token: QWdsqEXAMPLETOKENqwerty
 ip: 192.168.13.37
 port: 32400
-libraryName: Movies
+libraryName: Deck
 protocol: http
 maxCount: 10
 sort: title:desc
