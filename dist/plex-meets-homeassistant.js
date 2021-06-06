@@ -19812,6 +19812,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             window.addEventListener('scroll', () => {
                 this.renderNewElementsIfNeeded();
             });
+            window.addEventListener('resize', () => {
+                this.renderNewElementsIfNeeded();
+            });
             this.loading = true;
             this.renderPage();
             try {
