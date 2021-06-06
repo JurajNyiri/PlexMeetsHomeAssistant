@@ -745,9 +745,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			}, 200);
 		}
 		if (this.plex) {
-			if (data.childCount > 0) {
+			let seasonsData: Record<string, any> = {};
+			if (_.isEqual(data.type, 'episode')) {
+				seasonsData = await this.plex.getLibraryData(data.grandparentKey.split('/')[3]);
+			} else if (data.childCount > 0) {
+				seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
+			}
+			if (!_.isEmpty(seasonsData)) {
 				this.seasonElemFreshlyLoaded = true;
-				const seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
 				if (this.seasonsElem) {
 					this.seasonsElem.style.display = 'block';
 					this.seasonsElem.innerHTML = '';
