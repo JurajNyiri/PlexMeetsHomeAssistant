@@ -34,7 +34,9 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 **libraryName**: Name of the library you wish to render.
 
 Available special libraries:
+
 _Deck_: Shows Continue Watching
+
 _Recently Added_: Shows recently added episodes of TV Shows. Tip: For movies, just put in your library name and use sort.
 
 **protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
