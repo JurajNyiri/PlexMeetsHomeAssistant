@@ -19948,6 +19948,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.searchValue = searchInput.value;
                 this.renderPage();
                 this.focus();
+                this.renderNewElementsIfNeeded();
             });
             searchContainer.appendChild(searchInput);
             return searchContainer;
@@ -20434,6 +20435,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
                 }
                 const dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+                console.log(dataDetails);
+                console.log(dataDetails.Extras);
                 if (this.videoElem) {
                     const trailerURL = findTrailerURL(dataDetails);
                     if (trailerURL !== '') {
