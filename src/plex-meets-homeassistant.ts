@@ -751,6 +751,76 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			} else if (data.childCount > 0) {
 				seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
 			}
+			const dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+			if (this.videoElem) {
+				const trailerURL = findTrailerURL(dataDetails);
+				if (trailerURL !== '') {
+					const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+					const video = document.createElement('video');
+					video.style.height = '100%';
+					video.style.width = '100%';
+					video.controls = false;
+					const source = document.createElement('source');
+					source.type = 'video/mp4';
+					source.src = this.plex.authorizeURL(
+						`${this.plex.getBasicURL()}${dataDetails.Extras.Metadata[0].Media[0].Part[0].key}`
+					);
+					video.appendChild(source);
+					videoPlayer.appendChild(video);
+
+					video.load();
+					video.play();
+					let playingFired = false;
+
+					const videobg1 = this.getElementsByClassName('videobg1')[0] as HTMLElement;
+					const videobg2 = this.getElementsByClassName('videobg2')[0] as HTMLElement;
+					video.addEventListener('click', event => {
+						if (isVideoFullScreen(this)) {
+							event.stopPropagation();
+						}
+					});
+					const fullScreenChangeAction = (): void => {
+						if (this.videoElem) {
+							if (isVideoFullScreen(this)) {
+								videobg1.classList.add('transparent');
+								videobg2.classList.add('transparent');
+
+								this.videoElem.classList.add('maxZIndex');
+								video.controls = true;
+							} else {
+								videobg1.classList.remove('transparent');
+								videobg2.classList.remove('transparent');
+
+								this.videoElem.classList.remove('maxZIndex');
+								video.controls = false;
+								window.scroll({
+									top: getOffset(this.activeMovieElem as Element).top - 70,
+									behavior: 'smooth'
+								});
+							}
+						}
+					};
+					video.addEventListener('fullscreenchange', fullScreenChangeAction);
+					video.addEventListener('mozfullscreenchange', fullScreenChangeAction);
+					video.addEventListener('webkitfullscreenchange', fullScreenChangeAction);
+					video.addEventListener('msfullscreenchange', fullScreenChangeAction);
+
+					video.addEventListener('playing', () => {
+						if (this.videoElem && !playingFired) {
+							const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
+							const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
+							fullscreenTrailer.style.visibility = 'visible';
+							contentbg.classList.add('no-transparency');
+							playingFired = true;
+							this.videoElem.style.width = `${
+								(this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth
+							}px`;
+							this.videoElem.style.visibility = 'visible';
+							this.videoElem.style.top = `${top}px`;
+						}
+					});
+				}
+			}
 			if (!_.isEmpty(seasonsData)) {
 				this.seasonElemFreshlyLoaded = true;
 				if (this.seasonsElem) {
@@ -944,78 +1014,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}, 200);
 			} else {
-				const movieDetails = await this.plex.getDetails(data.key.split('/')[3]);
-				if (this.videoElem) {
-					const trailerURL = findTrailerURL(movieDetails);
-					if (trailerURL !== '') {
-						const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-						const video = document.createElement('video');
-						video.style.height = '100%';
-						video.style.width = '100%';
-						video.controls = false;
-						const source = document.createElement('source');
-						source.type = 'video/mp4';
-						source.src = this.plex.authorizeURL(
-							`${this.plex.getBasicURL()}${movieDetails.Extras.Metadata[0].Media[0].Part[0].key}`
-						);
-						video.appendChild(source);
-						videoPlayer.appendChild(video);
-
-						video.load();
-						video.play();
-						let playingFired = false;
-
-						const videobg1 = this.getElementsByClassName('videobg1')[0] as HTMLElement;
-						const videobg2 = this.getElementsByClassName('videobg2')[0] as HTMLElement;
-						video.addEventListener('click', event => {
-							if (isVideoFullScreen(this)) {
-								event.stopPropagation();
-							}
-						});
-						const fullScreenChangeAction = () => {
-							if (this.videoElem) {
-								if (isVideoFullScreen(this)) {
-									videobg1.classList.add('transparent');
-									videobg2.classList.add('transparent');
-
-									this.videoElem.classList.add('maxZIndex');
-									video.controls = true;
-								} else {
-									videobg1.classList.remove('transparent');
-									videobg2.classList.remove('transparent');
-
-									this.videoElem.classList.remove('maxZIndex');
-									video.controls = false;
-									window.scroll({
-										top: getOffset(this.activeMovieElem as Element).top - 70,
-										behavior: 'smooth'
-									});
-								}
-							}
-						};
-						video.addEventListener('fullscreenchange', fullScreenChangeAction);
-						video.addEventListener('mozfullscreenchange', fullScreenChangeAction);
-						video.addEventListener('webkitfullscreenchange', fullScreenChangeAction);
-						video.addEventListener('msfullscreenchange', fullScreenChangeAction);
-
-						video.addEventListener('playing', () => {
-							if (this.videoElem && !playingFired) {
-								const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
-								const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
-								fullscreenTrailer.style.visibility = 'visible';
-								contentbg.classList.add('no-transparency');
-								playingFired = true;
-								this.videoElem.style.width = `${
-									(this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth
-								}px`;
-								this.videoElem.style.visibility = 'visible';
-								this.videoElem.style.top = `${top}px`;
-							}
-						});
-					}
-				}
-
-				const extras = movieDetails.Extras.Metadata;
+				const extras = dataDetails.Extras.Metadata;
 
 				this.episodesElemFreshlyLoaded = true;
 				if (this.episodesElem) {
