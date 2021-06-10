@@ -2,7 +2,7 @@
 
 Custom Home Assistant card which integrates plex into Home Assistant and makes it possible to launch movies or tv shows on TV with a simple click.
 
-Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect is also supported.
+Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect and Google Cast is also supported.
 
 Video of the card:
 
@@ -53,6 +53,7 @@ _Available special libraries:_
 - **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#android-tv-or-fire-tv).
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#kodi).
 - **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#all-other-plex-clients).
+- **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#google-cast).
 
 Example of card configuration:
 
@@ -69,6 +70,7 @@ entity:
   kodi: media_player.kodi_123456qwe789rty
   androidtv: media_player.living_room_nvidia_shield
   plexPlayer: 192.168.13.38
+  cast: media_player.bedroom_tv
 ```
 
 Example using lists:
@@ -93,11 +95,14 @@ entity:
   plexPlayer:
     - TV 2020
     - 192.168.13.50
+  cast:
+    - media_player.bedroom_tv
 ```
 
 In this example, it will try to first play via kodi, in bedroom. If that kodi is unavailable or off, it tries in living room kodi.
 If that fails, it moves on to android tvs, starting with living room, continuing with bedroom and ending with kitchen.
-Finally, if a possible player still has not been found (all kodis and shields are off) it tries to play via plexPlayer, trying TV 2020 and if not found, IP 192.168.13.50.
+Next, if a possible player still has not been found (all kodis and shields are off) it tries to play via plexPlayer, trying TV 2020 and if not found, IP 192.168.13.50.
+Finally, it tries to cast into media_player.bedroom_tv.
 
 ## Detailed configuration instructions for end devices
 
@@ -164,6 +169,30 @@ Play button is only visible if all the conditions inside Availability section of
 - Entity 'sensor.kodi_media_sensor_search' needs to exist
 - State of both entities cannot be 'unavailable'
 - State of kodi cannot be 'off'
+
+**Supported play types**:
+
+✅ Movies
+
+❌ Show
+
+❌ Season
+
+✅ Episodes
+
+### Google Cast
+
+**Difficulty to setup**: Very easy
+
+**Steps**:
+
+- Set up [Google Cast](https://www.home-assistant.io/integrations/cast/) in Home Assistant.
+- Use entity_id of media_player provided by Google Cast integration in card, example: `cast: media_player.bedroom_tv`.
+- Save card configuration and make sure the entity is not `unavailable`, if you see play buttons on movies or individual episodes configuration was successful.
+
+**Availability**:
+
+- Media player entity cannot be `unavailable`
 
 **Supported play types**:
 

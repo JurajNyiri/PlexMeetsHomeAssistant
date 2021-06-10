@@ -97,6 +97,9 @@ class PlayController {
 			case 'plexPlayer':
 				await this.playViaPlexPlayer(entity.value, data.key.split('/')[3]);
 				break;
+			case 'cast':
+				this.playViaCast(entity.value, data.Media[0].Part[0].key);
+				break;
 			default:
 				throw Error(`No service available to play ${data.title}!`);
 		}
@@ -197,6 +200,17 @@ class PlayController {
 		}
 	};
 
+	private playViaCast = (entityName: string, mediaLink: string): void => {
+		this.hass.callService('media_player', 'play_media', {
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			entity_id: entityName,
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			media_content_type: 'video',
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+		});
+	};
+
 	private playViaAndroidTV = async (entityName: string, mediaID: number, instantPlay = false): Promise<void> => {
 		const serverID = await this.plex.getServerID();
 		let command = `am start`;
@@ -230,7 +244,8 @@ class PlayController {
 							if (
 								(key === 'kodi' && this.isKodiSupported(entity)) ||
 								(key === 'androidtv' && this.isAndroidTVSupported(entity)) ||
-								(key === 'plexPlayer' && this.isPlexPlayerSupported(entity))
+								(key === 'plexPlayer' && this.isPlexPlayerSupported(entity)) ||
+								(key === 'cast' && this.isCastSupported(entity))
 							) {
 								service = { key, value: entity };
 								return false;
@@ -241,7 +256,8 @@ class PlayController {
 					if (
 						(key === 'kodi' && this.isKodiSupported(entityVal)) ||
 						(key === 'androidtv' && this.isAndroidTVSupported(entityVal)) ||
-						(key === 'plexPlayer' && this.isPlexPlayerSupported(entityVal))
+						(key === 'plexPlayer' && this.isPlexPlayerSupported(entityVal)) ||
+						(key === 'cast' && this.isCastSupported(entityVal))
 					) {
 						service = { key, value: entityVal };
 						return false;
@@ -292,6 +308,14 @@ class PlayController {
 			);
 		}
 		return false;
+	};
+
+	private isCastSupported = (entityName: string): boolean => {
+		return (
+			this.hass.states[entityName] &&
+			!_.isNil(this.hass.states[entityName].attributes) &&
+			this.hass.states[entityName].state !== 'unavailable'
+		);
 	};
 
 	private isAndroidTVSupported = (entityName: string): boolean => {

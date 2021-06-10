@@ -17206,7 +17206,8 @@ const CSS_STYLE = {
 const supported = {
     kodi: ['movie', 'episode'],
     androidtv: ['movie', 'show', 'season', 'episode', 'clip'],
-    plexPlayer: ['movie', 'show', 'season', 'episode', 'clip']
+    plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
+    cast: ['movie', 'episode']
 };
 
 var bind = function bind(fn, thisArg) {
@@ -18901,6 +18902,9 @@ class PlayController {
                 case 'plexPlayer':
                     await this.playViaPlexPlayer(entity.value, data.key.split('/')[3]);
                     break;
+                case 'cast':
+                    this.playViaCast(entity.value, data.Media[0].Part[0].key);
+                    break;
                 default:
                     throw Error(`No service available to play ${data.title}!`);
             }
@@ -18990,6 +18994,16 @@ class PlayController {
                 throw Error(`Plex type ${type} is not supported in Kodi.`);
             }
         };
+        this.playViaCast = (entityName, mediaLink) => {
+            this.hass.callService('media_player', 'play_media', {
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                entity_id: entityName,
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                media_content_type: 'video',
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+            });
+        };
         this.playViaAndroidTV = async (entityName, mediaID, instantPlay = false) => {
             const serverID = await this.plex.getServerID();
             let command = `am start`;
@@ -19018,7 +19032,8 @@ class PlayController {
                             if (lodash.includes(this.supported[key], data.type)) {
                                 if ((key === 'kodi' && this.isKodiSupported(entity)) ||
                                     (key === 'androidtv' && this.isAndroidTVSupported(entity)) ||
-                                    (key === 'plexPlayer' && this.isPlexPlayerSupported(entity))) {
+                                    (key === 'plexPlayer' && this.isPlexPlayerSupported(entity)) ||
+                                    (key === 'cast' && this.isCastSupported(entity))) {
                                     service = { key, value: entity };
                                     return false;
                                 }
@@ -19028,7 +19043,8 @@ class PlayController {
                     else if (lodash.includes(this.supported[key], data.type)) {
                         if ((key === 'kodi' && this.isKodiSupported(entityVal)) ||
                             (key === 'androidtv' && this.isAndroidTVSupported(entityVal)) ||
-                            (key === 'plexPlayer' && this.isPlexPlayerSupported(entityVal))) {
+                            (key === 'plexPlayer' && this.isPlexPlayerSupported(entityVal)) ||
+                            (key === 'cast' && this.isCastSupported(entityVal))) {
                             service = { key, value: entityVal };
                             return false;
                         }
@@ -19070,6 +19086,11 @@ class PlayController {
                     this.hass.states[entityName].state !== 'unavailable');
             }
             return false;
+        };
+        this.isCastSupported = (entityName) => {
+            return (this.hass.states[entityName] &&
+                !lodash.isNil(this.hass.states[entityName].attributes) &&
+                this.hass.states[entityName].state !== 'unavailable');
         };
         this.isAndroidTVSupported = (entityName) => {
             return (this.hass.states[entityName] &&
