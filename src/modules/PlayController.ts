@@ -18,14 +18,19 @@ class PlayController {
 
 	runBefore: Array<string> | false = false;
 
+	runAfter: Array<string> | false = false;
+
 	supported: any = supported;
 
-	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>, runBefore: string) {
+	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>, runBefore: string, runAfter: string) {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
 		if (!_.isEmpty(runBefore) && this.hass.states[runBefore]) {
 			this.runBefore = runBefore.split('.');
+		}
+		if (!_.isEmpty(runAfter) && this.hass.states[runAfter]) {
+			this.runAfter = runAfter.split('.');
 		}
 	}
 
@@ -110,6 +115,9 @@ class PlayController {
 				break;
 			default:
 				throw Error(`No service available to play ${data.title}!`);
+		}
+		if (_.isArray(this.runAfter)) {
+			await this.hass.callService(this.runAfter[0], this.runAfter[1], {});
 		}
 	};
 

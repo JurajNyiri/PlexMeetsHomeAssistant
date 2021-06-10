@@ -25,6 +25,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	runBefore = '';
 
+	runAfter = '';
+
 	renderNewElementsIfNeededTimeout: any;
 
 	columnsCount = 0;
@@ -108,7 +110,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
 		if (this.plex) {
-			this.playController = new PlayController(this.hassObj, this.plex, this.config.entity, this.runBefore);
+			this.playController = new PlayController(
+				this.hassObj,
+				this.plex,
+				this.config.entity,
+				this.runBefore,
+				this.runAfter
+			);
 		}
 
 		if (!this.content) {
@@ -1345,6 +1353,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (config.runBefore) {
 			this.runBefore = config.runBefore;
+		}
+		if (config.runAfter) {
+			this.runAfter = config.runAfter;
 		}
 
 		this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);

@@ -18830,9 +18830,10 @@ class Plex {
 }
 
 class PlayController {
-    constructor(hass, plex, entity, runBefore) {
+    constructor(hass, plex, entity, runBefore, runAfter) {
         this.plexPlayerEntity = '';
         this.runBefore = false;
+        this.runAfter = false;
         this.supported = supported;
         this.getState = async (entityID) => {
             return this.hass.callApi('GET', `states/${entityID}`);
@@ -18911,6 +18912,9 @@ class PlayController {
                     break;
                 default:
                     throw Error(`No service available to play ${data.title}!`);
+            }
+            if (lodash.isArray(this.runAfter)) {
+                await this.hass.callService(this.runAfter[0], this.runAfter[1], {});
             }
         };
         this.plexPlayerCreateQueue = async (movieID) => {
@@ -19111,6 +19115,9 @@ class PlayController {
         this.entity = entity;
         if (!lodash.isEmpty(runBefore) && this.hass.states[runBefore]) {
             this.runBefore = runBefore.split('.');
+        }
+        if (!lodash.isEmpty(runAfter) && this.hass.states[runAfter]) {
+            this.runAfter = runAfter.split('.');
         }
     }
 }
@@ -19910,6 +19917,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.plexProtocol = 'http';
         this.detailsShown = false;
         this.runBefore = '';
+        this.runAfter = '';
         this.columnsCount = 0;
         this.renderedItems = 0;
         this.maxRenderCount = false;
@@ -21033,6 +21041,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.runBefore) {
                 this.runBefore = config.runBefore;
             }
+            if (config.runAfter) {
+                this.runAfter = config.runAfter;
+            }
             this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
         };
         this.getCardSize = () => {
@@ -21042,7 +21053,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     set hass(hass) {
         this.hassObj = hass;
         if (this.plex) {
-            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity, this.runBefore);
+            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity, this.runBefore, this.runAfter);
         }
         if (!this.content) {
             this.error = '';
