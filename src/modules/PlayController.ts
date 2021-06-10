@@ -16,12 +16,17 @@ class PlayController {
 
 	plex: Plex;
 
+	runBefore: Array<string> | false = false;
+
 	supported: any = supported;
 
-	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>) {
+	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>, runBefore: string) {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
+		if (!_.isEmpty(runBefore) && this.hass.states[runBefore]) {
+			this.runBefore = runBefore.split('.');
+		}
 	}
 
 	private getState = async (entityID: string): Promise<Record<string, any>> => {
@@ -86,6 +91,9 @@ class PlayController {
 	};
 
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
+		if (_.isArray(this.runBefore)) {
+			await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
+		}
 		const entity = this.getPlayService(data);
 		switch (entity.key) {
 			case 'kodi':
@@ -268,14 +276,6 @@ class PlayController {
 		return service;
 	};
 
-	isPlexPlayerSupported = (entityName: string): boolean => {
-		let found = false;
-		if (this.getPlexPlayerMachineIdentifier(entityName)) {
-			found = true;
-		}
-		return found;
-	};
-
 	private getPlexPlayerMachineIdentifier = (entityName: string): string => {
 		let machineIdentifier = '';
 		_.forEach(this.plex.clients, plexClient => {
@@ -297,14 +297,25 @@ class PlayController {
 		return !_.isEmpty(this.getPlayService(data));
 	};
 
+	private isPlexPlayerSupported = (entityName: string): boolean => {
+		let found = false;
+		if (this.getPlexPlayerMachineIdentifier(entityName)) {
+			found = true;
+		}
+		return found || !_.isEqual(this.runBefore, false);
+	};
+
 	private isKodiSupported = (entityName: string): boolean => {
 		if (entityName) {
-			return (
-				this.hass.states[entityName] &&
+			const hasKodiMediaSearchInstalled =
 				this.hass.states['sensor.kodi_media_sensor_search'] &&
-				this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable' &&
-				this.hass.states[entityName].state !== 'off' &&
-				this.hass.states[entityName].state !== 'unavailable'
+				this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable';
+			return (
+				(this.hass.states[entityName] &&
+					this.hass.states[entityName].state !== 'off' &&
+					this.hass.states[entityName].state !== 'unavailable' &&
+					hasKodiMediaSearchInstalled) ||
+				(!_.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled)
 			);
 		}
 		return false;
@@ -312,18 +323,20 @@ class PlayController {
 
 	private isCastSupported = (entityName: string): boolean => {
 		return (
-			this.hass.states[entityName] &&
-			!_.isNil(this.hass.states[entityName].attributes) &&
-			this.hass.states[entityName].state !== 'unavailable'
+			(this.hass.states[entityName] &&
+				!_.isNil(this.hass.states[entityName].attributes) &&
+				this.hass.states[entityName].state !== 'unavailable') ||
+			!_.isEqual(this.runBefore, false)
 		);
 	};
 
 	private isAndroidTVSupported = (entityName: string): boolean => {
 		return (
-			this.hass.states[entityName] &&
-			!_.isEqual(this.hass.states[entityName].state, 'off') &&
-			this.hass.states[entityName].attributes &&
-			this.hass.states[entityName].attributes.adb_response !== undefined
+			(this.hass.states[entityName] &&
+				!_.isEqual(this.hass.states[entityName].state, 'off') &&
+				this.hass.states[entityName].attributes &&
+				this.hass.states[entityName].attributes.adb_response !== undefined) ||
+			!_.isEqual(this.runBefore, false)
 		);
 	};
 }

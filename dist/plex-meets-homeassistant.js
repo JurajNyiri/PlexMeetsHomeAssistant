@@ -18830,8 +18830,9 @@ class Plex {
 }
 
 class PlayController {
-    constructor(hass, plex, entity) {
+    constructor(hass, plex, entity, runBefore) {
         this.plexPlayerEntity = '';
+        this.runBefore = false;
         this.supported = supported;
         this.getState = async (entityID) => {
             return this.hass.callApi('GET', `states/${entityID}`);
@@ -18891,6 +18892,9 @@ class PlayController {
             return foundResult;
         };
         this.play = async (data, instantPlay = false) => {
+            if (lodash.isArray(this.runBefore)) {
+                await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
+            }
             const entity = this.getPlayService(data);
             switch (entity.key) {
                 case 'kodi':
@@ -19053,13 +19057,6 @@ class PlayController {
             });
             return service;
         };
-        this.isPlexPlayerSupported = (entityName) => {
-            let found = false;
-            if (this.getPlexPlayerMachineIdentifier(entityName)) {
-                found = true;
-            }
-            return found;
-        };
         this.getPlexPlayerMachineIdentifier = (entityName) => {
             let machineIdentifier = '';
             lodash.forEach(this.plex.clients, plexClient => {
@@ -19077,30 +19074,44 @@ class PlayController {
         this.isPlaySupported = (data) => {
             return !lodash.isEmpty(this.getPlayService(data));
         };
+        this.isPlexPlayerSupported = (entityName) => {
+            let found = false;
+            if (this.getPlexPlayerMachineIdentifier(entityName)) {
+                found = true;
+            }
+            return found || !lodash.isEqual(this.runBefore, false);
+        };
         this.isKodiSupported = (entityName) => {
             if (entityName) {
-                return (this.hass.states[entityName] &&
-                    this.hass.states['sensor.kodi_media_sensor_search'] &&
-                    this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable' &&
+                const hasKodiMediaSearchInstalled = this.hass.states['sensor.kodi_media_sensor_search'] &&
+                    this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable';
+                return ((this.hass.states[entityName] &&
                     this.hass.states[entityName].state !== 'off' &&
-                    this.hass.states[entityName].state !== 'unavailable');
+                    this.hass.states[entityName].state !== 'unavailable' &&
+                    hasKodiMediaSearchInstalled) ||
+                    (!lodash.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled));
             }
             return false;
         };
         this.isCastSupported = (entityName) => {
-            return (this.hass.states[entityName] &&
+            return ((this.hass.states[entityName] &&
                 !lodash.isNil(this.hass.states[entityName].attributes) &&
-                this.hass.states[entityName].state !== 'unavailable');
+                this.hass.states[entityName].state !== 'unavailable') ||
+                !lodash.isEqual(this.runBefore, false));
         };
         this.isAndroidTVSupported = (entityName) => {
-            return (this.hass.states[entityName] &&
+            return ((this.hass.states[entityName] &&
                 !lodash.isEqual(this.hass.states[entityName].state, 'off') &&
                 this.hass.states[entityName].attributes &&
-                this.hass.states[entityName].attributes.adb_response !== undefined);
+                this.hass.states[entityName].attributes.adb_response !== undefined) ||
+                !lodash.isEqual(this.runBefore, false));
         };
         this.hass = hass;
         this.plex = plex;
         this.entity = entity;
+        if (!lodash.isEmpty(runBefore) && this.hass.states[runBefore]) {
+            this.runBefore = runBefore.split('.');
+        }
     }
 }
 
@@ -19898,6 +19909,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         super(...arguments);
         this.plexProtocol = 'http';
         this.detailsShown = false;
+        this.runBefore = '';
         this.columnsCount = 0;
         this.renderedItems = 0;
         this.maxRenderCount = false;
@@ -21018,6 +21030,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.maxCount) {
                 this.maxCount = config.maxCount;
             }
+            if (config.runBefore) {
+                this.runBefore = config.runBefore;
+            }
             this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
         };
         this.getCardSize = () => {
@@ -21027,7 +21042,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     set hass(hass) {
         this.hassObj = hass;
         if (this.plex) {
-            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity);
+            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity, this.runBefore);
         }
         if (!this.content) {
             this.error = '';
