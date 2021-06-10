@@ -25,6 +25,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	runBefore = '';
 
+	playTrailer: string | boolean = true;
+
 	runAfter = '';
 
 	renderNewElementsIfNeededTimeout: any;
@@ -819,12 +821,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			const dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
 			if (this.videoElem) {
 				const trailerURL = findTrailerURL(dataDetails);
-				if (trailerURL !== '') {
+				if (trailerURL !== '' && !_.isEqual(this.playTrailer, false)) {
 					const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
 					const video = document.createElement('video');
 					video.style.height = '100%';
 					video.style.width = '100%';
 					video.controls = false;
+					if (_.isEqual(this.playTrailer, 'muted')) {
+						video.muted = true;
+					}
 					const source = document.createElement('source');
 					source.type = 'video/mp4';
 					source.src = this.plex.authorizeURL(
@@ -852,6 +857,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 								this.videoElem.classList.add('maxZIndex');
 								video.controls = true;
+								video.muted = false;
 							} else {
 								videobg1.classList.remove('transparent');
 								videobg2.classList.remove('transparent');
@@ -862,6 +868,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									top: getOffset(this.activeMovieElem as Element).top - 70,
 									behavior: 'smooth'
 								});
+								if (_.isEqual(this.playTrailer, 'muted')) {
+									video.muted = true;
+								}
 							}
 						}
 					};
@@ -1354,6 +1363,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (config.runAfter) {
 			this.runAfter = config.runAfter;
+		}
+		if (!_.isNil(config.playTrailer)) {
+			this.playTrailer = config.playTrailer;
 		}
 
 		this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);

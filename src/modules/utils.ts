@@ -60,7 +60,7 @@ const isVideoFullScreen = (_this: any): boolean => {
 	const video = videoPlayer.children[0] as any;
 	const body = document.getElementsByTagName('body')[0];
 	return (
-		(video.offsetWidth === body.offsetHeight && video.offsetHeight === body.offsetHeight) ||
+		(video.offsetWidth === body.offsetWidth && video.offsetHeight === body.offsetHeight) ||
 		(_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen'))
 	);
 };

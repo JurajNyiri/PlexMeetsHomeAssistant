@@ -19172,7 +19172,7 @@ const isVideoFullScreen = (_this) => {
     const videoPlayer = _this.getElementsByClassName('videoPlayer')[0];
     const video = videoPlayer.children[0];
     const body = document.getElementsByTagName('body')[0];
-    return ((video.offsetWidth === body.offsetHeight && video.offsetHeight === body.offsetHeight) ||
+    return ((video.offsetWidth === body.offsetWidth && video.offsetHeight === body.offsetHeight) ||
         (_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen')));
 };
 const getOldPlexServerErrorMessage = (libraryName) => {
@@ -19917,6 +19917,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.plexProtocol = 'http';
         this.detailsShown = false;
         this.runBefore = '';
+        this.playTrailer = true;
         this.runAfter = '';
         this.columnsCount = 0;
         this.renderedItems = 0;
@@ -20580,12 +20581,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
                 if (this.videoElem) {
                     const trailerURL = findTrailerURL(dataDetails);
-                    if (trailerURL !== '') {
+                    if (trailerURL !== '' && !lodash.isEqual(this.playTrailer, false)) {
                         const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                         const video = document.createElement('video');
                         video.style.height = '100%';
                         video.style.width = '100%';
                         video.controls = false;
+                        if (lodash.isEqual(this.playTrailer, 'muted')) {
+                            video.muted = true;
+                        }
                         const source = document.createElement('source');
                         source.type = 'video/mp4';
                         source.src = this.plex.authorizeURL(`${this.plex.getBasicURL()}${dataDetails.Extras.Metadata[0].Media[0].Part[0].key}`);
@@ -20608,6 +20612,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                     videobg2.classList.add('transparent');
                                     this.videoElem.classList.add('maxZIndex');
                                     video.controls = true;
+                                    video.muted = false;
                                 }
                                 else {
                                     videobg1.classList.remove('transparent');
@@ -20618,6 +20623,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         top: getOffset(this.activeMovieElem).top - 70,
                                         behavior: 'smooth'
                                     });
+                                    if (lodash.isEqual(this.playTrailer, 'muted')) {
+                                        video.muted = true;
+                                    }
                                 }
                             }
                         };
@@ -21041,6 +21049,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             if (config.runAfter) {
                 this.runAfter = config.runAfter;
+            }
+            if (!lodash.isNil(config.playTrailer)) {
+                this.playTrailer = config.playTrailer;
             }
             this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
         };

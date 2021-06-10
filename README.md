@@ -59,6 +59,8 @@ _Available special libraries:_
 
 **runAfter**: _Optional_ Specify a script to run after playing.
 
+**playTrailer**: _Optional_ Specify whether to play trailer if available. Possible values: true, false, muted
+
 Example of card configuration:
 
 ```
