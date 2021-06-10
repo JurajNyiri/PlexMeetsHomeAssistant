@@ -42,18 +42,22 @@ _Available special libraries:_
 | Continue Watching | Shows movies and tv shows in progress, uses old Plex API.                                                                   |
 | Deck              | Shows tv shows on deck, uses old Plex API.                                                                                  |
 
-**protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
-
-**maxCount**: _Optional_ Maximum number of items to display in card.
-
-**sort**: _Optional_ Define sort by. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#sorting)
-
 **entity**: You need to configure at least one supported media_player entity.
 
 - **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#android-tv-or-fire-tv).
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#kodi).
 - **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#all-other-plex-clients).
 - **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#google-cast).
+
+**protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
+
+**maxCount**: _Optional_ Maximum number of items to display in card.
+
+**sort**: _Optional_ Define sort by. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#sorting)
+
+**runBefore**: _Optional_ Specify a script to run before playing. This can be for example a script which turns on your TV and waits 5 seconds. If this is specified and provided entity/script exists, all the other play checks for availability of entity are ignored.
+
+**runAfter**: _Optional_ Specify a script to run after playing.
 
 Example of card configuration:
 
@@ -84,6 +88,8 @@ libraryName: Deck
 protocol: http
 maxCount: 10
 sort: title:desc
+runBefore: script.turn_on_tv_and_wait
+runAfter: script.movie_time
 entity:
   kodi:
     - media_player.kodi_bedroom
