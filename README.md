@@ -285,6 +285,10 @@ Join [Discord](https://discord.gg/jqqz9jQXWx) or [Home Assistant Community](http
 
 ![Expanded movie view](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/design_preview/3.png)
 
+# Want to say thank you?
+
+<a href="https://www.buymeacoffee.com/jurajnyiri" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee"  width="150px" ></a>
+
 # Disclaimer
 
 Author is in no way affiliated with Kodi, Plex, Roku, Android TV, Google or any other companies mentioned above.
