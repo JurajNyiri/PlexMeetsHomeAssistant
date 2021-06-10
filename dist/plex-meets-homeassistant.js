@@ -19874,16 +19874,26 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             try {
                 if (this.plex) {
                     await this.plex.init();
-                    const continueWatching = await this.plex.getContinueWatching();
-                    const recentlyAdded = await this.plex.getRecentyAdded();
+                    try {
+                        const continueWatching = await this.plex.getContinueWatching();
+                        const recentlyAdded = await this.plex.getRecentyAdded();
+                        this.data.Deck = continueWatching.Metadata;
+                        this.data['Recently Added'] = recentlyAdded.Metadata;
+                    }
+                    catch (err) {
+                        if (lodash.includes(err.message, 'Request failed with status code 404')) {
+                            console.warn('PlexMeetsHomeAssistant: You are using outdated Plex server. Recently added and continue watching is not available.');
+                        }
+                        else {
+                            throw err;
+                        }
+                    }
                     const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     this.data.serverID = serverID;
                     lodash.forEach(plexSections, section => {
                         this.data[section.title1] = section.Metadata;
                     });
-                    this.data.Deck = continueWatching.Metadata;
-                    this.data['Recently Added'] = recentlyAdded.Metadata;
                     if (this.data[this.config.libraryName] === undefined) {
                         this.error = `Library name ${this.config.libraryName} does not exist.`;
                     }
