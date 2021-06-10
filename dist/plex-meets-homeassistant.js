@@ -18729,13 +18729,31 @@ class Plex {
             });
             return this.exportSectionsData(await Promise.all(sectionsRequests));
         };
-        this.getRecentyAdded = async () => {
+        this.getRecentyAdded = async (useHub = false) => {
+            if (useHub) {
+                const hubs = await this.getHubs();
+                let recentlyAddedData = {};
+                // eslint-disable-next-line consistent-return
+                lodash.forEach(hubs.Hub, hub => {
+                    if (lodash.isEqual(hub.key, '/hubs/home/recentlyAdded?type=2')) {
+                        recentlyAddedData = hub;
+                        return false;
+                    }
+                });
+                return recentlyAddedData;
+            }
             const url = this.authorizeURL(`${this.getBasicURL()}/hubs/home/recentlyAdded?type=2&X-Plex-Container-Start=0&X-Plex-Container-Size=50`);
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer;
         };
-        this.getContinueWatching = async () => {
+        this.getHubs = async () => {
+            const url = this.authorizeURL(`${this.getBasicURL()}/hubs?includeEmpty=1&count=50&includeFeaturedTags=1&includeTypeFirst=1&includeStations=1&includeExternalMetadata=1&excludePlaylists=1`);
+            return (await axios.get(url, {
+                timeout: this.requestTimeout
+            })).data.MediaContainer;
+        };
+        this.getWatchNext = async () => {
             const sections = await this.getSections();
             let sectionsString = '';
             lodash.forEach(sections, section => {
@@ -18746,6 +18764,30 @@ class Plex {
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer;
+        };
+        this.getContinueWatching = async () => {
+            const hubs = await this.getHubs();
+            let continueWatchingData = {};
+            // eslint-disable-next-line consistent-return
+            lodash.forEach(hubs.Hub, hub => {
+                if (lodash.isEqual(hub.key, '/hubs/home/continueWatching')) {
+                    continueWatchingData = hub;
+                    return false;
+                }
+            });
+            return continueWatchingData;
+        };
+        this.getOnDeck = async () => {
+            const hubs = await this.getHubs();
+            let onDeckData = {};
+            // eslint-disable-next-line consistent-return
+            lodash.forEach(hubs.Hub, hub => {
+                if (lodash.isEqual(hub.key, '/hubs/home/onDeck')) {
+                    onDeckData = hub;
+                    return false;
+                }
+            });
+            return onDeckData;
         };
         this.getBasicURL = () => {
             return `${this.protocol}://${this.ip}:${this.port}`;
@@ -19093,6 +19135,9 @@ const isVideoFullScreen = (_this) => {
     const body = document.getElementsByTagName('body')[0];
     return ((video.offsetWidth === body.offsetHeight && video.offsetHeight === body.offsetHeight) ||
         (_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen')));
+};
+const getOldPlexServerErrorMessage = (libraryName) => {
+    return `PlexMeetsHomeAssistant: 404 Error requesting library feed for ${libraryName}. Plex API might have changed or using outdated server. Library ${libraryName} will not work.`;
 };
 const findTrailerURL = (movieData) => {
     let foundURL = '';
@@ -19875,14 +19920,61 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 if (this.plex) {
                     await this.plex.init();
                     try {
+                        const onDeck = await this.plex.getOnDeck();
+                        this.data.Deck = onDeck.Metadata;
+                    }
+                    catch (err) {
+                        if (lodash.includes(err.message, 'Request failed with status code 404')) {
+                            console.warn(getOldPlexServerErrorMessage('Deck'));
+                        }
+                        else {
+                            throw err;
+                        }
+                    }
+                    try {
                         const continueWatching = await this.plex.getContinueWatching();
+                        this.data['Continue Watching'] = continueWatching.Metadata;
+                    }
+                    catch (err) {
+                        if (lodash.includes(err.message, 'Request failed with status code 404')) {
+                            console.warn(getOldPlexServerErrorMessage('Continue Watching'));
+                        }
+                        else {
+                            throw err;
+                        }
+                    }
+                    try {
+                        const watchNext = await this.plex.getWatchNext();
+                        this.data['Watch Next'] = watchNext.Metadata;
+                    }
+                    catch (err) {
+                        if (lodash.includes(err.message, 'Request failed with status code 404')) {
+                            console.warn(getOldPlexServerErrorMessage('Watch Next'));
+                        }
+                        else {
+                            throw err;
+                        }
+                    }
+                    try {
                         const recentlyAdded = await this.plex.getRecentyAdded();
-                        this.data.Deck = continueWatching.Metadata;
                         this.data['Recently Added'] = recentlyAdded.Metadata;
                     }
                     catch (err) {
                         if (lodash.includes(err.message, 'Request failed with status code 404')) {
-                            console.warn('PlexMeetsHomeAssistant: You are using outdated Plex server. Recently added and continue watching is not available.');
+                            try {
+                                console.warn('PlexMeetsHomeAssistant: Using old endpoint for recently added tv shows. Consider updating your Plex server.');
+                                const recentlyAdded = await this.plex.getRecentyAdded(true);
+                                this.data['Recently Added'] = recentlyAdded.Metadata;
+                                // eslint-disable-next-line no-shadow
+                            }
+                            catch (err) {
+                                if (lodash.includes(err.message, 'Request failed with status code 404')) {
+                                    console.warn(getOldPlexServerErrorMessage('Recently Added'));
+                                }
+                                else {
+                                    throw err;
+                                }
+                            }
                         }
                         else {
                             throw err;

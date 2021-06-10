@@ -33,11 +33,14 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 **libraryName**: Name of the library you wish to render.
 
-Available special libraries:
+_Available special libraries:_
 
-_Deck_: Shows Continue Watching
-
-_Recently Added_: Shows recently added episodes of TV Shows. Tip: For movies, just put in your library name and use sort.
+| Special Library   | Description                                                                                                                 |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Watch Next        | Shows Continue Watching feed just like in your new plex interface. **Does not work with old servers.**                      |
+| Recently Added    | Shows recently added tv show episodes, might use old Plex API. For recently added movies use sort with your movies library. |
+| Continue Watching | Shows movies and tv shows in progress, uses old Plex API.                                                                   |
+| Deck              | Shows tv shows on deck, uses old Plex API.                                                                                  |
 
 **protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
 

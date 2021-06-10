@@ -65,6 +65,10 @@ const isVideoFullScreen = (_this: any): boolean => {
 	);
 };
 
+const getOldPlexServerErrorMessage = (libraryName: string): string => {
+	return `PlexMeetsHomeAssistant: 404 Error requesting library feed for ${libraryName}. Plex API might have changed or using outdated server. Library ${libraryName} will not work.`;
+};
+
 const findTrailerURL = (movieData: Record<string, any>): string => {
 	let foundURL = '';
 	if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
@@ -180,5 +184,6 @@ export {
 	createEpisodesView,
 	findTrailerURL,
 	isVideoFullScreen,
-	hasEpisodes
+	hasEpisodes,
+	getOldPlexServerErrorMessage
 };

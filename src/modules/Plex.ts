@@ -94,7 +94,19 @@ class Plex {
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
 	};
 
-	getRecentyAdded = async (): Promise<any> => {
+	getRecentyAdded = async (useHub = false): Promise<any> => {
+		if (useHub) {
+			const hubs = await this.getHubs();
+			let recentlyAddedData: Record<string, any> = {};
+			// eslint-disable-next-line consistent-return
+			_.forEach(hubs.Hub, hub => {
+				if (_.isEqual(hub.key, '/hubs/home/recentlyAdded?type=2')) {
+					recentlyAddedData = hub;
+					return false;
+				}
+			});
+			return recentlyAddedData;
+		}
 		const url = this.authorizeURL(
 			`${this.getBasicURL()}/hubs/home/recentlyAdded?type=2&X-Plex-Container-Start=0&X-Plex-Container-Size=50`
 		);
@@ -105,7 +117,18 @@ class Plex {
 		).data.MediaContainer;
 	};
 
-	getContinueWatching = async (): Promise<any> => {
+	private getHubs = async (): Promise<any> => {
+		const url = this.authorizeURL(
+			`${this.getBasicURL()}/hubs?includeEmpty=1&count=50&includeFeaturedTags=1&includeTypeFirst=1&includeStations=1&includeExternalMetadata=1&excludePlaylists=1`
+		);
+		return (
+			await axios.get(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer;
+	};
+
+	getWatchNext = async (): Promise<any> => {
 		const sections = await this.getSections();
 		let sectionsString = '';
 		_.forEach(sections, section => {
@@ -120,6 +143,32 @@ class Plex {
 				timeout: this.requestTimeout
 			})
 		).data.MediaContainer;
+	};
+
+	getContinueWatching = async (): Promise<any> => {
+		const hubs = await this.getHubs();
+		let continueWatchingData: Record<string, any> = {};
+		// eslint-disable-next-line consistent-return
+		_.forEach(hubs.Hub, hub => {
+			if (_.isEqual(hub.key, '/hubs/home/continueWatching')) {
+				continueWatchingData = hub;
+				return false;
+			}
+		});
+		return continueWatchingData;
+	};
+
+	getOnDeck = async (): Promise<any> => {
+		const hubs = await this.getHubs();
+		let onDeckData: Record<string, any> = {};
+		// eslint-disable-next-line consistent-return
+		_.forEach(hubs.Hub, hub => {
+			if (_.isEqual(hub.key, '/hubs/home/onDeck')) {
+				onDeckData = hub;
+				return false;
+			}
+		});
+		return onDeckData;
 	};
 
 	getBasicURL = (): string => {

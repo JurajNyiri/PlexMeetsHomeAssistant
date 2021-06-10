@@ -13,7 +13,8 @@ import {
 	createEpisodesView,
 	findTrailerURL,
 	isVideoFullScreen,
-	hasEpisodes
+	hasEpisodes,
+	getOldPlexServerErrorMessage
 } from './modules/utils';
 import style from './modules/style';
 
@@ -143,16 +144,59 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		try {
 			if (this.plex) {
 				await this.plex.init();
+
+				try {
+					const onDeck = await this.plex.getOnDeck();
+					this.data.Deck = onDeck.Metadata;
+				} catch (err) {
+					if (_.includes(err.message, 'Request failed with status code 404')) {
+						console.warn(getOldPlexServerErrorMessage('Deck'));
+					} else {
+						throw err;
+					}
+				}
+
 				try {
 					const continueWatching = await this.plex.getContinueWatching();
+					this.data['Continue Watching'] = continueWatching.Metadata;
+				} catch (err) {
+					if (_.includes(err.message, 'Request failed with status code 404')) {
+						console.warn(getOldPlexServerErrorMessage('Continue Watching'));
+					} else {
+						throw err;
+					}
+				}
+
+				try {
+					const watchNext = await this.plex.getWatchNext();
+					this.data['Watch Next'] = watchNext.Metadata;
+				} catch (err) {
+					if (_.includes(err.message, 'Request failed with status code 404')) {
+						console.warn(getOldPlexServerErrorMessage('Watch Next'));
+					} else {
+						throw err;
+					}
+				}
+
+				try {
 					const recentlyAdded = await this.plex.getRecentyAdded();
-					this.data.Deck = continueWatching.Metadata;
 					this.data['Recently Added'] = recentlyAdded.Metadata;
 				} catch (err) {
 					if (_.includes(err.message, 'Request failed with status code 404')) {
-						console.warn(
-							'PlexMeetsHomeAssistant: You are using outdated Plex server. Recently added and continue watching is not available.'
-						);
+						try {
+							console.warn(
+								'PlexMeetsHomeAssistant: Using old endpoint for recently added tv shows. Consider updating your Plex server.'
+							);
+							const recentlyAdded = await this.plex.getRecentyAdded(true);
+							this.data['Recently Added'] = recentlyAdded.Metadata;
+							// eslint-disable-next-line no-shadow
+						} catch (err) {
+							if (_.includes(err.message, 'Request failed with status code 404')) {
+								console.warn(getOldPlexServerErrorMessage('Recently Added'));
+							} else {
+								throw err;
+							}
+						}
 					} else {
 						throw err;
 					}
