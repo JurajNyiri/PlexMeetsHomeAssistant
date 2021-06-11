@@ -20206,6 +20206,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.content.appendChild(contentbg);
             const contentArt = document.createElement('div');
             contentArt.className = 'contentArt';
+            const contentArtBG1 = document.createElement('div');
+            contentArtBG1.className = 'videobg1';
+            contentArt.appendChild(contentArtBG1);
+            const contentArtBG2 = document.createElement('div');
+            contentArtBG2.className = 'videobg2';
+            contentArt.appendChild(contentArtBG2);
             this.content.appendChild(contentArt);
             this.detailElem = document.createElement('div');
             this.detailElem.className = 'detail';
@@ -20668,11 +20674,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                     else {
                         const contentArt = this.getElementsByClassName('contentArt')[0];
+                        const contentbg = this.getElementsByClassName('contentbg')[0];
                         contentArt.style.width = `${window.innerWidth}px`;
                         contentArt.style.height = `${window.innerHeight}px`;
                         contentArt.style.display = 'block';
                         contentArt.style.backgroundImage = `url('${art}')`;
                         contentArt.style.top = `${top - 8}px`;
+                        contentbg.classList.add('no-transparency');
                     }
                 }
                 if (!lodash.isEmpty(seasonsData)) {
