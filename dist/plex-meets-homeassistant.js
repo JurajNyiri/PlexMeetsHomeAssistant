@@ -20043,6 +20043,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
                 this.renderPage();
             }
+            this.resizeBackground();
         };
         this.render = () => {
             this.previousPositions = [];
@@ -20844,22 +20845,27 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.resizeBackground = () => {
+            console.log('resizeBackground');
             if (this.seasonsElem && this.episodesElem && this.card) {
                 const contentbg = this.getElementsByClassName('contentbg')[0];
-                if (this.contentBGHeight === 0) {
-                    this.contentBGHeight = getHeight(contentbg);
-                }
+                this.contentBGHeight = getHeight(contentbg);
+                console.log(contentbg);
+                console.log(this.contentBGHeight);
                 const requiredSeasonBodyHeight = parseInt(this.seasonsElem.style.top.replace('px', ''), 10) + this.seasonsElem.scrollHeight;
                 const requiredEpisodeBodyHeight = parseInt(this.episodesElem.style.top.replace('px', ''), 10) + this.episodesElem.scrollHeight;
                 if (requiredSeasonBodyHeight > this.contentBGHeight && !this.seasonsElemHidden) {
+                    console.log('1');
                     this.card.style.height = `${requiredSeasonBodyHeight + 16}px`;
                 }
                 else if (requiredEpisodeBodyHeight > this.contentBGHeight && !this.episodesElemHidden) {
+                    console.log('2');
                     this.card.style.height = `${requiredEpisodeBodyHeight + 16}px`;
                 }
                 else {
+                    console.log('3');
                     this.card.style.height = '100%';
                 }
+                console.log(getHeight(contentbg));
             }
         };
         this.showBackground = () => {
