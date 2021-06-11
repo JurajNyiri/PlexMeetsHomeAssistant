@@ -20015,6 +20015,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
+                if (this.detailsShown &&
+                    this.activeMovieElem &&
+                    this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)) {
+                    window.scroll({
+                        top: getOffset(this.activeMovieElem).top - 80
+                    });
+                }
                 this.renderNewElementsIfNeeded();
             });
             window.addEventListener('resize', () => {
