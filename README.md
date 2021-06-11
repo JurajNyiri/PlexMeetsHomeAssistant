@@ -59,7 +59,9 @@ _Available special libraries:_
 
 **runAfter**: _Optional_ Specify a script to run after playing.
 
-**playTrailer**: _Optional_ Specify whether to play trailer if available. Possible values: true, false, muted
+**showExtras**: _Optional_ Specify whether to show extras if any available on movie / episode. Possible values: true, false. Default: true
+
+**playTrailer**: _Optional_ Specify whether to play trailer if available. Possible values: true, false, muted. Default: true
 
 Example of card configuration:
 

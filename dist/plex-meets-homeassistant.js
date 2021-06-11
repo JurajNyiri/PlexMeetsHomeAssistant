@@ -19918,6 +19918,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.detailsShown = false;
         this.runBefore = '';
         this.playTrailer = true;
+        this.showExtras = true;
         this.runAfter = '';
         this.columnsCount = 0;
         this.renderedItems = 0;
@@ -20811,7 +20812,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }, 200);
                 }
                 else {
-                    const extras = dataDetails.Extras.Metadata;
                     this.episodesElemFreshlyLoaded = true;
                     if (this.episodesElem) {
                         this.episodesElemHidden = false;
@@ -20819,11 +20819,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.episodesElem.innerHTML = '';
                         this.episodesElem.style.transition = `0s`;
                         this.episodesElem.style.top = `${top + 2000}px`;
-                        lodash.forEach(extras, extrasData => {
-                            if (this.episodesElem && this.playController) {
-                                this.episodesElem.append(createEpisodesView(this.playController, this.plexProtocol, this.config.ip, this.config.port, this.config.token, extrasData));
-                            }
-                        });
+                        if (this.showExtras) {
+                            const extras = dataDetails.Extras.Metadata;
+                            lodash.forEach(extras, extrasData => {
+                                if (this.episodesElem && this.playController) {
+                                    this.episodesElem.append(createEpisodesView(this.playController, this.plexProtocol, this.config.ip, this.config.port, this.config.token, extrasData));
+                                }
+                            });
+                        }
                         clearInterval(this.episodesLoadTimeout);
                         this.episodesLoadTimeout = setTimeout(() => {
                             if (this.episodesElem) {
@@ -21052,6 +21055,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             if (!lodash.isNil(config.playTrailer)) {
                 this.playTrailer = config.playTrailer;
+            }
+            if (!lodash.isNil(config.showExtras)) {
+                this.showExtras = config.showExtras;
             }
             this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
         };

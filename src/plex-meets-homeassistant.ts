@@ -27,6 +27,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	playTrailer: string | boolean = true;
 
+	showExtras = true;
+
 	runAfter = '';
 
 	renderNewElementsIfNeededTimeout: any;
@@ -1088,8 +1090,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}, 200);
 			} else {
-				const extras = dataDetails.Extras.Metadata;
-
 				this.episodesElemFreshlyLoaded = true;
 				if (this.episodesElem) {
 					this.episodesElemHidden = false;
@@ -1098,20 +1098,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.episodesElem.style.transition = `0s`;
 					this.episodesElem.style.top = `${top + 2000}px`;
 
-					_.forEach(extras, extrasData => {
-						if (this.episodesElem && this.playController) {
-							this.episodesElem.append(
-								createEpisodesView(
-									this.playController,
-									this.plexProtocol,
-									this.config.ip,
-									this.config.port,
-									this.config.token,
-									extrasData
-								)
-							);
-						}
-					});
+					if (this.showExtras) {
+						const extras = dataDetails.Extras.Metadata;
+						_.forEach(extras, extrasData => {
+							if (this.episodesElem && this.playController) {
+								this.episodesElem.append(
+									createEpisodesView(
+										this.playController,
+										this.plexProtocol,
+										this.config.ip,
+										this.config.port,
+										this.config.token,
+										extrasData
+									)
+								);
+							}
+						});
+					}
 
 					clearInterval(this.episodesLoadTimeout);
 					this.episodesLoadTimeout = setTimeout(() => {
@@ -1366,6 +1369,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (!_.isNil(config.playTrailer)) {
 			this.playTrailer = config.playTrailer;
+		}
+		if (!_.isNil(config.showExtras)) {
+			this.showExtras = config.showExtras;
 		}
 
 		this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
