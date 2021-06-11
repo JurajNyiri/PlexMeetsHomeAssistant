@@ -180,6 +180,16 @@ style.textContent = css`
 		transition: 0.5s;
 		left: 0;
 		top: 0;
+		background-size: cover;
+	}
+	.contentArt {
+		position: absolute;
+		background-color: rgba(0, 0, 0, 0);
+		z-index: 2;
+		left: 0;
+		top: 0;
+		background-size: cover;
+		display: none;
 	}
 	.yearElem {
 		color: hsla(0, 0%, 100%, 0.45);

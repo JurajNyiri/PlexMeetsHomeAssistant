@@ -22,6 +22,10 @@ const getHeight = (el: HTMLElement): number => {
 	const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
 	return height;
 };
+const getWidth = (el: HTMLElement): number => {
+	const width = Math.max(el.scrollWidth, el.offsetWidth, el.clientWidth, el.scrollWidth, el.offsetWidth);
+	return width;
+};
 
 const getOffset = (el: Element): Record<string, any> => {
 	let x = 0;
@@ -185,5 +189,6 @@ export {
 	findTrailerURL,
 	isVideoFullScreen,
 	hasEpisodes,
-	getOldPlexServerErrorMessage
+	getOldPlexServerErrorMessage,
+	getWidth
 };

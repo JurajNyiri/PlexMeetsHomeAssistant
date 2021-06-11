@@ -19681,6 +19681,16 @@ style.textContent = css `
 		transition: 0.5s;
 		left: 0;
 		top: 0;
+		background-size: cover;
+	}
+	.contentArt {
+		position: absolute;
+		background-color: rgba(0, 0, 0, 0);
+		z-index: 2;
+		left: 0;
+		top: 0;
+		background-size: cover;
+		display: none;
 	}
 	.yearElem {
 		color: hsla(0, 0%, 100%, 0.45);
@@ -20194,6 +20204,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';
             this.content.appendChild(contentbg);
+            const contentArt = document.createElement('div');
+            contentArt.className = 'contentArt';
+            this.content.appendChild(contentArt);
             this.detailElem = document.createElement('div');
             this.detailElem.className = 'detail';
             this.detailElem.innerHTML = `<h1 class='detailsTitle'></h1>
@@ -20317,6 +20330,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             // todo: figure out why timeout is needed here and do it properly
             setTimeout(() => {
                 contentbg.addEventListener('click', () => {
+                    this.hideBackground();
+                    this.minimizeAll();
+                });
+                contentArt.addEventListener('click', () => {
                     this.hideBackground();
                     this.minimizeAll();
                 });
@@ -20582,6 +20599,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 const dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
                 if (this.videoElem) {
+                    const art = this.plex.authorizeURL(this.plex.getBasicURL() + data.art);
                     const trailerURL = findTrailerURL(dataDetails);
                     if (trailerURL !== '' && !lodash.isEqual(this.playTrailer, false)) {
                         const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
@@ -20647,6 +20665,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 this.videoElem.style.top = `${top}px`;
                             }
                         });
+                    }
+                    else {
+                        const contentArt = this.getElementsByClassName('contentArt')[0];
+                        contentArt.style.width = `${window.innerWidth}px`;
+                        contentArt.style.height = `${window.innerHeight}px`;
+                        contentArt.style.display = 'block';
+                        contentArt.style.backgroundImage = `url('${art}')`;
+                        contentArt.style.top = `${top - 8}px`;
                     }
                 }
                 if (!lodash.isEmpty(seasonsData)) {
@@ -20871,6 +20897,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             contentbg.classList.remove('no-transparency');
             contentbg.style.zIndex = '1';
             contentbg.style.backgroundColor = 'rgba(0,0,0,0)';
+            const contentArt = this.getElementsByClassName('contentArt')[0];
+            contentArt.style.display = 'none';
         };
         this.activateMovieElem = (movieElem) => {
             const movieElemLocal = movieElem;
