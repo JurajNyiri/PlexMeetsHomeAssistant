@@ -916,14 +916,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							this.videoElem.style.top = `${top}px`;
 						}
 					});
-				} else {
+				} else if (!_.isEmpty(art)) {
 					const contentArt = this.getElementsByClassName('contentArt')[0] as HTMLElement;
 					const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
 					contentArt.style.width = `${window.innerWidth}px`;
 					contentArt.style.height = `${window.innerHeight}px`;
-					contentArt.style.display = 'block';
 					contentArt.style.backgroundImage = `url('${art}')`;
 					contentArt.style.top = `${top - 8}px`;
+					contentArt.style.transition = '0.5s';
+
+					contentArt.style.display = 'block';
 					contentbg.classList.add('no-transparency');
 				}
 			}
