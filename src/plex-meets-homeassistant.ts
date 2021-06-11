@@ -149,15 +149,30 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	loadInitialData = async (): Promise<void> => {
 		window.addEventListener('scroll', () => {
-			if (
-				this.detailsShown &&
-				this.activeMovieElem &&
-				this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)
-			) {
-				window.scroll({
-					top: getOffset(this.activeMovieElem as Element).top - 80
-				});
+			if (this.detailsShown && this.activeMovieElem) {
+				if (this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)) {
+					window.scroll({
+						top: getOffset(this.activeMovieElem as Element).top - 80
+					});
+				} else {
+					// todo move final bottom value to class to safe performance
+					// todo: make it work with episodes and extras
+					const season = this.getElementsByClassName('seasons')[0] as HTMLElement;
+					const seasonContainers = this.getElementsByClassName('seasonContainer');
+					const lastSeasonContainer = seasonContainers[seasonContainers.length - 1] as HTMLElement;
+					const seasonContainersBottom =
+						parseInt(lastSeasonContainer.style.top, 10) +
+						parseInt(season.style.top, 10) +
+						getHeight(lastSeasonContainer) +
+						60;
+					if (this.getTop() + window.innerHeight > seasonContainersBottom) {
+						window.scroll({
+							top: seasonContainersBottom - window.innerHeight
+						});
+					}
+				}
 			}
+
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {
