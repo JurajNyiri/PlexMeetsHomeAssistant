@@ -20047,12 +20047,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             top: detailTop
                         });
                     }
-                    else if (detailBottom &&
-                        window.innerHeight < detailBottom - detailTop &&
-                        this.getTop() + window.innerHeight > detailBottom) {
-                        window.scroll({
-                            top: detailBottom - window.innerHeight
-                        });
+                    else if (detailBottom) {
+                        if (window.innerHeight < detailBottom - detailTop) {
+                            if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
+                                window.scroll({
+                                    top: detailBottom - window.innerHeight
+                                });
+                            }
+                        }
+                        else {
+                            window.scroll({
+                                top: detailTop
+                            });
+                        }
                     }
                 }
                 this.renderNewElementsIfNeeded();
