@@ -15,7 +15,7 @@ import {
 	isVideoFullScreen,
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
-	getWidth
+	getDetailsBottom
 } from './modules/utils';
 import style from './modules/style';
 
@@ -149,25 +149,29 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	loadInitialData = async (): Promise<void> => {
 		window.addEventListener('scroll', () => {
+			// todo: improve performance by calculating this when needed only
 			if (this.detailsShown && this.activeMovieElem) {
-				if (this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)) {
+				const seasonContainers = this.getElementsByClassName('seasonContainer') as HTMLCollectionOf<HTMLElement>;
+				const episodeContainers = this.getElementsByClassName('episodeContainer') as HTMLCollectionOf<HTMLElement>;
+				const seasonElems = this.getElementsByClassName('seasonElem') as HTMLCollectionOf<HTMLElement>;
+				let activeElem = this.activeMovieElem;
+				// eslint-disable-next-line consistent-return
+				_.forEach(seasonElems, seasonElem => {
+					if (_.isEqual(seasonElem.dataset.clicked, 'true')) {
+						activeElem = seasonElem;
+						return false;
+					}
+				});
+
+				if (this.getTop() < parseInt(getOffset(activeElem as Element).top, 10) - 70) {
 					window.scroll({
-						top: getOffset(this.activeMovieElem as Element).top - 80
+						top: getOffset(activeElem as Element).top - 70
 					});
 				} else {
-					// todo move final bottom value to class to safe performance
-					// todo: make it work with episodes and extras
-					const season = this.getElementsByClassName('seasons')[0] as HTMLElement;
-					const seasonContainers = this.getElementsByClassName('seasonContainer');
-					const lastSeasonContainer = seasonContainers[seasonContainers.length - 1] as HTMLElement;
-					const seasonContainersBottom =
-						parseInt(lastSeasonContainer.style.top, 10) +
-						parseInt(season.style.top, 10) +
-						getHeight(lastSeasonContainer) +
-						60;
-					if (this.getTop() + window.innerHeight > seasonContainersBottom) {
+					const detailBottom = getDetailsBottom(seasonContainers, episodeContainers);
+					if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
 						window.scroll({
-							top: seasonContainersBottom - window.innerHeight
+							top: detailBottom - window.innerHeight
 						});
 					}
 				}

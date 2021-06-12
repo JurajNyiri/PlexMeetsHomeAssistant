@@ -19157,6 +19157,18 @@ const getOffset = (el) => {
     }
     return { top: y, left: x };
 };
+const getDetailsBottom = (seasonContainers, episodeContainers) => {
+    const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
+    const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
+    let detailBottom = false;
+    if (seasonContainers.length > 0 && parseInt(lastSeasonContainer.style.top, 10) > 0) {
+        detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
+    }
+    else if (episodeContainers.length > 0) {
+        detailBottom = getHeight(lastEpisodeContainer) + parseInt(getOffset(lastEpisodeContainer).top, 10) + 10;
+    }
+    return detailBottom;
+};
 const hasEpisodes = (media) => {
     let result = false;
     // eslint-disable-next-line consistent-return
@@ -20015,25 +20027,29 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
+                // todo: improve performance by calculating this when needed only
                 if (this.detailsShown && this.activeMovieElem) {
-                    if (this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)) {
+                    const seasonContainers = this.getElementsByClassName('seasonContainer');
+                    const episodeContainers = this.getElementsByClassName('episodeContainer');
+                    const seasonElems = this.getElementsByClassName('seasonElem');
+                    let activeElem = this.activeMovieElem;
+                    // eslint-disable-next-line consistent-return
+                    lodash.forEach(seasonElems, seasonElem => {
+                        if (lodash.isEqual(seasonElem.dataset.clicked, 'true')) {
+                            activeElem = seasonElem;
+                            return false;
+                        }
+                    });
+                    if (this.getTop() < parseInt(getOffset(activeElem).top, 10) - 70) {
                         window.scroll({
-                            top: getOffset(this.activeMovieElem).top - 80
+                            top: getOffset(activeElem).top - 70
                         });
                     }
                     else {
-                        // todo move final bottom value to class to safe performance
-                        // todo: make it work with episodes and extras
-                        const season = this.getElementsByClassName('seasons')[0];
-                        const seasonContainers = this.getElementsByClassName('seasonContainer');
-                        const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
-                        const seasonContainersBottom = parseInt(lastSeasonContainer.style.top, 10) +
-                            parseInt(season.style.top, 10) +
-                            getHeight(lastSeasonContainer) +
-                            60;
-                        if (this.getTop() + window.innerHeight > seasonContainersBottom) {
+                        const detailBottom = getDetailsBottom(seasonContainers, episodeContainers);
+                        if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
                             window.scroll({
-                                top: seasonContainersBottom - window.innerHeight
+                                top: detailBottom - window.innerHeight
                             });
                         }
                     }
