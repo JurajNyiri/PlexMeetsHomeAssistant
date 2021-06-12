@@ -19157,11 +19157,11 @@ const getOffset = (el) => {
     }
     return { top: y, left: x };
 };
-const getDetailsBottom = (seasonContainers, episodeContainers) => {
+const getDetailsBottom = (seasonContainers, episodeContainers, activeElem) => {
     const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
     const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
     let detailBottom = false;
-    if (seasonContainers.length > 0 && parseInt(lastSeasonContainer.style.top, 10) > 0) {
+    if (seasonContainers.length > 0 && parseInt(activeElem.style.top, 10) > 0) {
         detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
     }
     else if (episodeContainers.length > 0) {
@@ -20040,18 +20040,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             return false;
                         }
                     });
-                    if (this.getTop() < parseInt(getOffset(activeElem).top, 10) - 70) {
+                    const detailTop = parseInt(getOffset(activeElem).top, 10) - 70;
+                    const detailBottom = getDetailsBottom(seasonContainers, episodeContainers, activeElem);
+                    if (this.getTop() < detailTop) {
                         window.scroll({
-                            top: getOffset(activeElem).top - 70
+                            top: detailTop
                         });
                     }
-                    else {
-                        const detailBottom = getDetailsBottom(seasonContainers, episodeContainers);
-                        if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
-                            window.scroll({
-                                top: detailBottom - window.innerHeight
-                            });
-                        }
+                    else if (detailBottom &&
+                        window.innerHeight < detailBottom - detailTop &&
+                        this.getTop() + window.innerHeight > detailBottom) {
+                        window.scroll({
+                            top: detailBottom - window.innerHeight
+                        });
                     }
                 }
                 this.renderNewElementsIfNeeded();

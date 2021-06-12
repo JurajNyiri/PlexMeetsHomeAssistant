@@ -49,13 +49,14 @@ const getOffset = (el: Element): Record<string, any> => {
 
 const getDetailsBottom = (
 	seasonContainers: HTMLCollectionOf<HTMLElement>,
-	episodeContainers: HTMLCollectionOf<HTMLElement>
+	episodeContainers: HTMLCollectionOf<HTMLElement>,
+	activeElem: HTMLElement
 ): number | false => {
 	const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
 	const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
 	let detailBottom: number | false = false;
 
-	if (seasonContainers.length > 0 && parseInt(lastSeasonContainer.style.top, 10) > 0) {
+	if (seasonContainers.length > 0 && parseInt(activeElem.style.top, 10) > 0) {
 		detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
 	} else if (episodeContainers.length > 0) {
 		detailBottom = getHeight(lastEpisodeContainer) + parseInt(getOffset(lastEpisodeContainer).top, 10) + 10;
