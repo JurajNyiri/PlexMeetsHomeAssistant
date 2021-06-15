@@ -20047,7 +20047,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     });
                     const detailTop = parseInt(getOffset(activeElem).top, 10) - 70;
                     const detailBottom = getDetailsBottom(seasonContainers, episodeContainers, activeElem);
-                    console.log(this);
                     if (this.getTop() < detailTop) {
                         window.scroll({
                             top: detailTop
@@ -20063,7 +20062,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 this.children[0].classList.add('stop-scrolling');
                             }
                         }
-                        else {
+                        else if (detailTop !== -70 && detailBottom !== -10) {
                             window.scroll({
                                 top: detailTop
                             });
