@@ -152,7 +152,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	loadInitialData = async (): Promise<void> => {
 		window.addEventListener('scroll', () => {
 			// todo: improve performance by calculating this when needed only
-			if (this.detailsShown && this.activeMovieElem) {
+			if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this)) {
 				const seasonContainers = this.getElementsByClassName('seasonContainer') as HTMLCollectionOf<HTMLElement>;
 				const episodeContainers = this.getElementsByClassName('episodeContainer') as HTMLCollectionOf<HTMLElement>;
 				const seasonElems = this.getElementsByClassName('seasonElem') as HTMLCollectionOf<HTMLElement>;
