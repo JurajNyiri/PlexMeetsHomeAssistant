@@ -521,17 +521,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (this.videoElem) {
 				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
 				const video = videoPlayer.children[0] as any;
-				if (video.requestFullscreen) {
+				if (video.requestFullscreen && false) {
 					video.requestFullscreen();
-				} else if (video.webkitRequestFullscreen) {
+				} else if (video.webkitRequestFullscreen && false) {
 					video.webkitRequestFullscreen();
-				} else if (video.msRequestFullscreen) {
+				} else if (video.msRequestFullscreen && false) {
 					video.msRequestFullscreen();
 				} else {
-					const videobg1 = this.getElementsByClassName('videobg1')[0] as HTMLElement;
-					const videobg2 = this.getElementsByClassName('videobg2')[0] as HTMLElement;
-					videobg1.classList.add('transparent');
-					videobg2.classList.add('transparent');
+					const videobgs1 = this.getElementsByClassName('videobg1');
+					const videobgs2 = this.getElementsByClassName('videobg2');
+					// eslint-disable-next-line no-restricted-syntax
+					for (const videobg1 of videobgs1) {
+						videobg1.classList.add('transparent');
+					}
+					// eslint-disable-next-line no-restricted-syntax
+					for (const videobg2 of videobgs2) {
+						videobg2.classList.add('transparent');
+					}
 
 					this.videoElem.classList.add('maxZIndex');
 					this.videoElem.classList.add('simulatedFullScreen');
@@ -568,10 +574,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.videoElem.classList.remove('simulatedFullScreen');
 				}
 
-				const videobg1 = this.getElementsByClassName('videobg1')[0] as HTMLElement;
-				const videobg2 = this.getElementsByClassName('videobg2')[0] as HTMLElement;
-				videobg1.classList.remove('transparent');
-				videobg2.classList.remove('transparent');
+				const videobgs1 = this.getElementsByClassName('videobg1');
+				const videobgs2 = this.getElementsByClassName('videobg2');
+				// eslint-disable-next-line no-restricted-syntax
+				for (const videobg1 of videobgs1) {
+					videobg1.classList.remove('transparent');
+				}
+				// eslint-disable-next-line no-restricted-syntax
+				for (const videobg2 of videobgs2) {
+					videobg2.classList.remove('transparent');
+				}
+
 				video.controls = false;
 			} else {
 				this.hideBackground();
@@ -681,10 +694,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.videoElem.classList.remove('maxZIndex');
 			this.videoElem.classList.remove('simulatedFullScreen');
 
-			const videobg1 = this.getElementsByClassName('videobg1')[0] as HTMLElement;
-			const videobg2 = this.getElementsByClassName('videobg2')[0] as HTMLElement;
-			videobg1.classList.remove('transparent');
-			videobg2.classList.remove('transparent');
+			const videobgs1 = this.getElementsByClassName('videobg1');
+			const videobgs2 = this.getElementsByClassName('videobg2');
+			// eslint-disable-next-line no-restricted-syntax
+			for (const videobg1 of videobgs1) {
+				videobg1.classList.remove('transparent');
+			}
+			// eslint-disable-next-line no-restricted-syntax
+			for (const videobg2 of videobgs2) {
+				videobg2.classList.remove('transparent');
+			}
 		}
 	};
 
@@ -905,8 +924,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					video.play();
 					let playingFired = false;
 
-					const videobg1 = this.getElementsByClassName('videobg1')[0] as HTMLElement;
-					const videobg2 = this.getElementsByClassName('videobg2')[0] as HTMLElement;
+					const videobgs1 = this.getElementsByClassName('videobg1');
+					const videobgs2 = this.getElementsByClassName('videobg2');
 					video.addEventListener('click', event => {
 						if (isVideoFullScreen(this)) {
 							event.stopPropagation();
@@ -915,15 +934,27 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					const fullScreenChangeAction = (): void => {
 						if (this.videoElem) {
 							if (isVideoFullScreen(this)) {
-								videobg1.classList.add('transparent');
-								videobg2.classList.add('transparent');
+								// eslint-disable-next-line no-restricted-syntax
+								for (const videobg1 of videobgs1) {
+									videobg1.classList.add('transparent');
+								}
+								// eslint-disable-next-line no-restricted-syntax
+								for (const videobg2 of videobgs2) {
+									videobg2.classList.add('transparent');
+								}
 
 								this.videoElem.classList.add('maxZIndex');
 								video.controls = true;
 								video.muted = false;
 							} else {
-								videobg1.classList.remove('transparent');
-								videobg2.classList.remove('transparent');
+								// eslint-disable-next-line no-restricted-syntax
+								for (const videobg1 of videobgs1) {
+									videobg1.classList.remove('transparent');
+								}
+								// eslint-disable-next-line no-restricted-syntax
+								for (const videobg2 of videobgs2) {
+									videobg2.classList.remove('transparent');
+								}
 
 								this.videoElem.classList.remove('maxZIndex');
 								video.controls = false;
