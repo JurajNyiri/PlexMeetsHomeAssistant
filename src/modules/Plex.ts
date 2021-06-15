@@ -5,7 +5,7 @@ import _ from 'lodash';
 class Plex {
 	ip: string;
 
-	port: number;
+	port: number | false;
 
 	token: string;
 
@@ -21,7 +21,13 @@ class Plex {
 
 	sections: Array<Record<string, any>> = [];
 
-	constructor(ip: string, port = 32400, token: string, protocol: 'http' | 'https' = 'http', sort = 'titleSort:asc') {
+	constructor(
+		ip: string,
+		port: number | false = false,
+		token: string,
+		protocol: 'http' | 'https' = 'http',
+		sort = 'titleSort:asc'
+	) {
 		this.ip = ip;
 		this.port = port;
 		this.token = token;
@@ -172,7 +178,7 @@ class Plex {
 	};
 
 	getBasicURL = (): string => {
-		return `${this.protocol}://${this.ip}:${this.port}`;
+		return `${this.protocol}://${this.ip}${this.port === false ? '' : `:${this.port}`}`;
 	};
 
 	authorizeURL = (url: string): string => {

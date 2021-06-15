@@ -22,6 +22,8 @@ import style from './modules/style';
 class PlexMeetsHomeAssistant extends HTMLElement {
 	plexProtocol: 'http' | 'https' = 'http';
 
+	plexPort: number | false = false;
+
 	detailsShown = false;
 
 	runBefore = '';
@@ -948,12 +950,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 
 				_.forEach(seasonsData, seasonData => {
-					if (this.seasonsElem) {
+					if (this.seasonsElem && this.plex) {
 						this.seasonsElemHidden = false;
 						const seasonContainer = document.createElement('div');
 						seasonContainer.className = 'seasonContainer';
 						seasonContainer.style.width = `${CSS_STYLE.width}px`;
-						const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${seasonData.thumb}&X-Plex-Token=${this.config.token}`;
+						const thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${
+							CSS_STYLE.expandedHeight
+						}&minSize=1&upscale=1&url=${seasonData.thumb}&X-Plex-Token=${this.config.token}`;
 
 						const seasonElem = document.createElement('div');
 						seasonElem.className = 'seasonElem';
@@ -1047,17 +1051,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													this.episodesElem.style.transition = `0s`;
 													this.episodesElem.style.top = `${top + 2000}px`;
 													_.forEach(episodesData, episodeData => {
-														if (this.episodesElem && this.playController) {
-															this.episodesElem.append(
-																createEpisodesView(
-																	this.playController,
-																	this.plexProtocol,
-																	this.config.ip,
-																	this.config.port,
-																	this.config.token,
-																	episodeData
-																)
-															);
+														if (this.episodesElem && this.playController && this.plex) {
+															this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData));
 														}
 													});
 													clearInterval(this.episodesLoadTimeout);
@@ -1142,17 +1137,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					if (this.showExtras) {
 						const extras = dataDetails.Extras.Metadata;
 						_.forEach(extras, extrasData => {
-							if (this.episodesElem && this.playController) {
-								this.episodesElem.append(
-									createEpisodesView(
-										this.playController,
-										this.plexProtocol,
-										this.config.ip,
-										this.config.port,
-										this.config.token,
-										extrasData
-									)
-								);
+							if (this.episodesElem && this.playController && this.plex) {
+								this.episodesElem.append(createEpisodesView(this.playController, this.plex, extrasData));
 							}
 						});
 					}
@@ -1255,10 +1241,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	getMovieElement = (data: any, hasAdditionalData = false): HTMLDivElement => {
 		let thumbURL = '';
-		if (_.isEqual(data.type, 'episode')) {
-			thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
-		} else {
-			thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+		if (this.plex) {
+			if (_.isEqual(data.type, 'episode')) {
+				thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${
+					CSS_STYLE.expandedHeight
+				}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
+			} else {
+				thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${
+					CSS_STYLE.expandedHeight
+				}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+			}
 		}
 
 		const container = document.createElement('div');
@@ -1389,15 +1381,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (!config.ip) {
 			throw new Error('You need to define a ip');
 		}
-		if (!config.port) {
-			throw new Error('You need to define a port');
-		}
 		if (!config.libraryName) {
 			throw new Error('You need to define a libraryName');
 		}
 		this.config = config;
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
+		}
+		if (config.port) {
+			this.plexPort = config.port;
 		}
 		if (config.maxCount) {
 			this.maxCount = config.maxCount;
@@ -1415,7 +1407,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.showExtras = config.showExtras;
 		}
 
-		this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
+		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 	};
 
 	getCardSize = (): number => {
