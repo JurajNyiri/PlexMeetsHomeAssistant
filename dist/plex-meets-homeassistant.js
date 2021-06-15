@@ -20375,13 +20375,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 if (this.videoElem) {
                     const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
                     const video = videoPlayer.children[0];
-                    if (video.requestFullscreen && false) {
+                    if (video.requestFullscreen) {
                         video.requestFullscreen();
                     }
-                    else if (video.webkitRequestFullscreen && false) {
+                    else if (video.webkitRequestFullscreen) {
                         video.webkitRequestFullscreen();
                     }
-                    else if (video.msRequestFullscreen && false) {
+                    else if (video.msRequestFullscreen) {
                         video.msRequestFullscreen();
                     }
                     else {
