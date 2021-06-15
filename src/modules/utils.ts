@@ -83,18 +83,15 @@ const findTrailerURL = (movieData: Record<string, any>): string => {
 	return foundURL;
 };
 
-const createEpisodesView = (
-	playController: PlayController,
-	plexProtocol: string,
-	ip: string,
-	port: string,
-	token: string,
-	data: Record<string, any>
-): HTMLElement => {
+const createEpisodesView = (playController: PlayController, plex: Plex, data: Record<string, any>): HTMLElement => {
 	const episodeContainer = document.createElement('div');
 	episodeContainer.className = 'episodeContainer';
 	episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
-	const episodeThumbURL = `${plexProtocol}://${ip}:${port}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${token}`;
+	const episodeThumbURL = plex.authorizeURL(
+		`${plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${
+			CSS_STYLE.episodeHeight
+		}&minSize=1&upscale=1&url=${data.thumb}`
+	);
 
 	const episodeElem = document.createElement('div');
 	episodeElem.className = 'episodeElem';

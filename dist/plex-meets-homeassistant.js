@@ -18669,7 +18669,7 @@ var axios = axios_1;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 class Plex {
-    constructor(ip, port = 32400, token, protocol = 'http', sort = 'titleSort:asc') {
+    constructor(ip, port = false, token, protocol = 'http', sort = 'titleSort:asc') {
         this.serverInfo = {};
         this.clients = [];
         this.requestTimeout = 5000;
@@ -18791,7 +18791,7 @@ class Plex {
             return onDeckData;
         };
         this.getBasicURL = () => {
-            return `${this.protocol}://${this.ip}:${this.port}`;
+            return `${this.protocol}://${this.ip}${this.port === false ? '' : `:${this.port}`}`;
         };
         this.authorizeURL = (url) => {
             if (!lodash.includes(url, 'X-Plex-Token')) {
@@ -19191,11 +19191,11 @@ const findTrailerURL = (movieData) => {
     }
     return foundURL;
 };
-const createEpisodesView = (playController, plexProtocol, ip, port, token, data) => {
+const createEpisodesView = (playController, plex, data) => {
     const episodeContainer = document.createElement('div');
     episodeContainer.className = 'episodeContainer';
     episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
-    const episodeThumbURL = `${plexProtocol}://${ip}:${port}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${token}`;
+    const episodeThumbURL = plex.authorizeURL(`${plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${data.thumb}`);
     const episodeElem = document.createElement('div');
     episodeElem.className = 'episodeElem';
     episodeElem.style.width = `${CSS_STYLE.episodeWidth}px`;
@@ -19915,6 +19915,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
         this.plexProtocol = 'http';
+        this.plexPort = false;
         this.detailsShown = false;
         this.runBefore = '';
         this.playTrailer = true;
@@ -20656,12 +20657,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.seasonsElem.style.top = `${top + 2000}px`;
                     }
                     lodash.forEach(seasonsData, seasonData => {
-                        if (this.seasonsElem) {
+                        if (this.seasonsElem && this.plex) {
                             this.seasonsElemHidden = false;
                             const seasonContainer = document.createElement('div');
                             seasonContainer.className = 'seasonContainer';
                             seasonContainer.style.width = `${CSS_STYLE.width}px`;
-                            const thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${seasonData.thumb}&X-Plex-Token=${this.config.token}`;
+                            const thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${seasonData.thumb}&X-Plex-Token=${this.config.token}`;
                             const seasonElem = document.createElement('div');
                             seasonElem.className = 'seasonElem';
                             seasonElem.style.width = `${CSS_STYLE.width}px`;
@@ -20741,8 +20742,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                         this.episodesElem.style.transition = `0s`;
                                                         this.episodesElem.style.top = `${top + 2000}px`;
                                                         lodash.forEach(episodesData, episodeData => {
-                                                            if (this.episodesElem && this.playController) {
-                                                                this.episodesElem.append(createEpisodesView(this.playController, this.plexProtocol, this.config.ip, this.config.port, this.config.token, episodeData));
+                                                            if (this.episodesElem && this.playController && this.plex) {
+                                                                this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData));
                                                             }
                                                         });
                                                         clearInterval(this.episodesLoadTimeout);
@@ -20820,8 +20821,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.episodesElem.style.transition = `0s`;
                         this.episodesElem.style.top = `${top + 2000}px`;
                         lodash.forEach(extras, extrasData => {
-                            if (this.episodesElem && this.playController) {
-                                this.episodesElem.append(createEpisodesView(this.playController, this.plexProtocol, this.config.ip, this.config.port, this.config.token, extrasData));
+                            if (this.episodesElem && this.playController && this.plex) {
+                                this.episodesElem.append(createEpisodesView(this.playController, this.plex, extrasData));
                             }
                         });
                         clearInterval(this.episodesLoadTimeout);
@@ -20913,11 +20914,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.getMovieElement = (data, hasAdditionalData = false) => {
             let thumbURL = '';
-            if (lodash.isEqual(data.type, 'episode')) {
-                thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
-            }
-            else {
-                thumbURL = `${this.plexProtocol}://${this.config.ip}:${this.config.port}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+            if (this.plex) {
+                if (lodash.isEqual(data.type, 'episode')) {
+                    thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.grandparentThumb}&X-Plex-Token=${this.config.token}`;
+                }
+                else {
+                    thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.expandedWidth}&height=${CSS_STYLE.expandedHeight}&minSize=1&upscale=1&url=${data.thumb}&X-Plex-Token=${this.config.token}`;
+                }
             }
             const container = document.createElement('div');
             container.className = 'container';
@@ -21031,15 +21034,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (!config.ip) {
                 throw new Error('You need to define a ip');
             }
-            if (!config.port) {
-                throw new Error('You need to define a port');
-            }
             if (!config.libraryName) {
                 throw new Error('You need to define a libraryName');
             }
             this.config = config;
             if (config.protocol) {
                 this.plexProtocol = config.protocol;
+            }
+            if (config.port) {
+                this.plexPort = config.port;
             }
             if (config.maxCount) {
                 this.maxCount = config.maxCount;
@@ -21053,7 +21056,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (!lodash.isNil(config.playTrailer)) {
                 this.playTrailer = config.playTrailer;
             }
-            this.plex = new Plex(this.config.ip, this.config.port, this.config.token, this.plexProtocol, this.config.sort);
+            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
         };
         this.getCardSize = () => {
             return 3;

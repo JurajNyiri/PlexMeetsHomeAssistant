@@ -29,8 +29,6 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 **ip**: Enter ip address of plex server. You can also enter hostname without protocol or port.
 
-**port**: Enter port of your plex sever.
-
 **libraryName**: Name of the library you wish to render.
 
 _Available special libraries:_
@@ -48,6 +46,8 @@ _Available special libraries:_
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#kodi).
 - **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#all-other-plex-clients).
 - **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#google-cast).
+
+**port**: _Optional_ Port of your plex sever.
 
 **protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
 
