@@ -165,22 +165,25 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 				const detailTop = parseInt(getOffset(activeElem as Element).top, 10) - 70;
 				const detailBottom = getDetailsBottom(seasonContainers, episodeContainers, activeElem);
-
+				console.log(this);
 				if (this.getTop() < detailTop) {
 					window.scroll({
 						top: detailTop
 					});
+					this.children[0].classList.add('stop-scrolling');
 				} else if (detailBottom) {
 					if (window.innerHeight < detailBottom - detailTop) {
 						if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
 							window.scroll({
 								top: detailBottom - window.innerHeight
 							});
+							this.children[0].classList.add('stop-scrolling');
 						}
 					} else {
 						window.scroll({
 							top: detailTop
 						});
+						this.children[0].classList.add('stop-scrolling');
 					}
 				}
 			}

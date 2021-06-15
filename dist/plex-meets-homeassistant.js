@@ -19695,6 +19695,10 @@ style.textContent = css `
 		top: 0;
 		background-size: cover;
 	}
+	.stop-scrolling {
+		height: 100%;
+		overflow: hidden;
+	}
 	.contentArt {
 		position: absolute;
 		background-color: rgba(0, 0, 0, 0);
@@ -20042,10 +20046,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     });
                     const detailTop = parseInt(getOffset(activeElem).top, 10) - 70;
                     const detailBottom = getDetailsBottom(seasonContainers, episodeContainers, activeElem);
+                    console.log(this);
                     if (this.getTop() < detailTop) {
                         window.scroll({
                             top: detailTop
                         });
+                        this.children[0].classList.add('stop-scrolling');
                     }
                     else if (detailBottom) {
                         if (window.innerHeight < detailBottom - detailTop) {
@@ -20053,12 +20059,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 window.scroll({
                                     top: detailBottom - window.innerHeight
                                 });
+                                this.children[0].classList.add('stop-scrolling');
                             }
                         }
                         else {
                             window.scroll({
                                 top: detailTop
                             });
+                            this.children[0].classList.add('stop-scrolling');
                         }
                     }
                 }
