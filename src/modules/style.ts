@@ -182,6 +182,10 @@ style.textContent = css`
 		top: 0;
 		background-size: cover;
 	}
+	.stop-scrolling {
+		height: 100%;
+		overflow: hidden;
+	}
 	.contentArt {
 		position: absolute;
 		background-color: rgba(0, 0, 0, 0);

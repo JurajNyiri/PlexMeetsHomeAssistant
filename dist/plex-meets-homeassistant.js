@@ -19157,6 +19157,18 @@ const getOffset = (el) => {
     }
     return { top: y, left: x };
 };
+const getDetailsBottom = (seasonContainers, episodeContainers, activeElem) => {
+    const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
+    const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
+    let detailBottom = false;
+    if (seasonContainers.length > 0 && parseInt(activeElem.style.top, 10) > 0) {
+        detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
+    }
+    else if (episodeContainers.length > 0) {
+        detailBottom = getHeight(lastEpisodeContainer) + parseInt(getOffset(lastEpisodeContainer).top, 10) + 10;
+    }
+    return detailBottom;
+};
 const hasEpisodes = (media) => {
     let result = false;
     // eslint-disable-next-line consistent-return
@@ -19683,6 +19695,10 @@ style.textContent = css `
 		top: 0;
 		background-size: cover;
 	}
+	.stop-scrolling {
+		height: 100%;
+		overflow: hidden;
+	}
 	.contentArt {
 		position: absolute;
 		background-color: rgba(0, 0, 0, 0);
@@ -20016,12 +20032,44 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.loadInitialData = async () => {
             window.addEventListener('scroll', () => {
-                if (this.detailsShown &&
-                    this.activeMovieElem &&
-                    this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)) {
-                    window.scroll({
-                        top: getOffset(this.activeMovieElem).top - 80
+                // todo: improve performance by calculating this when needed only
+                if (this.detailsShown && this.activeMovieElem) {
+                    const seasonContainers = this.getElementsByClassName('seasonContainer');
+                    const episodeContainers = this.getElementsByClassName('episodeContainer');
+                    const seasonElems = this.getElementsByClassName('seasonElem');
+                    let activeElem = this.activeMovieElem;
+                    // eslint-disable-next-line consistent-return
+                    lodash.forEach(seasonElems, seasonElem => {
+                        if (lodash.isEqual(seasonElem.dataset.clicked, 'true')) {
+                            activeElem = seasonElem;
+                            return false;
+                        }
                     });
+                    const detailTop = parseInt(getOffset(activeElem).top, 10) - 70;
+                    const detailBottom = getDetailsBottom(seasonContainers, episodeContainers, activeElem);
+                    console.log(this);
+                    if (this.getTop() < detailTop) {
+                        window.scroll({
+                            top: detailTop
+                        });
+                        this.children[0].classList.add('stop-scrolling');
+                    }
+                    else if (detailBottom) {
+                        if (window.innerHeight < detailBottom - detailTop) {
+                            if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
+                                window.scroll({
+                                    top: detailBottom - window.innerHeight
+                                });
+                                this.children[0].classList.add('stop-scrolling');
+                            }
+                        }
+                        else {
+                            window.scroll({
+                                top: detailTop
+                            });
+                            this.children[0].classList.add('stop-scrolling');
+                        }
+                    }
                 }
                 this.renderNewElementsIfNeeded();
             });

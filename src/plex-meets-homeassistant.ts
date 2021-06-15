@@ -15,7 +15,7 @@ import {
 	isVideoFullScreen,
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
-	getWidth
+	getDetailsBottom
 } from './modules/utils';
 import style from './modules/style';
 
@@ -151,15 +151,45 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	loadInitialData = async (): Promise<void> => {
 		window.addEventListener('scroll', () => {
-			if (
-				this.detailsShown &&
-				this.activeMovieElem &&
-				this.getTop() + 15 < parseInt(this.activeMovieElem.style.top, 10)
-			) {
-				window.scroll({
-					top: getOffset(this.activeMovieElem as Element).top - 80
+			// todo: improve performance by calculating this when needed only
+			if (this.detailsShown && this.activeMovieElem) {
+				const seasonContainers = this.getElementsByClassName('seasonContainer') as HTMLCollectionOf<HTMLElement>;
+				const episodeContainers = this.getElementsByClassName('episodeContainer') as HTMLCollectionOf<HTMLElement>;
+				const seasonElems = this.getElementsByClassName('seasonElem') as HTMLCollectionOf<HTMLElement>;
+				let activeElem = this.activeMovieElem;
+				// eslint-disable-next-line consistent-return
+				_.forEach(seasonElems, seasonElem => {
+					if (_.isEqual(seasonElem.dataset.clicked, 'true')) {
+						activeElem = seasonElem;
+						return false;
+					}
 				});
+
+				const detailTop = parseInt(getOffset(activeElem as Element).top, 10) - 70;
+				const detailBottom = getDetailsBottom(seasonContainers, episodeContainers, activeElem);
+				console.log(this);
+				if (this.getTop() < detailTop) {
+					window.scroll({
+						top: detailTop
+					});
+					this.children[0].classList.add('stop-scrolling');
+				} else if (detailBottom) {
+					if (window.innerHeight < detailBottom - detailTop) {
+						if (detailBottom && this.getTop() + window.innerHeight > detailBottom) {
+							window.scroll({
+								top: detailBottom - window.innerHeight
+							});
+							this.children[0].classList.add('stop-scrolling');
+						}
+					} else {
+						window.scroll({
+							top: detailTop
+						});
+						this.children[0].classList.add('stop-scrolling');
+					}
+				}
 			}
+
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {

@@ -47,6 +47,23 @@ const getOffset = (el: Element): Record<string, any> => {
 	return { top: y, left: x };
 };
 
+const getDetailsBottom = (
+	seasonContainers: HTMLCollectionOf<HTMLElement>,
+	episodeContainers: HTMLCollectionOf<HTMLElement>,
+	activeElem: HTMLElement
+): number | false => {
+	const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
+	const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
+	let detailBottom: number | false = false;
+
+	if (seasonContainers.length > 0 && parseInt(activeElem.style.top, 10) > 0) {
+		detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
+	} else if (episodeContainers.length > 0) {
+		detailBottom = getHeight(lastEpisodeContainer) + parseInt(getOffset(lastEpisodeContainer).top, 10) + 10;
+	}
+	return detailBottom;
+};
+
 const hasEpisodes = (media: Array<Record<string, any>>): boolean => {
 	let result = false;
 	// eslint-disable-next-line consistent-return
@@ -187,5 +204,6 @@ export {
 	isVideoFullScreen,
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
-	getWidth
+	getWidth,
+	getDetailsBottom
 };
