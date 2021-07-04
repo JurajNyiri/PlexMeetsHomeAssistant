@@ -117,15 +117,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
-		if (this.plex) {
-			this.playController = new PlayController(
-				this.hassObj,
-				this.plex,
-				this.config.entity,
-				this.runBefore,
-				this.runAfter
-			);
-		}
 
 		if (!this.content) {
 			this.error = '';
@@ -211,6 +202,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			}
 			this.renderNewElementsIfNeeded();
 		});
+
+		if (this.hassObj && this.plex) {
+			const entityConfig: Record<string, any> = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
+			this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter);
+			if (this.playController) {
+				await this.playController.init();
+			}
+		}
+
 		if (this.card) {
 			this.previousPageWidth = this.card.offsetWidth;
 		}

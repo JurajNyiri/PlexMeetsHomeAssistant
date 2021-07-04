@@ -285,9 +285,72 @@ class PlayController {
 		return service;
 	};
 
-	private getPlexPlayerMachineIdentifier = (entityName: string): string => {
+	init = async (): Promise<void> => {
+		if (!_.isNil(this.entity.plexPlayer)) {
+			if (_.isArray(this.entity.plexPlayer)) {
+				for (let i = 0; i < this.entity.plexPlayer.length; i += 1) {
+					if (_.isObjectLike(this.entity.plexPlayer[i]) && !_.isNil(this.entity.plexPlayer[i].server)) {
+						let port: number | false = false;
+						if (!_.isNil(this.entity.plexPlayer[i].server.port)) {
+							port = this.entity.plexPlayer[i].server.port;
+						}
+						let protocol: 'http' | 'https' = 'http';
+						if (!_.isNil(this.entity.plexPlayer[i].server.protocol)) {
+							protocol = this.entity.plexPlayer[i].server.protocol;
+						}
+						// eslint-disable-next-line no-param-reassign
+						this.entity.plexPlayer[i].plex = new Plex(
+							this.entity.plexPlayer[i].server.ip,
+							port,
+							this.entity.plexPlayer[i].server.token,
+							protocol
+						);
+						// eslint-disable-next-line no-await-in-loop
+						await this.entity.plexPlayer[i].plex.getClients();
+					}
+				}
+			} else if (
+				!_.isNil(this.entity.plexPlayer.server) &&
+				!_.isNil(this.entity.plexPlayer.server.ip) &&
+				!_.isNil(this.entity.plexPlayer.server.token)
+			) {
+				let port: number | false = false;
+				if (!_.isNil(this.entity.plexPlayer.server.port)) {
+					port = this.entity.plexPlayer.server.port;
+				}
+				let protocol: 'http' | 'https' = 'http';
+				if (!_.isNil(this.entity.plexPlayer.server.protocol)) {
+					protocol = this.entity.plexPlayer.server.protocol;
+				}
+				// eslint-disable-next-line no-param-reassign
+				this.entity.plexPlayer.plex = new Plex(
+					this.entity.plexPlayer.server.ip,
+					port,
+					this.entity.plexPlayer.server.token,
+					protocol
+				);
+				// eslint-disable-next-line no-await-in-loop
+				await this.entity.plexPlayer.plex.getClients();
+			}
+		}
+	};
+
+	private getPlexPlayerMachineIdentifier = (entity: string | Record<string, any>): string => {
 		let machineIdentifier = '';
-		_.forEach(this.plex.clients, plexClient => {
+
+		let { plex } = this;
+		let entityName = '';
+		if (_.isString(entity)) {
+			entityName = entity;
+		} else if (_.isObjectLike(entity) && !_.isNil(entity.identifier)) {
+			entityName = entity.identifier;
+			if (!_.isNil(entity.plex) && entity.plex) {
+				plex = entity.plex;
+			}
+		}
+
+		console.log(plex.clients);
+		_.forEach(plex.clients, plexClient => {
 			if (
 				_.isEqual(plexClient.machineIdentifier, entityName) ||
 				_.isEqual(plexClient.product, entityName) ||
@@ -306,11 +369,12 @@ class PlayController {
 		return !_.isEmpty(this.getPlayService(data));
 	};
 
-	private isPlexPlayerSupported = (entityName: string): boolean => {
+	private isPlexPlayerSupported = (entity: string | Record<string, any>): boolean => {
 		let found = false;
-		if (this.getPlexPlayerMachineIdentifier(entityName)) {
+		if (this.getPlexPlayerMachineIdentifier(entity)) {
 			found = true;
 		}
+
 		return found || !_.isEqual(this.runBefore, false);
 	};
 

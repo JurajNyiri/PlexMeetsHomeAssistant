@@ -19062,9 +19062,59 @@ class PlayController {
             });
             return service;
         };
-        this.getPlexPlayerMachineIdentifier = (entityName) => {
+        this.init = async () => {
+            if (!lodash.isNil(this.entity.plexPlayer)) {
+                if (lodash.isArray(this.entity.plexPlayer)) {
+                    for (let i = 0; i < this.entity.plexPlayer.length; i += 1) {
+                        if (lodash.isObjectLike(this.entity.plexPlayer[i]) && !lodash.isNil(this.entity.plexPlayer[i].server)) {
+                            let port = false;
+                            if (!lodash.isNil(this.entity.plexPlayer[i].server.port)) {
+                                port = this.entity.plexPlayer[i].server.port;
+                            }
+                            let protocol = 'http';
+                            if (!lodash.isNil(this.entity.plexPlayer[i].server.protocol)) {
+                                protocol = this.entity.plexPlayer[i].server.protocol;
+                            }
+                            // eslint-disable-next-line no-param-reassign
+                            this.entity.plexPlayer[i].plex = new Plex(this.entity.plexPlayer[i].server.ip, port, this.entity.plexPlayer[i].server.token, protocol);
+                            // eslint-disable-next-line no-await-in-loop
+                            await this.entity.plexPlayer[i].plex.getClients();
+                        }
+                    }
+                }
+                else if (!lodash.isNil(this.entity.plexPlayer.server) &&
+                    !lodash.isNil(this.entity.plexPlayer.server.ip) &&
+                    !lodash.isNil(this.entity.plexPlayer.server.token)) {
+                    let port = false;
+                    if (!lodash.isNil(this.entity.plexPlayer.server.port)) {
+                        port = this.entity.plexPlayer.server.port;
+                    }
+                    let protocol = 'http';
+                    if (!lodash.isNil(this.entity.plexPlayer.server.protocol)) {
+                        protocol = this.entity.plexPlayer.server.protocol;
+                    }
+                    // eslint-disable-next-line no-param-reassign
+                    this.entity.plexPlayer.plex = new Plex(this.entity.plexPlayer.server.ip, port, this.entity.plexPlayer.server.token, protocol);
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.entity.plexPlayer.plex.getClients();
+                }
+            }
+        };
+        this.getPlexPlayerMachineIdentifier = (entity) => {
             let machineIdentifier = '';
-            lodash.forEach(this.plex.clients, plexClient => {
+            let { plex } = this;
+            let entityName = '';
+            if (lodash.isString(entity)) {
+                entityName = entity;
+            }
+            else if (lodash.isObjectLike(entity) && !lodash.isNil(entity.identifier)) {
+                entityName = entity.identifier;
+                if (!lodash.isNil(entity.plex) && entity.plex) {
+                    plex = entity.plex;
+                }
+            }
+            console.log(plex.clients);
+            lodash.forEach(plex.clients, plexClient => {
                 if (lodash.isEqual(plexClient.machineIdentifier, entityName) ||
                     lodash.isEqual(plexClient.product, entityName) ||
                     lodash.isEqual(plexClient.name, entityName) ||
@@ -19079,9 +19129,9 @@ class PlayController {
         this.isPlaySupported = (data) => {
             return !lodash.isEmpty(this.getPlayService(data));
         };
-        this.isPlexPlayerSupported = (entityName) => {
+        this.isPlexPlayerSupported = (entity) => {
             let found = false;
-            if (this.getPlexPlayerMachineIdentifier(entityName)) {
+            if (this.getPlexPlayerMachineIdentifier(entity)) {
                 found = true;
             }
             return found || !lodash.isEqual(this.runBefore, false);
@@ -20136,6 +20186,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 this.renderNewElementsIfNeeded();
             });
+            if (this.hassObj && this.plex) {
+                const entityConfig = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
+                this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter);
+                if (this.playController) {
+                    await this.playController.init();
+                }
+            }
             if (this.card) {
                 this.previousPageWidth = this.card.offsetWidth;
             }
@@ -21287,9 +21344,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     }
     set hass(hass) {
         this.hassObj = hass;
-        if (this.plex) {
-            this.playController = new PlayController(this.hassObj, this.plex, this.config.entity, this.runBefore, this.runAfter);
-        }
         if (!this.content) {
             this.error = '';
             if (!this.loading) {
