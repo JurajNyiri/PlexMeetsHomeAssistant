@@ -377,6 +377,34 @@ You can use _:desc_ or _:asc_ after every value to change the order from ascendi
 | mediaHeight           | Sorts by resolution                               |
 | mediaBitrate          | Sorts by bitrate                                  |
 
+## FAQ
+
+<details>
+  <summary>I am using plexPlayer and nothing happens when play button is pressed</summary>
+
+- Make sure that your device is turned on, and has Plex running
+- Reload tab
+- Try hitting play button again
+
+If it still doesn't work and everything else works, you are probably encountering CORS issue. You can check this by opening developer tools and looking into console log or network tab.
+
+The reason why this is happening only for this call is right now unknown, but there is a workaround.
+
+Edit configuration.yaml of your Home Assistant and add following rest_command:
+
+```
+rest_command:
+  pmha_playmedia:
+    url: "{{ url }}"
+    headers:
+      X-Plex-Target-Client-Identifier: "{{ target_client_identifier }}"
+      X-Plex-Client-Identifier: "{{ client_identifier }}"
+```
+
+Restart Home Assistant, clear browser cache and try hitting play again. It should now work.
+
+</details>
+
 ## Ask for help or help development
 
 Join [Discord](https://discord.gg/jqqz9jQXWx) or [Home Assistant Community](https://community.home-assistant.io/t/custom-component-card-plex-meets-home-assistant/304349).

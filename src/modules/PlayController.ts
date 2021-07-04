@@ -182,22 +182,22 @@ class PlayController {
 				throw Error('Error while asking plex to play a movie - target device not available.');
 			}
 		} catch (err) {
+			try {
+				await this.hass.callService('rest_command', 'pmha_playmedia', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					url,
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					target_client_identifier: machineID,
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					client_identifier: 'PlexMeetsHomeAssistant'
+				});
+			} catch (homeAssistantErr) {
+				// pass
+			}
 			if (_.includes(err.message, '404')) {
 				throw Error('Defined plexPlayer is currently not available for playback.');
 			} else {
-				// if we caught CORS error, try to use workaround. Todo: figure out why is the CORS issue happening
-				try {
-					await this.hass.callService('rest_command', 'pmha_playmedia', {
-						// eslint-disable-next-line @typescript-eslint/camelcase
-						url,
-						// eslint-disable-next-line @typescript-eslint/camelcase
-						target_client_identifier: machineID,
-						// eslint-disable-next-line @typescript-eslint/camelcase
-						client_identifier: 'PlexMeetsHomeAssistant'
-					});
-				} catch (homeAssistantErr) {
-					throw err;
-				}
+				throw err;
 			}
 		}
 	};
