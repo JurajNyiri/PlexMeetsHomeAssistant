@@ -140,7 +140,9 @@ Play button is only visible if all the conditions inside Availability section of
 - Provided entity ID needs to have attributes
 - Provided entity ID needs to have attribute adb_response
 
-**Supported play types**:
+**Supported**:
+
+✅ Shared Plex servers
 
 ✅ Movies
 
@@ -180,7 +182,9 @@ Play button is only visible if all the conditions inside Availability section of
 - State of both entities cannot be 'unavailable'
 - State of kodi cannot be 'off'
 
-**Supported play types**:
+**Supported**:
+
+✅ Shared Plex servers _\*if content available in kodi_
 
 ✅ Movies
 
@@ -204,7 +208,9 @@ Play button is only visible if all the conditions inside Availability section of
 
 - Media player entity cannot be `unavailable`
 
-**Supported play types**:
+**Supported**:
+
+✅ Shared Plex servers
 
 ✅ Movies
 
@@ -263,7 +269,9 @@ entity:
 
 - Plex needs to run on the defined device
 
-**Supported play types**:
+**Supported**:
+
+✅ Shared Plex servers _\*requires additional configuration, see below_
 
 ✅ Movies
 
@@ -272,6 +280,63 @@ entity:
 ✅ Season
 
 ✅ Episodes
+
+**Shared Plex servers configuration**
+
+plexPlayer can be configured in multiple ways, achieving the same thing:
+
+```
+entity:
+  plexPlayer: TV 2020
+```
+
+```
+entity:
+  plexPlayer:
+    - TV 2020
+```
+
+```
+entity:
+  plexPlayer:
+    identifier: TV 2020
+```
+
+```
+entity:
+  plexPlayer:
+    - identifier: TV 2020
+```
+
+As can be seen from the last two examples, it is possible to configure it as an object having key "identifier".
+
+That is useful, if you want to stream media from shared or remote Plex server. Add information about your local Plex server which sees your device on which you wish to play content. This is done by including a new key, "server" having additional keys:
+
+Example 1:
+
+```
+entity:
+  plexPlayer:
+    - identifier: TV 2020
+      server:
+        ip: 192.168.13.37 # Mandatory
+        token: QWdsqEXAMPLETOKENqwerty # Mandatory
+        port: 32400
+        protocol: http
+```
+
+Example 2:
+
+```
+entity:
+  plexPlayer:
+    - identifier: TV 2020
+      server:
+        ip: 192.168.13.37 # Mandatory
+        token: QWdsqEXAMPLETOKENqwerty # Mandatory
+        port: 32400
+        protocol: http
+```
 
 ## Sorting
 
