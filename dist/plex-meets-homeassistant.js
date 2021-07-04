@@ -19541,7 +19541,7 @@ style.textContent = css `
 		z-index: 5;
 		position: absolute;
 		top: ${CSS_STYLE.expandedHeight + 16}px;
-		width: calc(100% - 32px);
+		width: calc(100% - 22px);
 		left: 0;
 		padding: 16px;
 		display: none;
@@ -19840,7 +19840,7 @@ style.textContent = css `
 	.seasonContainer {
 		position: relative;
 		float: left;
-		margin-right: 16px;
+		margin-right: 10px;
 		margin-bottom: 15px;
 		transition: 0.5s;
 	}
