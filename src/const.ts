@@ -4,8 +4,8 @@ const CSS_STYLE: any = {
 	minimumWidth: 138,
 	expandedWidth: 220,
 	expandedHeight: 324,
-	episodeWidth: 300,
-	episodeHeight: 169
+	episodeRatio: 0.563,
+	minimumEpisodeWidth: 300
 };
 
 const supported: any = {

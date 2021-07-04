@@ -17200,8 +17200,8 @@ const CSS_STYLE = {
     minimumWidth: 138,
     expandedWidth: 220,
     expandedHeight: 324,
-    episodeWidth: 300,
-    episodeHeight: 169
+    episodeRatio: 0.563,
+    minimumEpisodeWidth: 300
 };
 const supported = {
     kodi: ['movie', 'episode'],
@@ -19550,7 +19550,7 @@ style.textContent = css `
 		z-index: 5;
 		position: absolute;
 		top: ${CSS_STYLE.expandedHeight + 16}px;
-		width: calc(100% - 32px);
+		width: calc(100% - 22px);
 		left: 0;
 		padding: 16px;
 		display: none;
@@ -19847,7 +19847,7 @@ style.textContent = css `
 	.episodeContainer {
 		position: relative;
 		float: left;
-		margin-right: 16px;
+		margin-right: 10px;
 		margin-bottom: 15px;
 		transition: 0.5s;
 	}
@@ -20270,6 +20270,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const postersInRow = Math.floor(areaSize / CSS_STYLE.minimumWidth);
                 CSS_STYLE.width = areaSize / postersInRow - marginRight;
                 CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
+                const episodesInRow = Math.floor(areaSize / CSS_STYLE.minimumEpisodeWidth);
+                CSS_STYLE.episodeWidth = Math.floor(areaSize / episodesInRow - marginRight);
+                CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
             }
             this.renderedItems = 0;
             this.columnsCount = 0;

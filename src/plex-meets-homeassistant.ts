@@ -400,6 +400,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			const postersInRow = Math.floor(areaSize / CSS_STYLE.minimumWidth);
 			CSS_STYLE.width = areaSize / postersInRow - marginRight;
 			CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
+
+			const episodesInRow = Math.floor(areaSize / CSS_STYLE.minimumEpisodeWidth);
+
+			CSS_STYLE.episodeWidth = Math.floor(areaSize / episodesInRow - marginRight);
+			CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
 		}
 
 		this.renderedItems = 0;
