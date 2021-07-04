@@ -104,6 +104,54 @@ const findTrailerURL = (movieData: Record<string, any>): string => {
 	}
 	return foundURL;
 };
+const clickHandler = (elem: HTMLButtonElement, clickFunction: Function, holdFunction: Function): void => {
+	let longpress = false;
+	let presstimer: any = null;
+
+	const cancel = (e: any): void => {
+		e.stopPropagation();
+		if (presstimer !== null) {
+			clearTimeout(presstimer);
+			presstimer = null;
+		}
+	};
+
+	const click = (e: any): boolean => {
+		e.stopPropagation();
+		if (presstimer !== null) {
+			clearTimeout(presstimer);
+			presstimer = null;
+		}
+
+		if (longpress) {
+			return false;
+		}
+
+		clickFunction(e);
+		return true;
+	};
+
+	const start = (e: any): void => {
+		e.stopPropagation();
+		if (e.type === 'click' && e.button !== 0) {
+			return;
+		}
+
+		longpress = false;
+
+		presstimer = setTimeout(() => {
+			holdFunction(e);
+			longpress = true;
+		}, 1000);
+	};
+	elem.addEventListener('mousedown', start);
+	elem.addEventListener('touchstart', start);
+	elem.addEventListener('click', click);
+	elem.addEventListener('mouseout', cancel);
+	elem.addEventListener('touchend', cancel);
+	elem.addEventListener('touchleave', cancel);
+	elem.addEventListener('touchcancel', cancel);
+};
 
 const createEpisodesView = (playController: PlayController, plex: Plex, data: Record<string, any>): HTMLElement => {
 	const episodeContainer = document.createElement('div');
@@ -206,5 +254,6 @@ export {
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
 	getWidth,
-	getDetailsBottom
+	getDetailsBottom,
+	clickHandler
 };

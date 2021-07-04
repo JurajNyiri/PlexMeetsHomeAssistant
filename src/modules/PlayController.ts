@@ -121,19 +121,18 @@ class PlayController {
 		}
 	};
 
-	private plexPlayerCreateQueue = async (movieID: number): Promise<Record<string, number>> => {
-		const url = `${this.plex.protocol}://${this.plex.ip}:${
-			this.plex.port
-		}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await this.plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
+	private plexPlayerCreateQueue = async (movieID: number, plex: Plex): Promise<Record<string, number>> => {
+		const url = `${plex.getBasicURL()}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
 
 		const plexResponse = await axios({
 			method: 'post',
 			url,
 			headers: {
-				'X-Plex-Token': this.plex.token,
+				'X-Plex-Token': plex.token,
 				'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
 			}
 		});
+
 		if (plexResponse.status !== 200) {
 			throw Error('Error reaching Plex to generate queue');
 		}
@@ -143,15 +142,30 @@ class PlayController {
 		};
 	};
 
-	private playViaPlexPlayer = async (entityName: string, movieID: number): Promise<void> => {
-		const machineID = this.getPlexPlayerMachineIdentifier(entityName);
-		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID);
+	private playViaPlexPlayer = async (entity: string | Record<string, any>, movieID: number): Promise<void> => {
+		const machineID = this.getPlexPlayerMachineIdentifier(entity);
+		let { plex } = this;
+		if (_.isObject(entity) && !_.isNil(entity.plex)) {
+			plex = entity.plex;
+		}
+		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID, this.plex);
 
-		const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/player/playback/playMedia?address=${
-			this.plex.ip
-		}&commandID=1&containerKey=/playQueues/${playQueueID}?window=100%26own=1&key=/library/metadata/${playQueueSelectedMetadataItemID}&machineIdentifier=${await this.plex.getServerID()}&offset=0&port=${
-			this.plex.port
-		}&token=${this.plex.token}&type=video&protocol=${this.plex.protocol}`;
+		let url = plex.getBasicURL();
+		url += `/player/playback/playMedia`;
+		url += `?type=video`;
+		url += `&commandID=1`;
+		url += `&providerIdentifier=com.plexapp.plugins.library`;
+		url += `&containerKey=/playQueues/${playQueueID}`;
+		url += `&key=/library/metadata/${playQueueSelectedMetadataItemID}`;
+		url += `&offset=0`;
+		url += `&machineIdentifier=${await this.plex.getServerID()}`;
+		url += `&protocol=${this.plex.protocol}`;
+		url += `&address=${this.plex.ip}`;
+		url += `&port=${this.plex.port}`;
+		url += `&token=${this.plex.token}`;
+
+		url = plex.authorizeURL(url);
+
 		try {
 			const plexResponse = await axios({
 				method: 'post',
@@ -284,9 +298,71 @@ class PlayController {
 		return service;
 	};
 
-	private getPlexPlayerMachineIdentifier = (entityName: string): string => {
+	init = async (): Promise<void> => {
+		if (!_.isNil(this.entity.plexPlayer)) {
+			if (_.isArray(this.entity.plexPlayer)) {
+				for (let i = 0; i < this.entity.plexPlayer.length; i += 1) {
+					if (_.isObjectLike(this.entity.plexPlayer[i]) && !_.isNil(this.entity.plexPlayer[i].server)) {
+						let port: number | false = false;
+						if (!_.isNil(this.entity.plexPlayer[i].server.port)) {
+							port = this.entity.plexPlayer[i].server.port;
+						}
+						let protocol: 'http' | 'https' = 'http';
+						if (!_.isNil(this.entity.plexPlayer[i].server.protocol)) {
+							protocol = this.entity.plexPlayer[i].server.protocol;
+						}
+						// eslint-disable-next-line no-param-reassign
+						this.entity.plexPlayer[i].plex = new Plex(
+							this.entity.plexPlayer[i].server.ip,
+							port,
+							this.entity.plexPlayer[i].server.token,
+							protocol
+						);
+						// eslint-disable-next-line no-await-in-loop
+						await this.entity.plexPlayer[i].plex.getClients();
+					}
+				}
+			} else if (
+				!_.isNil(this.entity.plexPlayer.server) &&
+				!_.isNil(this.entity.plexPlayer.server.ip) &&
+				!_.isNil(this.entity.plexPlayer.server.token)
+			) {
+				let port: number | false = false;
+				if (!_.isNil(this.entity.plexPlayer.server.port)) {
+					port = this.entity.plexPlayer.server.port;
+				}
+				let protocol: 'http' | 'https' = 'http';
+				if (!_.isNil(this.entity.plexPlayer.server.protocol)) {
+					protocol = this.entity.plexPlayer.server.protocol;
+				}
+				// eslint-disable-next-line no-param-reassign
+				this.entity.plexPlayer.plex = new Plex(
+					this.entity.plexPlayer.server.ip,
+					port,
+					this.entity.plexPlayer.server.token,
+					protocol
+				);
+				// eslint-disable-next-line no-await-in-loop
+				await this.entity.plexPlayer.plex.getClients();
+			}
+		}
+	};
+
+	private getPlexPlayerMachineIdentifier = (entity: string | Record<string, any>): string => {
 		let machineIdentifier = '';
-		_.forEach(this.plex.clients, plexClient => {
+
+		let { plex } = this;
+		let entityName = '';
+		if (_.isString(entity)) {
+			entityName = entity;
+		} else if (_.isObjectLike(entity) && !_.isNil(entity.identifier)) {
+			entityName = entity.identifier;
+			if (!_.isNil(entity.plex) && entity.plex) {
+				plex = entity.plex;
+			}
+		}
+
+		_.forEach(plex.clients, plexClient => {
 			if (
 				_.isEqual(plexClient.machineIdentifier, entityName) ||
 				_.isEqual(plexClient.product, entityName) ||
@@ -305,11 +381,12 @@ class PlayController {
 		return !_.isEmpty(this.getPlayService(data));
 	};
 
-	private isPlexPlayerSupported = (entityName: string): boolean => {
+	private isPlexPlayerSupported = (entity: string | Record<string, any>): boolean => {
 		let found = false;
-		if (this.getPlexPlayerMachineIdentifier(entityName)) {
+		if (this.getPlexPlayerMachineIdentifier(entity)) {
 			found = true;
 		}
+
 		return found || !_.isEqual(this.runBefore, false);
 	};
 

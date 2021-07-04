@@ -15,7 +15,8 @@ import {
 	isVideoFullScreen,
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
-	getDetailsBottom
+	getDetailsBottom,
+	clickHandler
 } from './modules/utils';
 import style from './modules/style';
 
@@ -116,15 +117,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
-		if (this.plex) {
-			this.playController = new PlayController(
-				this.hassObj,
-				this.plex,
-				this.config.entity,
-				this.runBefore,
-				this.runAfter
-			);
-		}
 
 		if (!this.content) {
 			this.error = '';
@@ -210,6 +202,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			}
 			this.renderNewElementsIfNeeded();
 		});
+
 		if (this.card) {
 			this.previousPageWidth = this.card.offsetWidth;
 		}
@@ -218,6 +211,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.renderPage();
 		try {
 			if (this.plex) {
+				if (this.hassObj) {
+					const entityConfig: Record<string, any> = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
+					this.playController = new PlayController(
+						this.hassObj,
+						this.plex,
+						entityConfig,
+						this.runBefore,
+						this.runAfter
+					);
+					if (this.playController) {
+						await this.playController.init();
+					}
+				}
 				await this.plex.init();
 
 				try {
@@ -1362,13 +1368,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		movieElem.append(interactiveArea);
 
-		playButton.addEventListener('click', event => {
-			event.stopPropagation();
+		clickHandler(
+			playButton,
+			(event: any): void => {
+				event.stopPropagation();
 
-			if (this.hassObj && this.playController) {
-				this.playController.play(data, true);
+				if (this.hassObj && this.playController) {
+					this.playController.play(data, true);
+				}
+			},
+			(event: any): void => {
+				console.log('Play version... will be here!');
+				event.stopPropagation();
 			}
-		});
+		);
 
 		const titleElem = document.createElement('div');
 		if (_.isEqual(data.type, 'episode')) {
