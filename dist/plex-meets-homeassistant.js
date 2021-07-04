@@ -17196,8 +17196,8 @@ var lodash = createCommonjsModule(function (module, exports) {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const CSS_STYLE = {
-    width: 138,
-    height: 203,
+    ratio: 1.471,
+    minimumWidth: 138,
     expandedWidth: 220,
     expandedHeight: 324,
     episodeWidth: 300,
@@ -19625,6 +19625,7 @@ style.textContent = css `
 	.searchContainer {
 		position: relative;
 		z-index: 2;
+		padding-right: 8px;
 	}
 
 	.searchContainer input {
@@ -20001,6 +20002,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.runBefore = '';
         this.playTrailer = true;
         this.showExtras = true;
+        this.previousPageWidth = 0;
         this.runAfter = '';
         this.columnsCount = 0;
         this.renderedItems = 0;
@@ -20019,7 +20021,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.loading = false;
         this.maxCount = false;
         this.error = '';
-        this.previousPositions = [];
         this.contentBGHeight = 0;
         this.renderNewElementsIfNeeded = () => {
             const loadAdditionalRowsCount = 2; // todo: make this configurable
@@ -20075,8 +20076,26 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.renderNewElementsIfNeeded();
             });
             window.addEventListener('resize', () => {
+                if (!this.detailsShown) {
+                    const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
+                    let isFullScreen = false;
+                    if (videoPlayer.children.length > 0) {
+                        isFullScreen = isVideoFullScreen(this);
+                    }
+                    if (this.card && this.movieElems.length > 0 && !isFullScreen) {
+                        if (this.previousPageWidth !== this.card.offsetWidth) {
+                            this.previousPageWidth = this.card.offsetWidth;
+                            this.renderPage();
+                            const contentbg = this.getElementsByClassName('contentbg');
+                            this.contentBGHeight = getHeight(contentbg[0]);
+                        }
+                    }
+                }
                 this.renderNewElementsIfNeeded();
             });
+            if (this.card) {
+                this.previousPageWidth = this.card.offsetWidth;
+            }
             this.loading = true;
             this.renderPage();
             try {
@@ -20166,41 +20185,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.resizeBackground();
         };
         this.render = () => {
-            this.previousPositions = [];
-            // todo: find a better way to detect resize...
-            setInterval(() => {
-                if (!this.detailsShown) {
-                    const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
-                    let isFullScreen = false;
-                    if (videoPlayer.children.length > 0) {
-                        isFullScreen = isVideoFullScreen(this);
-                    }
-                    if (this.movieElems.length > 0 && !isFullScreen) {
-                        let renderNeeded = false;
-                        if (this.previousPositions.length === 0) {
-                            for (let i = 0; i < this.movieElems.length; i += 1) {
-                                this.previousPositions[i] = {};
-                                this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
-                                this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
-                            }
-                        }
-                        for (let i = 0; i < this.movieElems.length; i += 1) {
-                            if (this.previousPositions[i] &&
-                                this.movieElems[i].dataset.clicked !== 'true' &&
-                                (this.previousPositions[i].top !== this.movieElems[i].parentElement.offsetTop ||
-                                    this.previousPositions[i].left !== this.movieElems[i].parentElement.offsetLeft)) {
-                                renderNeeded = true;
-                                this.previousPositions = [];
-                            }
-                        }
-                        if (renderNeeded) {
-                            this.renderPage();
-                            const contentbg = this.getElementsByClassName('contentbg');
-                            this.contentBGHeight = getHeight(contentbg[0]);
-                        }
-                    }
-                }
-            }, 250);
             this.renderPage();
         };
         this.searchInput = () => {
@@ -20280,6 +20264,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.contentBGHeight = getHeight(contentbg);
         };
         this.renderPage = () => {
+            if (this.card) {
+                const marginRight = 10; // needs to be equal to .container margin right
+                const areaSize = this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);
+                const postersInRow = Math.floor(areaSize / CSS_STYLE.minimumWidth);
+                CSS_STYLE.width = areaSize / postersInRow - marginRight;
+                CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
+            }
             this.renderedItems = 0;
             this.columnsCount = 0;
             const spinner = document.createElement('div');
@@ -20295,6 +20286,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.card.style.transition = '0.5s';
                 this.card.style.overflow = 'hidden';
                 this.card.style.padding = '16px';
+                this.card.style.paddingRight = '6px';
                 this.card.appendChild(this.searchInput());
                 this.appendChild(this.card);
             }

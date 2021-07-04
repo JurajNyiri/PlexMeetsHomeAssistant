@@ -32,6 +32,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	showExtras = true;
 
+	previousPageWidth = 0;
+
 	runAfter = '';
 
 	renderNewElementsIfNeededTimeout: any;
@@ -105,8 +107,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	error = '';
 
 	content: any;
-
-	previousPositions: Array<any> = [];
 
 	hassObj: HomeAssistant | undefined;
 
@@ -192,8 +192,28 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {
+			if (!this.detailsShown) {
+				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+				let isFullScreen = false;
+				if (videoPlayer.children.length > 0) {
+					isFullScreen = isVideoFullScreen(this);
+				}
+
+				if (this.card && this.movieElems.length > 0 && !isFullScreen) {
+					if (this.previousPageWidth !== this.card.offsetWidth) {
+						this.previousPageWidth = this.card.offsetWidth;
+						this.renderPage();
+						const contentbg = this.getElementsByClassName('contentbg');
+						this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
+					}
+				}
+			}
 			this.renderNewElementsIfNeeded();
 		});
+		if (this.card) {
+			this.previousPageWidth = this.card.offsetWidth;
+		}
+
 		this.loading = true;
 		this.renderPage();
 		try {
@@ -282,46 +302,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	render = (): void => {
-		this.previousPositions = [];
-
-		// todo: find a better way to detect resize...
-		setInterval(() => {
-			if (!this.detailsShown) {
-				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-				let isFullScreen = false;
-				if (videoPlayer.children.length > 0) {
-					isFullScreen = isVideoFullScreen(this);
-				}
-
-				if (this.movieElems.length > 0 && !isFullScreen) {
-					let renderNeeded = false;
-					if (this.previousPositions.length === 0) {
-						for (let i = 0; i < this.movieElems.length; i += 1) {
-							this.previousPositions[i] = {};
-							this.previousPositions[i].top = this.movieElems[i].parentElement.offsetTop;
-							this.previousPositions[i].left = this.movieElems[i].parentElement.offsetLeft;
-						}
-					}
-					for (let i = 0; i < this.movieElems.length; i += 1) {
-						if (
-							this.previousPositions[i] &&
-							this.movieElems[i].dataset.clicked !== 'true' &&
-							(this.previousPositions[i].top !== this.movieElems[i].parentElement.offsetTop ||
-								this.previousPositions[i].left !== this.movieElems[i].parentElement.offsetLeft)
-						) {
-							renderNeeded = true;
-							this.previousPositions = [];
-						}
-					}
-					if (renderNeeded) {
-						this.renderPage();
-						const contentbg = this.getElementsByClassName('contentbg');
-						this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
-					}
-				}
-			}
-		}, 250);
-
 		this.renderPage();
 	};
 
@@ -413,6 +393,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderPage = (): void => {
+		if (this.card) {
+			const marginRight = 10; // needs to be equal to .container margin right
+			const areaSize =
+				this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);
+			const postersInRow = Math.floor(areaSize / CSS_STYLE.minimumWidth);
+			CSS_STYLE.width = areaSize / postersInRow - marginRight;
+			CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
+		}
+
 		this.renderedItems = 0;
 		this.columnsCount = 0;
 		const spinner = document.createElement('div');
@@ -429,6 +418,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.card.style.transition = '0.5s';
 			this.card.style.overflow = 'hidden';
 			this.card.style.padding = '16px';
+			this.card.style.paddingRight = '6px';
 			this.card.appendChild(this.searchInput());
 			this.appendChild(this.card);
 		}

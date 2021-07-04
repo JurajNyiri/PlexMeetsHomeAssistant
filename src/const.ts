@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const CSS_STYLE = {
-	width: 138,
-	height: 203,
+const CSS_STYLE: any = {
+	ratio: 1.471,
+	minimumWidth: 138,
 	expandedWidth: 220,
 	expandedHeight: 324,
 	episodeWidth: 300,

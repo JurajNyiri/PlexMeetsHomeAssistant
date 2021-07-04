@@ -110,6 +110,7 @@ style.textContent = css`
 	.searchContainer {
 		position: relative;
 		z-index: 2;
+		padding-right: 8px;
 	}
 
 	.searchContainer input {
