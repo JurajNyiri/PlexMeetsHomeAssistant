@@ -18973,6 +18973,19 @@ class PlayController {
                 }
             }
             catch (err) {
+                try {
+                    await this.hass.callService('rest_command', 'pmha_playmedia', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        url,
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        target_client_identifier: machineID,
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        client_identifier: 'PlexMeetsHomeAssistant'
+                    });
+                }
+                catch (homeAssistantErr) {
+                    // pass
+                }
                 if (lodash.includes(err.message, '404')) {
                     throw Error('Defined plexPlayer is currently not available for playback.');
                 }
