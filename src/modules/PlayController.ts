@@ -96,6 +96,7 @@ class PlayController {
 	};
 
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
+		console.log(data);
 		if (_.isArray(this.runBefore)) {
 			await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
 		}

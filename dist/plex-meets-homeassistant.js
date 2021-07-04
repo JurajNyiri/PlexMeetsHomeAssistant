@@ -18893,6 +18893,7 @@ class PlayController {
             return foundResult;
         };
         this.play = async (data, instantPlay = false) => {
+            console.log(data);
             if (lodash.isArray(this.runBefore)) {
                 await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
             }
@@ -19205,7 +19206,49 @@ const findTrailerURL = (movieData) => {
     }
     return foundURL;
 };
+const clickHandler = (elem, clickFunction, holdFunction) => {
+    let longpress = false;
+    let presstimer = null;
+    const cancel = (e) => {
+        e.stopPropagation();
+        if (presstimer !== null) {
+            clearTimeout(presstimer);
+            presstimer = null;
+        }
+    };
+    const click = (e) => {
+        e.stopPropagation();
+        if (presstimer !== null) {
+            clearTimeout(presstimer);
+            presstimer = null;
+        }
+        if (longpress) {
+            return false;
+        }
+        clickFunction(e);
+        return true;
+    };
+    const start = (e) => {
+        e.stopPropagation();
+        if (e.type === 'click' && e.button !== 0) {
+            return;
+        }
+        longpress = false;
+        presstimer = setTimeout(() => {
+            holdFunction(e);
+            longpress = true;
+        }, 1000);
+    };
+    elem.addEventListener('mousedown', start);
+    elem.addEventListener('touchstart', start);
+    elem.addEventListener('click', click);
+    elem.addEventListener('mouseout', cancel);
+    elem.addEventListener('touchend', cancel);
+    elem.addEventListener('touchleave', cancel);
+    elem.addEventListener('touchcancel', cancel);
+};
 const createEpisodesView = (playController, plex, data) => {
+    console.log(data);
     const episodeContainer = document.createElement('div');
     episodeContainer.className = 'episodeContainer';
     episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
@@ -21140,11 +21183,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 interactiveArea.append(playButton);
             }
             movieElem.append(interactiveArea);
-            playButton.addEventListener('click', event => {
+            clickHandler(playButton, (event) => {
+                console.log('click');
                 event.stopPropagation();
                 if (this.hassObj && this.playController) {
                     this.playController.play(data, true);
                 }
+            }, (event) => {
+                console.log('hold');
+                event.stopPropagation();
             });
             const titleElem = document.createElement('div');
             if (lodash.isEqual(data.type, 'episode')) {

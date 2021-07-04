@@ -15,7 +15,8 @@ import {
 	isVideoFullScreen,
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
-	getDetailsBottom
+	getDetailsBottom,
+	clickHandler
 } from './modules/utils';
 import style from './modules/style';
 
@@ -1362,13 +1363,21 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		movieElem.append(interactiveArea);
 
-		playButton.addEventListener('click', event => {
-			event.stopPropagation();
+		clickHandler(
+			playButton,
+			(event: any): void => {
+				console.log('click');
+				event.stopPropagation();
 
-			if (this.hassObj && this.playController) {
-				this.playController.play(data, true);
+				if (this.hassObj && this.playController) {
+					this.playController.play(data, true);
+				}
+			},
+			(event: any): void => {
+				console.log('hold');
+				event.stopPropagation();
 			}
-		});
+		);
 
 		const titleElem = document.createElement('div');
 		if (_.isEqual(data.type, 'episode')) {
