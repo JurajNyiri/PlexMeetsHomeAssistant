@@ -330,12 +330,12 @@ Example 2:
 ```
 entity:
   plexPlayer:
-    - identifier: TV 2020
-      server:
-        ip: 192.168.13.37 # Mandatory
-        token: QWdsqEXAMPLETOKENqwerty # Mandatory
-        port: 32400
-        protocol: http
+    identifier: TV 2020
+    server:
+      ip: 192.168.13.37 # Mandatory
+      token: QWdsqEXAMPLETOKENqwerty # Mandatory
+      port: 32400
+      protocol: http
 ```
 
 ## Sorting
