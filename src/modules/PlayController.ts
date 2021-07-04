@@ -168,7 +168,7 @@ class PlayController {
 
 		try {
 			const plexResponse = await axios({
-				method: 'post',
+				method: 'get',
 				url,
 				headers: {
 					'X-Plex-Target-Client-Identifier': machineID,
