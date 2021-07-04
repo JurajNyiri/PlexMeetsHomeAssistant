@@ -154,7 +154,6 @@ const clickHandler = (elem: HTMLButtonElement, clickFunction: Function, holdFunc
 };
 
 const createEpisodesView = (playController: PlayController, plex: Plex, data: Record<string, any>): HTMLElement => {
-	console.log(data);
 	const episodeContainer = document.createElement('div');
 	episodeContainer.className = 'episodeContainer';
 	episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;

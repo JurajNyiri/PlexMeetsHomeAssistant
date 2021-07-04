@@ -19313,7 +19313,6 @@ const clickHandler = (elem, clickFunction, holdFunction) => {
     elem.addEventListener('touchcancel', cancel);
 };
 const createEpisodesView = (playController, plex, data) => {
-    console.log(data);
     const episodeContainer = document.createElement('div');
     episodeContainer.className = 'episodeContainer';
     episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
@@ -21256,13 +21255,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             movieElem.append(interactiveArea);
             clickHandler(playButton, (event) => {
-                console.log('click');
                 event.stopPropagation();
                 if (this.hassObj && this.playController) {
                     this.playController.play(data, true);
                 }
             }, (event) => {
-                console.log('hold');
+                console.log('Play version... will be here!');
                 event.stopPropagation();
             });
             const titleElem = document.createElement('div');

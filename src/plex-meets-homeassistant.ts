@@ -1371,7 +1371,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		clickHandler(
 			playButton,
 			(event: any): void => {
-				console.log('click');
 				event.stopPropagation();
 
 				if (this.hassObj && this.playController) {
@@ -1379,7 +1378,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 			},
 			(event: any): void => {
-				console.log('hold');
+				console.log('Play version... will be here!');
 				event.stopPropagation();
 			}
 		);
