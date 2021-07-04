@@ -203,14 +203,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.renderNewElementsIfNeeded();
 		});
 
-		if (this.hassObj && this.plex) {
-			const entityConfig: Record<string, any> = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
-			this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter);
-			if (this.playController) {
-				await this.playController.init();
-			}
-		}
-
 		if (this.card) {
 			this.previousPageWidth = this.card.offsetWidth;
 		}
@@ -219,6 +211,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.renderPage();
 		try {
 			if (this.plex) {
+				if (this.hassObj) {
+					const entityConfig: Record<string, any> = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
+					this.playController = new PlayController(
+						this.hassObj,
+						this.plex,
+						entityConfig,
+						this.runBefore,
+						this.runAfter
+					);
+					if (this.playController) {
+						await this.playController.init();
+					}
+				}
 				await this.plex.init();
 
 				try {

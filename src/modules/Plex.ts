@@ -15,7 +15,7 @@ class Plex {
 
 	clients: Array<Record<string, any>> = [];
 
-	requestTimeout = 5000;
+	requestTimeout = 10000;
 
 	sort: string;
 

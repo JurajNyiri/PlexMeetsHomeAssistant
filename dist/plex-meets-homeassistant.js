@@ -18672,7 +18672,7 @@ class Plex {
     constructor(ip, port = false, token, protocol = 'http', sort = 'titleSort:asc') {
         this.serverInfo = {};
         this.clients = [];
-        this.requestTimeout = 5000;
+        this.requestTimeout = 10000;
         this.sections = [];
         this.init = async () => {
             await this.getClients();
@@ -18893,7 +18893,6 @@ class PlayController {
             return foundResult;
         };
         this.play = async (data, instantPlay = false) => {
-            console.log(data);
             if (lodash.isArray(this.runBefore)) {
                 await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
             }
@@ -18918,13 +18917,13 @@ class PlayController {
                 await this.hass.callService(this.runAfter[0], this.runAfter[1], {});
             }
         };
-        this.plexPlayerCreateQueue = async (movieID) => {
-            const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await this.plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
+        this.plexPlayerCreateQueue = async (movieID, plex) => {
+            const url = `${plex.getBasicURL()}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
             const plexResponse = await axios({
                 method: 'post',
                 url,
                 headers: {
-                    'X-Plex-Token': this.plex.token,
+                    'X-Plex-Token': plex.token,
                     'X-Plex-Client-Identifier': 'PlexMeetsHomeAssistant'
                 }
             });
@@ -18936,10 +18935,27 @@ class PlayController {
                 playQueueSelectedMetadataItemID: plexResponse.data.MediaContainer.playQueueSelectedMetadataItemID
             };
         };
-        this.playViaPlexPlayer = async (entityName, movieID) => {
-            const machineID = this.getPlexPlayerMachineIdentifier(entityName);
-            const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID);
-            const url = `${this.plex.protocol}://${this.plex.ip}:${this.plex.port}/player/playback/playMedia?address=${this.plex.ip}&commandID=1&containerKey=/playQueues/${playQueueID}?window=100%26own=1&key=/library/metadata/${playQueueSelectedMetadataItemID}&machineIdentifier=${await this.plex.getServerID()}&offset=0&port=${this.plex.port}&token=${this.plex.token}&type=video&protocol=${this.plex.protocol}`;
+        this.playViaPlexPlayer = async (entity, movieID) => {
+            const machineID = this.getPlexPlayerMachineIdentifier(entity);
+            let { plex } = this;
+            if (lodash.isObject(entity) && !lodash.isNil(entity.plex)) {
+                plex = entity.plex;
+            }
+            const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID, this.plex);
+            let url = plex.getBasicURL();
+            url += `/player/playback/playMedia`;
+            url += `?type=video`;
+            url += `&commandID=1`;
+            url += `&providerIdentifier=com.plexapp.plugins.library`;
+            url += `&containerKey=/playQueues/${playQueueID}`;
+            url += `&key=/library/metadata/${playQueueSelectedMetadataItemID}`;
+            url += `&offset=0`;
+            url += `&machineIdentifier=${await this.plex.getServerID()}`;
+            url += `&protocol=${this.plex.protocol}`;
+            url += `&address=${this.plex.ip}`;
+            url += `&port=${this.plex.port}`;
+            url += `&token=${this.plex.token}`;
+            url = plex.authorizeURL(url);
             try {
                 const plexResponse = await axios({
                     method: 'post',
@@ -19113,7 +19129,6 @@ class PlayController {
                     plex = entity.plex;
                 }
             }
-            console.log(plex.clients);
             lodash.forEach(plex.clients, plexClient => {
                 if (lodash.isEqual(plexClient.machineIdentifier, entityName) ||
                     lodash.isEqual(plexClient.product, entityName) ||
@@ -20186,13 +20201,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 this.renderNewElementsIfNeeded();
             });
-            if (this.hassObj && this.plex) {
-                const entityConfig = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
-                this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter);
-                if (this.playController) {
-                    await this.playController.init();
-                }
-            }
             if (this.card) {
                 this.previousPageWidth = this.card.offsetWidth;
             }
@@ -20200,6 +20208,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.renderPage();
             try {
                 if (this.plex) {
+                    if (this.hassObj) {
+                        const entityConfig = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
+                        this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter);
+                        if (this.playController) {
+                            await this.playController.init();
+                        }
+                    }
                     await this.plex.init();
                     try {
                         const onDeck = await this.plex.getOnDeck();
