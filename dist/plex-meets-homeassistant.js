@@ -19183,6 +19183,8 @@ const hasEpisodes = (media) => {
 const isVideoFullScreen = (_this) => {
     const videoPlayer = _this.getElementsByClassName('videoPlayer')[0];
     const video = videoPlayer.children[0];
+    if (!video)
+        return false;
     const body = document.getElementsByTagName('body')[0];
     return ((video.offsetWidth === body.offsetWidth && video.offsetHeight === body.offsetHeight) ||
         (_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen')));

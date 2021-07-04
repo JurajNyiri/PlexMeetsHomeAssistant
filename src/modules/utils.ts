@@ -79,6 +79,7 @@ const hasEpisodes = (media: Array<Record<string, any>>): boolean => {
 const isVideoFullScreen = (_this: any): boolean => {
 	const videoPlayer = _this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
 	const video = videoPlayer.children[0] as any;
+	if (!video) return false;
 	const body = document.getElementsByTagName('body')[0];
 	return (
 		(video.offsetWidth === body.offsetWidth && video.offsetHeight === body.offsetHeight) ||
