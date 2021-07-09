@@ -18830,7 +18830,7 @@ class Plex {
 }
 
 class PlayController {
-    constructor(hass, plex, entity, runBefore, runAfter) {
+    constructor(hass, plex, entity, runBefore, runAfter, libraryName) {
         this.plexPlayerEntity = '';
         this.runBefore = false;
         this.runAfter = false;
@@ -18908,7 +18908,34 @@ class PlayController {
                     await this.playViaPlexPlayer(entity.value, data.key.split('/')[3]);
                     break;
                 case 'cast':
-                    this.playViaCast(entity.value, data.Media[0].Part[0].key);
+                    if (this.hass.services.plex) {
+                        switch (data.type) {
+                            case 'movie':
+                                this.playViaCastPlex(entity.value, 'movie', `plex://${JSON.stringify({
+                                    // eslint-disable-next-line @typescript-eslint/camelcase
+                                    library_name: this.libraryName,
+                                    title: data.title
+                                })}`);
+                                break;
+                            case 'episode':
+                                this.playViaCastPlex(entity.value, 'EPISODE', `plex://${JSON.stringify({
+                                    // eslint-disable-next-line @typescript-eslint/camelcase
+                                    library_name: this.libraryName,
+                                    // eslint-disable-next-line @typescript-eslint/camelcase
+                                    show_name: data.grandparentTitle,
+                                    // eslint-disable-next-line @typescript-eslint/camelcase
+                                    season_number: data.parentIndex,
+                                    // eslint-disable-next-line @typescript-eslint/camelcase
+                                    episode_number: data.index
+                                })}`);
+                                break;
+                            default:
+                                this.playViaCast(entity.value, data.Media[0].Part[0].key);
+                        }
+                    }
+                    else {
+                        this.playViaCast(entity.value, data.Media[0].Part[0].key);
+                    }
                     break;
                 default:
                     throw Error(`No service available to play ${data.title}!`);
@@ -19040,6 +19067,16 @@ class PlayController {
                 media_content_type: 'video',
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+            });
+        };
+        this.playViaCastPlex = (entityName, contentType, mediaLink) => {
+            this.hass.callService('media_player', 'play_media', {
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                entity_id: entityName,
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                media_content_type: contentType,
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                media_content_id: mediaLink
             });
         };
         this.playViaAndroidTV = async (entityName, mediaID, instantPlay = false) => {
@@ -19192,6 +19229,7 @@ class PlayController {
         this.hass = hass;
         this.plex = plex;
         this.entity = entity;
+        this.libraryName = libraryName;
         if (!lodash.isEmpty(runBefore) && this.hass.states[runBefore]) {
             this.runBefore = runBefore.split('.');
         }
@@ -20222,7 +20260,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 if (this.plex) {
                     if (this.hassObj) {
                         const entityConfig = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
-                        this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter);
+                        this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter, this.config.libraryName);
                         if (this.playController) {
                             await this.playController.init();
                         }
