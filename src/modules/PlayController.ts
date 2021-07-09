@@ -16,16 +16,26 @@ class PlayController {
 
 	plex: Plex;
 
+	libraryName: string;
+
 	runBefore: Array<string> | false = false;
 
 	runAfter: Array<string> | false = false;
 
 	supported: any = supported;
 
-	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>, runBefore: string, runAfter: string) {
+	constructor(
+		hass: HomeAssistant,
+		plex: Plex,
+		entity: Record<string, any>,
+		runBefore: string,
+		runAfter: string,
+		libraryName: string
+	) {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
+		this.libraryName = libraryName;
 		if (!_.isEmpty(runBefore) && this.hass.states[runBefore]) {
 			this.runBefore = runBefore.split('.');
 		}
@@ -111,7 +121,41 @@ class PlayController {
 				await this.playViaPlexPlayer(entity.value, data.key.split('/')[3]);
 				break;
 			case 'cast':
-				this.playViaCast(entity.value, data.Media[0].Part[0].key);
+				if (this.hass.services.plex) {
+					switch (data.type) {
+						case 'movie':
+							this.playViaCastPlex(
+								entity.value,
+								'movie',
+								`plex://${JSON.stringify({
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: this.libraryName,
+									title: data.title
+								})}`
+							);
+							break;
+						case 'episode':
+							this.playViaCastPlex(
+								entity.value,
+								'EPISODE',
+								`plex://${JSON.stringify({
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: this.libraryName,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									show_name: data.grandparentTitle,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									season_number: data.parentIndex,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									episode_number: data.index
+								})}`
+							);
+							break;
+						default:
+							this.playViaCast(entity.value, data.Media[0].Part[0].key);
+					}
+				} else {
+					this.playViaCast(entity.value, data.Media[0].Part[0].key);
+				}
 				break;
 			default:
 				throw Error(`No service available to play ${data.title}!`);
@@ -250,6 +294,17 @@ class PlayController {
 			media_content_type: 'video',
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+		});
+	};
+
+	private playViaCastPlex = (entityName: string, contentType: string, mediaLink: string): void => {
+		this.hass.callService('media_player', 'play_media', {
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			entity_id: entityName,
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			media_content_type: contentType,
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			media_content_id: mediaLink
 		});
 	};
 
