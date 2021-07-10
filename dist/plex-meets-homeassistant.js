@@ -19494,9 +19494,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     });
                 }
                 if (!lodash.isEqual(this.config, originalConfig)) {
-                    console.log(this.config);
-                    console.log(originalConfig);
-                    console.log('event');
                     this.fireEvent(this, 'config-changed', { config: this.config });
                 }
             }
