@@ -19479,7 +19479,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 if (!lodash.isEmpty(this.entities)) {
                     this.config.entity = [];
                     lodash.forEach(this.entities, entity => {
-                        this.config.entity.push(entity.value);
+                        if (!lodash.isEmpty(entity.value)) {
+                            this.config.entity.push(entity.value);
+                        }
                     });
                 }
                 this.fireEvent(this, 'config-changed', { config: this.config });
@@ -19495,6 +19497,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 if (this.entitiesRegistry) {
                     const entitiesDropDown = document.createElement('paper-dropdown-menu');
                     const entities = document.createElement('paper-listbox');
+                    entities.appendChild(addDropdownItem(''));
                     lodash.forEach(this.entitiesRegistry, entityRegistry => {
                         if (lodash.isEqual(entityRegistry.platform, 'cast') ||
                             lodash.isEqual(entityRegistry.platform, 'kodi') ||

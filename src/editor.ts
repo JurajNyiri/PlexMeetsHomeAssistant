@@ -65,7 +65,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			if (!_.isEmpty(this.entities)) {
 				this.config.entity = [];
 				_.forEach(this.entities, entity => {
-					this.config.entity.push(entity.value);
+					if (!_.isEmpty(entity.value)) {
+						this.config.entity.push(entity.value);
+					}
 				});
 			}
 			this.fireEvent(this, 'config-changed', { config: this.config });
@@ -83,6 +85,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				const entitiesDropDown: any = document.createElement('paper-dropdown-menu');
 				const entities: any = document.createElement('paper-listbox');
 
+				entities.appendChild(addDropdownItem(''));
 				_.forEach(this.entitiesRegistry, entityRegistry => {
 					if (
 						_.isEqual(entityRegistry.platform, 'cast') ||
