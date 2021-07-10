@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-env browser */
 import _ from 'lodash';
+import { HomeAssistant } from 'custom-card-helpers';
 import Plex from './modules/Plex';
+import { fetchEntityRegistry } from './modules/utils';
 
 class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	content: any;
@@ -26,6 +28,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	devicesTabs = 0;
 
+	hassObj: HomeAssistant | undefined;
+
+	entities: Array<any> = [];
+
 	fireEvent = (
 		node: HTMLElement,
 		type: string,
@@ -44,21 +50,66 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		return event;
 	};
 
-	valueUpdated = () => {
-		this.config.ip = this.ip.value;
-		this.config.token = this.token.value;
-		this.config.port = this.port.value;
-		this.config.libraryName = this.libraryName.value;
-		this.fireEvent(this, 'config-changed', { config: this.config }); // todo remove me
+	valueUpdated = (): void => {
+		if (!_.isEmpty(this.libraryName.value)) {
+			this.config.ip = this.ip.value;
+			this.config.token = this.token.value;
+			this.config.port = this.port.value;
+			this.config.libraryName = this.libraryName.value;
+			this.config.entity = [];
+			_.forEach(this.entities, entity => {
+				this.config.entity.push(entity.value);
+			});
+			this.fireEvent(this, 'config-changed', { config: this.config });
+		}
 	};
 
 	render = async (): Promise<void> => {
-		console.log('render');
+		const addDropdownItem = (text: string): HTMLElement => {
+			const libraryItem: any = document.createElement('paper-item');
+			libraryItem.innerHTML = text;
+			return libraryItem;
+		};
+		const createEntitiesDropdown = (
+			entitiesRegistry: Array<Record<string, any>>,
+			selected: string,
+			changeHandler: Function
+		): HTMLElement => {
+			const entitiesDropDown: any = document.createElement('paper-dropdown-menu');
+			const entities: any = document.createElement('paper-listbox');
+
+			_.forEach(entitiesRegistry, entityRegistry => {
+				if (
+					_.isEqual(entityRegistry.platform, 'cast') ||
+					_.isEqual(entityRegistry.platform, 'kodi') ||
+					_.isEqual(entityRegistry.platform, 'androidtv')
+				) {
+					entities.appendChild(addDropdownItem(entityRegistry.entity_id));
+				}
+			});
+			entities.slot = 'dropdown-content';
+			entitiesDropDown.label = 'Entity';
+			entitiesDropDown.value = selected;
+			entitiesDropDown.appendChild(entities);
+			entitiesDropDown.style.width = '100%';
+			entitiesDropDown.className = 'entitiesDropDown';
+			entitiesDropDown.addEventListener('value-changed', changeHandler);
+			this.entities.push(entitiesDropDown);
+			return entitiesDropDown;
+		};
 		if (this.content) this.content.remove();
+		let entitiesRegistry: false | Array<Record<string, any>> = false;
+		if (this.hassObj) {
+			entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
+		}
+
+		this.entities = [];
 		this.content = document.createElement('div');
 
 		const plexTitle = document.createElement('h2');
 		plexTitle.innerHTML = 'Plex Configuration';
+		plexTitle.style.margin = '0px';
+		plexTitle.style.padding = '0px';
 		this.content.appendChild(plexTitle);
 
 		this.ip.label = 'Plex IP Address';
@@ -77,17 +128,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.port.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.port);
 
-		const addLibraryItem = (text: string): HTMLElement => {
-			const libraryItem: any = document.createElement('paper-item');
-			libraryItem.innerHTML = text;
-			return libraryItem;
-		};
 		this.libraryName.innerHTML = '';
 		const libraryItems: any = document.createElement('paper-listbox');
-		libraryItems.appendChild(addLibraryItem('Continue Watching'));
-		libraryItems.appendChild(addLibraryItem('Deck'));
-		libraryItems.appendChild(addLibraryItem('Recently Added'));
-		libraryItems.appendChild(addLibraryItem('Watch Next'));
+		libraryItems.appendChild(addDropdownItem('Continue Watching'));
+		libraryItems.appendChild(addDropdownItem('Deck'));
+		libraryItems.appendChild(addDropdownItem('Recently Added'));
+		libraryItems.appendChild(addDropdownItem('Watch Next'));
 		libraryItems.slot = 'dropdown-content';
 		this.libraryName.label = 'Plex Library';
 		this.libraryName.disabled = true;
@@ -99,24 +145,33 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		const devicesTitle = document.createElement('h2');
 		devicesTitle.innerHTML = `Devices Configuration`;
 		devicesTitle.style.lineHeight = '29px';
+		devicesTitle.style.marginBottom = '0px';
+		devicesTitle.style.marginTop = '20px';
+
 		const addDeviceButton = document.createElement('button');
 		addDeviceButton.style.float = 'right';
 		addDeviceButton.style.fontSize = '20px';
 		addDeviceButton.style.cursor = 'pointer';
 		addDeviceButton.innerHTML = '+';
 		addDeviceButton.addEventListener('click', () => {
-			this.devicesTabs += 1;
-			const tab = document.createElement('paper-tab');
-			tab.innerHTML = `${this.devicesTabs}`;
-			this.tabs.appendChild(tab);
+			if (entitiesRegistry) {
+				this.content.appendChild(createEntitiesDropdown(entitiesRegistry, '', this.valueUpdated));
+				this.scrollTop = this.scrollHeight - this.clientHeight;
+			}
 		});
 		devicesTitle.appendChild(addDeviceButton);
+
 		this.content.appendChild(devicesTitle);
-
-		this.tabs.innerHTML = '';
-		this.tabs.scrollable = 'yes';
-
-		this.content.appendChild(this.tabs);
+		if (_.isString(this.config.entity)) {
+			this.config.entity = [this.config.entity];
+		}
+		if (_.isArray(this.config.entity)) {
+			_.forEach(this.config.entity, entity => {
+				if (entitiesRegistry && _.isString(entity)) {
+					this.content.appendChild(createEntitiesDropdown(entitiesRegistry, entity, this.valueUpdated));
+				}
+			});
+		}
 
 		this.appendChild(this.content);
 
@@ -124,7 +179,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			try {
 				const sections = await this.plex.getSections();
 				_.forEach(sections, (section: Record<string, any>) => {
-					libraryItems.appendChild(addLibraryItem(section.title));
+					libraryItems.appendChild(addDropdownItem(section.title));
 				});
 				this.libraryName.disabled = false;
 				this.libraryName.value = this.config.libraryName;
@@ -158,5 +213,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		event.detail = { config: newConfig };
 		this.dispatchEvent(event);
 	};
+
+	set hass(hass: HomeAssistant) {
+		this.hassObj = hass;
+	}
 }
 export default PlexMeetsHomeAssistantEditor;

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-env browser */
+import { Connection } from 'home-assistant-js-websocket';
 import _ from 'lodash';
 import { CSS_STYLE } from '../const';
 import PlayController from './PlayController';
@@ -17,6 +18,11 @@ const escapeHtml = (unsafe: any): string => {
 	}
 	return '';
 };
+
+const fetchEntityRegistry = (conn: Connection): Promise<Array<Record<string, any>>> =>
+	conn.sendMessagePromise({
+		type: 'config/entity_registry/list'
+	});
 
 const getHeight = (el: HTMLElement): number => {
 	const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
@@ -255,5 +261,6 @@ export {
 	getOldPlexServerErrorMessage,
 	getWidth,
 	getDetailsBottom,
-	clickHandler
+	clickHandler,
+	fetchEntityRegistry
 };

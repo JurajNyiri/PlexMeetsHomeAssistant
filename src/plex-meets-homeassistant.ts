@@ -2,7 +2,6 @@
 /* eslint-env browser */
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
-import { Connection } from 'home-assistant-js-websocket';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
@@ -18,7 +17,8 @@ import {
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
 	getDetailsBottom,
-	clickHandler
+	clickHandler,
+	fetchEntityRegistry
 } from './modules/utils';
 import style from './modules/style';
 
@@ -155,14 +155,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
-	fetchEntityRegistry = (conn: Connection): Promise<Array<Record<string, any>>> =>
-		conn.sendMessagePromise({
-			type: 'config/entity_registry/list'
-		});
-
 	loadInitialData = async (): Promise<void> => {
 		if (this.hassObj) {
-			this.entityRegistry = await this.fetchEntityRegistry(this.hassObj.connection);
+			this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
 		let { entity } = JSON.parse(JSON.stringify(this.config));

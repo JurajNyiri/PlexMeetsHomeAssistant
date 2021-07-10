@@ -19239,135 +19239,6 @@ class PlayController {
     }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-class PlexMeetsHomeAssistantEditor extends HTMLElement {
-    constructor() {
-        super(...arguments);
-        this.plexPort = false;
-        this.plexProtocol = 'http';
-        this.config = {};
-        this.ip = document.createElement('paper-input');
-        this.token = document.createElement('paper-input');
-        this.port = document.createElement('paper-input');
-        this.libraryName = document.createElement('paper-dropdown-menu');
-        this.tabs = document.createElement('paper-tabs');
-        this.devicesTabs = 0;
-        this.fireEvent = (node, type, detail, options = {}) => {
-            // eslint-disable-next-line no-param-reassign
-            detail = detail === null || detail === undefined ? {} : detail;
-            const event = new Event(type, {
-                bubbles: options.bubbles === undefined ? true : options.bubbles,
-                cancelable: Boolean(options.cancelable),
-                composed: options.composed === undefined ? true : options.composed
-            });
-            event.detail = detail;
-            node.dispatchEvent(event);
-            return event;
-        };
-        this.valueUpdated = () => {
-            this.config.ip = this.ip.value;
-            this.config.token = this.token.value;
-            this.config.port = this.port.value;
-            this.config.libraryName = this.libraryName.value;
-            this.fireEvent(this, 'config-changed', { config: this.config }); // todo remove me
-        };
-        this.render = async () => {
-            console.log('render');
-            if (this.content)
-                this.content.remove();
-            this.content = document.createElement('div');
-            const plexTitle = document.createElement('h2');
-            plexTitle.innerHTML = 'Plex Configuration';
-            this.content.appendChild(plexTitle);
-            this.ip.label = 'Plex IP Address';
-            this.ip.value = this.config.ip;
-            this.ip.addEventListener('change', this.valueUpdated);
-            this.content.appendChild(this.ip);
-            this.token.label = 'Plex Token';
-            this.token.value = this.config.token;
-            this.token.addEventListener('change', this.valueUpdated);
-            this.content.appendChild(this.token);
-            this.port.label = 'Plex Port';
-            this.port.value = this.config.port;
-            this.port.type = 'number';
-            this.port.addEventListener('change', this.valueUpdated);
-            this.content.appendChild(this.port);
-            const addLibraryItem = (text) => {
-                const libraryItem = document.createElement('paper-item');
-                libraryItem.innerHTML = text;
-                return libraryItem;
-            };
-            this.libraryName.innerHTML = '';
-            const libraryItems = document.createElement('paper-listbox');
-            libraryItems.appendChild(addLibraryItem('Continue Watching'));
-            libraryItems.appendChild(addLibraryItem('Deck'));
-            libraryItems.appendChild(addLibraryItem('Recently Added'));
-            libraryItems.appendChild(addLibraryItem('Watch Next'));
-            libraryItems.slot = 'dropdown-content';
-            this.libraryName.label = 'Plex Library';
-            this.libraryName.disabled = true;
-            this.libraryName.appendChild(libraryItems);
-            this.libraryName.style.width = '100%';
-            this.libraryName.addEventListener('value-changed', this.valueUpdated);
-            this.content.appendChild(this.libraryName);
-            const devicesTitle = document.createElement('h2');
-            devicesTitle.innerHTML = `Devices Configuration`;
-            devicesTitle.style.lineHeight = '29px';
-            const addDeviceButton = document.createElement('button');
-            addDeviceButton.style.float = 'right';
-            addDeviceButton.style.fontSize = '20px';
-            addDeviceButton.style.cursor = 'pointer';
-            addDeviceButton.innerHTML = '+';
-            addDeviceButton.addEventListener('click', () => {
-                this.devicesTabs += 1;
-                const tab = document.createElement('paper-tab');
-                tab.innerHTML = `${this.devicesTabs}`;
-                this.tabs.appendChild(tab);
-            });
-            devicesTitle.appendChild(addDeviceButton);
-            this.content.appendChild(devicesTitle);
-            this.tabs.innerHTML = '';
-            this.tabs.scrollable = 'yes';
-            this.content.appendChild(this.tabs);
-            this.appendChild(this.content);
-            if (this.plex) {
-                try {
-                    const sections = await this.plex.getSections();
-                    lodash.forEach(sections, (section) => {
-                        libraryItems.appendChild(addLibraryItem(section.title));
-                    });
-                    this.libraryName.disabled = false;
-                    this.libraryName.value = this.config.libraryName;
-                }
-                catch (err) {
-                    // pass
-                }
-            }
-        };
-        this.setConfig = (config) => {
-            console.log(config);
-            this.config = JSON.parse(JSON.stringify(config));
-            if (config.port) {
-                this.plexPort = config.port;
-            }
-            if (config.protocol) {
-                this.plexProtocol = config.protocol;
-            }
-            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
-            this.render();
-        };
-        this.configChanged = (newConfig) => {
-            const event = new Event('config-changed', {
-                bubbles: true,
-                composed: true
-            });
-            event.detail = { config: newConfig };
-            this.dispatchEvent(event);
-        };
-    }
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
     if (unsafe) {
@@ -19381,6 +19252,9 @@ const escapeHtml = (unsafe) => {
     }
     return '';
 };
+const fetchEntityRegistry = (conn) => conn.sendMessagePromise({
+    type: 'config/entity_registry/list'
+});
 const getHeight = (el) => {
     const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
     return height;
@@ -19566,6 +19440,179 @@ const isScrolledIntoView = (elem) => {
     // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
     return isVisible;
 };
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+class PlexMeetsHomeAssistantEditor extends HTMLElement {
+    constructor() {
+        super(...arguments);
+        this.plexPort = false;
+        this.plexProtocol = 'http';
+        this.config = {};
+        this.ip = document.createElement('paper-input');
+        this.token = document.createElement('paper-input');
+        this.port = document.createElement('paper-input');
+        this.libraryName = document.createElement('paper-dropdown-menu');
+        this.tabs = document.createElement('paper-tabs');
+        this.devicesTabs = 0;
+        this.entities = [];
+        this.fireEvent = (node, type, detail, options = {}) => {
+            // eslint-disable-next-line no-param-reassign
+            detail = detail === null || detail === undefined ? {} : detail;
+            const event = new Event(type, {
+                bubbles: options.bubbles === undefined ? true : options.bubbles,
+                cancelable: Boolean(options.cancelable),
+                composed: options.composed === undefined ? true : options.composed
+            });
+            event.detail = detail;
+            node.dispatchEvent(event);
+            return event;
+        };
+        this.valueUpdated = () => {
+            if (!lodash.isEmpty(this.libraryName.value)) {
+                this.config.ip = this.ip.value;
+                this.config.token = this.token.value;
+                this.config.port = this.port.value;
+                this.config.libraryName = this.libraryName.value;
+                this.config.entity = [];
+                lodash.forEach(this.entities, entity => {
+                    this.config.entity.push(entity.value);
+                });
+                this.fireEvent(this, 'config-changed', { config: this.config });
+            }
+        };
+        this.render = async () => {
+            const addDropdownItem = (text) => {
+                const libraryItem = document.createElement('paper-item');
+                libraryItem.innerHTML = text;
+                return libraryItem;
+            };
+            const createEntitiesDropdown = (entitiesRegistry, selected, changeHandler) => {
+                const entitiesDropDown = document.createElement('paper-dropdown-menu');
+                const entities = document.createElement('paper-listbox');
+                lodash.forEach(entitiesRegistry, entityRegistry => {
+                    if (lodash.isEqual(entityRegistry.platform, 'cast') ||
+                        lodash.isEqual(entityRegistry.platform, 'kodi') ||
+                        lodash.isEqual(entityRegistry.platform, 'androidtv')) {
+                        entities.appendChild(addDropdownItem(entityRegistry.entity_id));
+                    }
+                });
+                entities.slot = 'dropdown-content';
+                entitiesDropDown.label = 'Entity';
+                entitiesDropDown.value = selected;
+                entitiesDropDown.appendChild(entities);
+                entitiesDropDown.style.width = '100%';
+                entitiesDropDown.className = 'entitiesDropDown';
+                entitiesDropDown.addEventListener('value-changed', changeHandler);
+                this.entities.push(entitiesDropDown);
+                return entitiesDropDown;
+            };
+            if (this.content)
+                this.content.remove();
+            let entitiesRegistry = false;
+            if (this.hassObj) {
+                entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
+            }
+            this.entities = [];
+            this.content = document.createElement('div');
+            const plexTitle = document.createElement('h2');
+            plexTitle.innerHTML = 'Plex Configuration';
+            plexTitle.style.margin = '0px';
+            plexTitle.style.padding = '0px';
+            this.content.appendChild(plexTitle);
+            this.ip.label = 'Plex IP Address';
+            this.ip.value = this.config.ip;
+            this.ip.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.ip);
+            this.token.label = 'Plex Token';
+            this.token.value = this.config.token;
+            this.token.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.token);
+            this.port.label = 'Plex Port';
+            this.port.value = this.config.port;
+            this.port.type = 'number';
+            this.port.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.port);
+            this.libraryName.innerHTML = '';
+            const libraryItems = document.createElement('paper-listbox');
+            libraryItems.appendChild(addDropdownItem('Continue Watching'));
+            libraryItems.appendChild(addDropdownItem('Deck'));
+            libraryItems.appendChild(addDropdownItem('Recently Added'));
+            libraryItems.appendChild(addDropdownItem('Watch Next'));
+            libraryItems.slot = 'dropdown-content';
+            this.libraryName.label = 'Plex Library';
+            this.libraryName.disabled = true;
+            this.libraryName.appendChild(libraryItems);
+            this.libraryName.style.width = '100%';
+            this.libraryName.addEventListener('value-changed', this.valueUpdated);
+            this.content.appendChild(this.libraryName);
+            const devicesTitle = document.createElement('h2');
+            devicesTitle.innerHTML = `Devices Configuration`;
+            devicesTitle.style.lineHeight = '29px';
+            devicesTitle.style.marginBottom = '0px';
+            devicesTitle.style.marginTop = '20px';
+            const addDeviceButton = document.createElement('button');
+            addDeviceButton.style.float = 'right';
+            addDeviceButton.style.fontSize = '20px';
+            addDeviceButton.style.cursor = 'pointer';
+            addDeviceButton.innerHTML = '+';
+            addDeviceButton.addEventListener('click', () => {
+                if (entitiesRegistry) {
+                    this.content.appendChild(createEntitiesDropdown(entitiesRegistry, '', this.valueUpdated));
+                    this.scrollTop = this.scrollHeight - this.clientHeight;
+                }
+            });
+            devicesTitle.appendChild(addDeviceButton);
+            this.content.appendChild(devicesTitle);
+            if (lodash.isString(this.config.entity)) {
+                this.config.entity = [this.config.entity];
+            }
+            if (lodash.isArray(this.config.entity)) {
+                lodash.forEach(this.config.entity, entity => {
+                    if (entitiesRegistry && lodash.isString(entity)) {
+                        this.content.appendChild(createEntitiesDropdown(entitiesRegistry, entity, this.valueUpdated));
+                    }
+                });
+            }
+            this.appendChild(this.content);
+            if (this.plex) {
+                try {
+                    const sections = await this.plex.getSections();
+                    lodash.forEach(sections, (section) => {
+                        libraryItems.appendChild(addDropdownItem(section.title));
+                    });
+                    this.libraryName.disabled = false;
+                    this.libraryName.value = this.config.libraryName;
+                }
+                catch (err) {
+                    // pass
+                }
+            }
+        };
+        this.setConfig = (config) => {
+            console.log(config);
+            this.config = JSON.parse(JSON.stringify(config));
+            if (config.port) {
+                this.plexPort = config.port;
+            }
+            if (config.protocol) {
+                this.plexProtocol = config.protocol;
+            }
+            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+            this.render();
+        };
+        this.configChanged = (newConfig) => {
+            const event = new Event('config-changed', {
+                bubbles: true,
+                composed: true
+            });
+            event.detail = { config: newConfig };
+            this.dispatchEvent(event);
+        };
+    }
+    set hass(hass) {
+        this.hassObj = hass;
+    }
+}
 
 /**
  * @license
@@ -20320,12 +20367,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.calculatePositions();
             }
         };
-        this.fetchEntityRegistry = (conn) => conn.sendMessagePromise({
-            type: 'config/entity_registry/list'
-        });
         this.loadInitialData = async () => {
             if (this.hassObj) {
-                this.entityRegistry = await this.fetchEntityRegistry(this.hassObj.connection);
+                this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
             let { entity } = JSON.parse(JSON.stringify(this.config));
             const processEntity = (entityObj, entityString) => {
