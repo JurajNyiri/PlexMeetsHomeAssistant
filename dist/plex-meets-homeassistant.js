@@ -20157,6 +20157,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.plexProtocol = 'http';
         this.plexPort = false;
         this.detailsShown = false;
+        this.entityRegistry = [];
         this.runBefore = '';
         this.playTrailer = true;
         this.showExtras = true;
@@ -20191,7 +20192,55 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.calculatePositions();
             }
         };
+        this.fetchEntityRegistry = (conn) => conn.sendMessagePromise({
+            type: 'config/entity_registry/list'
+        });
         this.loadInitialData = async () => {
+            if (this.hassObj) {
+                this.entityRegistry = await this.fetchEntityRegistry(this.hassObj.connection);
+            }
+            let { entity } = JSON.parse(JSON.stringify(this.config));
+            const processEntity = (entityObj, entityString) => {
+                lodash.forEach(this.entityRegistry, entityInRegister => {
+                    if (lodash.isEqual(entityInRegister.entity_id, entityString)) {
+                        switch (entityInRegister.platform) {
+                            case 'cast':
+                                if (lodash.isNil(entityObj.cast)) {
+                                    // eslint-disable-next-line no-param-reassign
+                                    entityObj.cast = [];
+                                }
+                                entityObj.cast.push(entityInRegister.entity_id);
+                                break;
+                            case 'androidtv':
+                                if (lodash.isNil(entityObj.androidtv)) {
+                                    // eslint-disable-next-line no-param-reassign
+                                    entityObj.androidtv = [];
+                                }
+                                entityObj.androidtv.push(entityInRegister.entity_id);
+                                break;
+                            case 'kodi':
+                                if (lodash.isNil(entityObj.kodi)) {
+                                    // eslint-disable-next-line no-param-reassign
+                                    entityObj.kodi = [];
+                                }
+                                entityObj.kodi.push(entityInRegister.entity_id);
+                                break;
+                            // pass
+                        }
+                    }
+                });
+            };
+            const entityOrig = entity;
+            if (lodash.isString(entityOrig)) {
+                entity = {};
+                processEntity(entity, entityOrig);
+            }
+            else if (lodash.isArray(entityOrig)) {
+                entity = {};
+                lodash.forEach(entityOrig, entityStr => {
+                    processEntity(entity, entityStr);
+                });
+            }
             window.addEventListener('scroll', () => {
                 // todo: improve performance by calculating this when needed only
                 if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this)) {
@@ -20259,8 +20308,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             try {
                 if (this.plex) {
                     if (this.hassObj) {
-                        const entityConfig = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
-                        this.playController = new PlayController(this.hassObj, this.plex, entityConfig, this.runBefore, this.runAfter, this.config.libraryName);
+                        this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter, this.config.libraryName);
                         if (this.playController) {
                             await this.playController.init();
                         }
@@ -21353,10 +21401,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
-            if (!config.entity || config.entity.length === 0 || !lodash.isObject(config.entity)) {
+            if (!config.entity || config.entity.length === 0) {
                 throw new Error('You need to define at least one entity');
             }
-            if (lodash.isObject(config.entity)) {
+            if (lodash.isPlainObject(config.entity)) {
                 let entityDefined = false;
                 // eslint-disable-next-line consistent-return
                 lodash.forEach(config.entity, (value, key) => {
@@ -21368,6 +21416,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 if (!entityDefined) {
                     throw new Error('You need to define at least one supported entity');
                 }
+            }
+            else if (!lodash.isString(config.entity) && !lodash.isArray(config.entity)) {
+                throw new Error('You need to define at least one supported entity');
             }
             if (!config.token) {
                 throw new Error('You need to define a token');
