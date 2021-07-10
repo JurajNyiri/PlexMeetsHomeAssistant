@@ -125,14 +125,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	card: HTMLElement | undefined;
 
+	initialDataLoaded = false;
+
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
 
-		if (!this.content) {
-			this.error = '';
-			if (!this.loading) {
-				this.loadInitialData();
-			}
+		if (!this.initialDataLoaded) {
+			this.loadInitialData();
 		}
 	}
 
@@ -224,8 +223,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (this.card) {
 			this.previousPageWidth = this.card.offsetWidth;
 		}
-		this.renderInitialData();
 		this.resizeBackground();
+		this.initialDataLoaded = true;
 	};
 
 	renderInitialData = async (): Promise<void> => {
@@ -1490,7 +1489,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	setConfig = (config: any): void => {
-		console.log('setConfig from main');
 		this.plexProtocol = 'http';
 		if (!config.entity || config.entity.length === 0) {
 			throw new Error('You need to define at least one entity');
@@ -1526,7 +1524,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (config.port) {
 			this.plexPort = config.port;
 		}
-		if (config.maxCount) {
+		if (config.maxCount && config.maxCount !== '') {
 			this.maxCount = config.maxCount;
 		}
 		if (config.runBefore) {

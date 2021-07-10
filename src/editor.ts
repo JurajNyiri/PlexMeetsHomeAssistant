@@ -22,6 +22,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	port: any = document.createElement('paper-input');
 
+	maxCount: any = document.createElement('paper-input');
+
 	libraryName: any = document.createElement('paper-dropdown-menu');
 
 	tabs: any = document.createElement('paper-tabs');
@@ -62,6 +64,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.token = this.token.value;
 			this.config.port = this.port.value;
 			this.config.libraryName = this.libraryName.value;
+			if (_.isEmpty(this.maxCount.value)) {
+				this.config.maxCount = '';
+			} else {
+				this.config.maxCount = parseInt(this.maxCount.value, 10);
+			}
+
 			if (!_.isEmpty(this.entities)) {
 				this.config.entity = [];
 				_.forEach(this.entities, entity => {
@@ -136,6 +144,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.port.type = 'number';
 		this.port.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.port);
+
+		this.maxCount.label = 'Maximum number of items to display';
+		this.maxCount.value = this.config.maxCount;
+		this.maxCount.type = 'number';
+		this.maxCount.addEventListener('change', this.valueUpdated);
+		this.content.appendChild(this.maxCount);
 
 		this.libraryName.innerHTML = '';
 		const libraryItems: any = document.createElement('paper-listbox');

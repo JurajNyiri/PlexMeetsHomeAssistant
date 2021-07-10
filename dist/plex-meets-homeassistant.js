@@ -19451,6 +19451,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.ip = document.createElement('paper-input');
         this.token = document.createElement('paper-input');
         this.port = document.createElement('paper-input');
+        this.maxCount = document.createElement('paper-input');
         this.libraryName = document.createElement('paper-dropdown-menu');
         this.tabs = document.createElement('paper-tabs');
         this.devicesTabs = 0;
@@ -19476,6 +19477,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 this.config.token = this.token.value;
                 this.config.port = this.port.value;
                 this.config.libraryName = this.libraryName.value;
+                if (lodash.isEmpty(this.maxCount.value)) {
+                    this.config.maxCount = '';
+                }
+                else {
+                    this.config.maxCount = parseInt(this.maxCount.value, 10);
+                }
                 if (!lodash.isEmpty(this.entities)) {
                     this.config.entity = [];
                     lodash.forEach(this.entities, entity => {
@@ -19542,6 +19549,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.port.type = 'number';
             this.port.addEventListener('change', this.valueUpdated);
             this.content.appendChild(this.port);
+            this.maxCount.label = 'Maximum number of items to display';
+            this.maxCount.value = this.config.maxCount;
+            this.maxCount.type = 'number';
+            this.maxCount.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.maxCount);
             this.libraryName.innerHTML = '';
             const libraryItems = document.createElement('paper-listbox');
             libraryItems.appendChild(addDropdownItem('Continue Watching'));
@@ -20376,6 +20388,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.maxCount = false;
         this.error = '';
         this.contentBGHeight = 0;
+        this.initialDataLoaded = false;
         this.renderNewElementsIfNeeded = () => {
             const loadAdditionalRowsCount = 2; // todo: make this configurable
             const height = getHeight(this.content);
@@ -20453,8 +20466,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.card) {
                 this.previousPageWidth = this.card.offsetWidth;
             }
-            this.renderInitialData();
             this.resizeBackground();
+            this.initialDataLoaded = true;
         };
         this.renderInitialData = async () => {
             let { entity } = JSON.parse(JSON.stringify(this.config));
@@ -21595,7 +21608,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return playButton;
         };
         this.setConfig = (config) => {
-            console.log('setConfig from main');
             this.plexProtocol = 'http';
             if (!config.entity || config.entity.length === 0) {
                 throw new Error('You need to define at least one entity');
@@ -21632,7 +21644,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.port) {
                 this.plexPort = config.port;
             }
-            if (config.maxCount) {
+            if (config.maxCount && config.maxCount !== '') {
                 this.maxCount = config.maxCount;
             }
             if (config.runBefore) {
@@ -21657,11 +21669,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     }
     set hass(hass) {
         this.hassObj = hass;
-        if (!this.content) {
-            this.error = '';
-            if (!this.loading) {
-                this.loadInitialData();
-            }
+        if (!this.initialDataLoaded) {
+            this.loadInitialData();
         }
     }
     static getConfigElement() {
