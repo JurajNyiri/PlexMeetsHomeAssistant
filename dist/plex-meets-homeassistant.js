@@ -19268,6 +19268,27 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             token.label = 'Plex Token';
             token.value = this.config.token;
             this.content.appendChild(token);
+            const port = document.createElement('paper-input');
+            port.label = 'Plex Port';
+            port.value = this.config.port;
+            port.type = 'number';
+            this.content.appendChild(port);
+            const addLibraryItem = (text) => {
+                const libraryItem = document.createElement('paper-item');
+                libraryItem.innerHTML = text;
+                return libraryItem;
+            };
+            const library = document.createElement('paper-dropdown-menu');
+            const libraryItems = document.createElement('paper-listbox');
+            libraryItems.appendChild(addLibraryItem('Continue Watching'));
+            libraryItems.appendChild(addLibraryItem('Deck'));
+            libraryItems.appendChild(addLibraryItem('Recently Added'));
+            libraryItems.appendChild(addLibraryItem('Watch Next'));
+            libraryItems.slot = 'dropdown-content';
+            library.label = 'Plex Library';
+            library.appendChild(libraryItems);
+            library.style.width = '100%';
+            this.content.appendChild(library);
             this.appendChild(this.content);
             this.fireEvent(this, 'config-changed', { config: this.config }); // todo remove me
         };
