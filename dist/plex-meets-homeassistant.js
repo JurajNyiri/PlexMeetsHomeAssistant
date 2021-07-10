@@ -19239,6 +19239,24 @@ class PlayController {
     }
 }
 
+/* eslint-env browser */
+class ContentCardEditor extends HTMLElement {
+    constructor() {
+        super(...arguments);
+        this.setConfig = (config) => {
+            console.log(config);
+        };
+        this.configChanged = (newConfig) => {
+            const event = new Event('config-changed', {
+                bubbles: true,
+                composed: true
+            });
+            event.detail = { config: newConfig };
+            this.dispatchEvent(event);
+        };
+    }
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
@@ -21466,5 +21484,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         }
     }
+    static getConfigElement() {
+        return document.createElement('content-card-editor');
+    }
+    static getStubConfig() {
+        return { entity: 'sun.sun' };
+    }
 }
+customElements.define('content-card-editor', ContentCardEditor);
 customElements.define('plex-meets-homeassistant', PlexMeetsHomeAssistant);
+window.customCards = window.customCards || [];
+window.customCards.push({
+    type: 'plex-meets-homeassistant',
+    name: 'Plex meets Home Assistant',
+    preview: false,
+    description: 'Integrates Plex into Home Assistant. Browse and launch media with a simple click.' // Optional
+});

@@ -6,6 +6,7 @@ import { Connection } from 'home-assistant-js-websocket';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
+import ContentCardEditor from './editor';
 import {
 	escapeHtml,
 	getOffset,
@@ -20,6 +21,12 @@ import {
 	clickHandler
 } from './modules/utils';
 import style from './modules/style';
+
+declare global {
+	interface Window {
+		customCards: any;
+	}
+}
 
 class PlexMeetsHomeAssistant extends HTMLElement {
 	plexProtocol: 'http' | 'https' = 'http';
@@ -127,6 +134,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.loadInitialData();
 			}
 		}
+	}
+
+	static getConfigElement() {
+		return document.createElement('content-card-editor');
+	}
+
+	static getStubConfig() {
+		return { entity: 'sun.sun' };
 	}
 
 	renderNewElementsIfNeeded = (): void => {
@@ -1542,4 +1557,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 }
 
+customElements.define('content-card-editor', ContentCardEditor);
 customElements.define('plex-meets-homeassistant', PlexMeetsHomeAssistant);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+	type: 'plex-meets-homeassistant',
+	name: 'Plex meets Home Assistant',
+	preview: false,
+	description: 'Integrates Plex into Home Assistant. Browse and launch media with a simple click.' // Optional
+});
