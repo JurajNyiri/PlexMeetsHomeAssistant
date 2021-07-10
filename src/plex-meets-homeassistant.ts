@@ -269,14 +269,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		try {
 			if (this.plex) {
 				if (this.hassObj) {
-					this.playController = new PlayController(
-						this.hassObj,
-						this.plex,
-						entity,
-						this.runBefore,
-						this.runAfter,
-						this.config.libraryName
-					);
+					this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
 					if (this.playController) {
 						await this.playController.init();
 					}
