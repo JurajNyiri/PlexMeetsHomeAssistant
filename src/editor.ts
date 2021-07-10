@@ -26,6 +26,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	libraryName: any = document.createElement('paper-dropdown-menu');
 
+	protocol: any = document.createElement('paper-dropdown-menu');
+
 	tabs: any = document.createElement('paper-tabs');
 
 	devicesTabs = 0;
@@ -60,10 +62,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	valueUpdated = (): void => {
 		if (!_.isEmpty(this.libraryName.value)) {
+			const originalConfig = _.clone(this.config);
 			this.config.ip = this.ip.value;
 			this.config.token = this.token.value;
 			this.config.port = this.port.value;
 			this.config.libraryName = this.libraryName.value;
+
+			this.config.protocol = this.protocol.value;
 			if (_.isEmpty(this.maxCount.value)) {
 				this.config.maxCount = '';
 			} else {
@@ -78,7 +83,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					}
 				});
 			}
-			this.fireEvent(this, 'config-changed', { config: this.config });
+			if (!_.isEqual(this.config, originalConfig)) {
+				console.log(this.config);
+				console.log(originalConfig);
+				console.log('event');
+				this.fireEvent(this, 'config-changed', { config: this.config });
+			}
 		}
 	};
 
@@ -128,6 +138,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		plexTitle.style.margin = '0px';
 		plexTitle.style.padding = '0px';
 		this.content.appendChild(plexTitle);
+
+		this.protocol.innerHTML = '';
+		const protocolItems: any = document.createElement('paper-listbox');
+		protocolItems.appendChild(addDropdownItem('http'));
+		protocolItems.appendChild(addDropdownItem('https'));
+		protocolItems.slot = 'dropdown-content';
+		this.protocol.label = 'Plex Protocol';
+		this.protocol.appendChild(protocolItems);
+		this.protocol.style.width = '100%';
+		this.protocol.addEventListener('value-changed', this.valueUpdated);
+		if (_.isEmpty(this.config.protocol)) {
+			this.protocol.value = 'http';
+		} else {
+			this.protocol.value = this.config.protocol;
+		}
+		this.content.appendChild(this.protocol);
 
 		this.ip.label = 'Plex IP Address';
 		this.ip.value = this.config.ip;
@@ -232,6 +258,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
+		} else {
+			this.config.protocol = 'http';
 		}
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);

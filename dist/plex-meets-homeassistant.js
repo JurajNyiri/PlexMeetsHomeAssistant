@@ -19453,6 +19453,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.port = document.createElement('paper-input');
         this.maxCount = document.createElement('paper-input');
         this.libraryName = document.createElement('paper-dropdown-menu');
+        this.protocol = document.createElement('paper-dropdown-menu');
         this.tabs = document.createElement('paper-tabs');
         this.devicesTabs = 0;
         this.entities = [];
@@ -19473,10 +19474,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         };
         this.valueUpdated = () => {
             if (!lodash.isEmpty(this.libraryName.value)) {
+                const originalConfig = lodash.clone(this.config);
                 this.config.ip = this.ip.value;
                 this.config.token = this.token.value;
                 this.config.port = this.port.value;
                 this.config.libraryName = this.libraryName.value;
+                this.config.protocol = this.protocol.value;
                 if (lodash.isEmpty(this.maxCount.value)) {
                     this.config.maxCount = '';
                 }
@@ -19491,7 +19494,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         }
                     });
                 }
-                this.fireEvent(this, 'config-changed', { config: this.config });
+                if (!lodash.isEqual(this.config, originalConfig)) {
+                    console.log(this.config);
+                    console.log(originalConfig);
+                    console.log('event');
+                    this.fireEvent(this, 'config-changed', { config: this.config });
+                }
             }
         };
         this.render = async () => {
@@ -19536,6 +19544,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             plexTitle.style.margin = '0px';
             plexTitle.style.padding = '0px';
             this.content.appendChild(plexTitle);
+            this.protocol.innerHTML = '';
+            const protocolItems = document.createElement('paper-listbox');
+            protocolItems.appendChild(addDropdownItem('http'));
+            protocolItems.appendChild(addDropdownItem('https'));
+            protocolItems.slot = 'dropdown-content';
+            this.protocol.label = 'Plex Protocol';
+            this.protocol.appendChild(protocolItems);
+            this.protocol.style.width = '100%';
+            this.protocol.addEventListener('value-changed', this.valueUpdated);
+            if (lodash.isEmpty(this.config.protocol)) {
+                this.protocol.value = 'http';
+            }
+            else {
+                this.protocol.value = this.config.protocol;
+            }
+            this.content.appendChild(this.protocol);
             this.ip.label = 'Plex IP Address';
             this.ip.value = this.config.ip;
             this.ip.addEventListener('change', this.valueUpdated);
@@ -19628,6 +19652,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (config.protocol) {
                 this.plexProtocol = config.protocol;
+            }
+            else {
+                this.config.protocol = 'http';
             }
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.render();
@@ -21661,6 +21688,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.data = {};
+            this.error = '';
             this.renderInitialData();
         };
         this.getCardSize = () => {

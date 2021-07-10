@@ -1542,6 +1542,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 		this.data = {};
+		this.error = '';
 		this.renderInitialData();
 	};
 
