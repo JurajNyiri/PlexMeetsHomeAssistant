@@ -42,10 +42,10 @@ _Available special libraries:_
 
 **entity**: You need to configure at least one supported media_player entity.
 
-- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#android-tv-or-fire-tv).
-- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#kodi).
-- **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#all-other-plex-clients).
-- **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#google-cast).
+- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#android-tv-or-fire-tv). It is also possible to use short declaration with androidtv.
+- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#kodi). It is also possible to use short declaration with kodi.
+- **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#all-other-plex-clients). It is required to use detailed declaration with "plexPlayer:" property.
+- **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#google-cast). It is also possible to use short declaration with cast.
 
 **port**: _Optional_ Port of your plex sever.
 
@@ -63,14 +63,38 @@ _Available special libraries:_
 
 **playTrailer**: _Optional_ Specify whether to play trailer if available. Possible values: true, false, muted. Default: true
 
-Example of card configuration:
+Example of the simplest possible configuration:
+
+```
+type: 'custom:plex-meets-homeassistant'
+token: QWdsqEXAMPLETOKENqwerty
+ip: 192.168.13.37
+libraryName: Movies
+entity: media_player.bedroom_tv # entity provided by cast integration
+```
+
+Example of the simplest possible configuration using multiple entities:
+
+```
+type: 'custom:plex-meets-homeassistant'
+token: QWdsqEXAMPLETOKENqwerty
+ip: 192.168.13.37
+libraryName: Movies
+entity:
+  - media_player.living_room_nvidia_shield # created by androidtv integration
+  - media_player.living_room_tv # created by cast integration
+  - media_player.bedroom_tv # created by cast integration
+  - media_player.kodi_123456qwe789rty # created by kodi integration
+```
+
+Example of card configuration using detailed definitions:
 
 ```
 type: 'custom:plex-meets-homeassistant'
 token: QWdsqEXAMPLETOKENqwerty
 ip: 192.168.13.37
 port: 32400
-libraryName: Movies
+libraryName: TV Shows
 protocol: http
 maxCount: 10
 sort: title:desc
@@ -81,19 +105,21 @@ entity:
   cast: media_player.bedroom_tv
 ```
 
-Example using lists:
+Complex example using detailed definitions, lists and shared plex server for plexPlayer:
 
 ```
 type: 'custom:plex-meets-homeassistant'
 token: QWdsqEXAMPLETOKENqwerty
-ip: 192.168.13.37
-port: 32400
+ip: remote.plex.server.com # remote shared plex instance
+port: 443
 libraryName: Deck
-protocol: http
+protocol: https
 maxCount: 10
 sort: title:desc
 runBefore: script.turn_on_tv_and_wait
 runAfter: script.movie_time
+showExtras: true
+playTrailer: muted
 entity:
   kodi:
     - media_player.kodi_bedroom
@@ -103,15 +129,19 @@ entity:
     - media_player.bedroom_nvidia_shield
     - media_player.kithen_nvidia_shield
   plexPlayer:
-    - TV 2020
-    - 192.168.13.50
-  cast:
-    - media_player.bedroom_tv
+    - identifier: TV 2020 # plex client device located on local plex server network
+      server:
+        ip: local.plex.server.com # Mandatory
+        token: QWdsqEXAMPLETOKENqwerty # Mandatory
+        port: 32400
+        protocol: http
+    - 192.168.13.50 # without definition for server, it will look for device on remote.plex.server.com network
+  cast: media_player.bedroom_tv
 ```
 
 In this example, it will try to first play via kodi, in bedroom. If that kodi is unavailable or off, it tries in living room kodi.
 If that fails, it moves on to android tvs, starting with living room, continuing with bedroom and ending with kitchen.
-Next, if a possible player still has not been found (all kodis and shields are off) it tries to play via plexPlayer, trying TV 2020 and if not found, IP 192.168.13.50.
+Next, if a possible player still has not been found (all kodis and shields are off) it tries to play via plexPlayer, trying TV 2020 on local plex server and if not found, IP 192.168.13.50 on remote plex server.
 Finally, it tries to cast into media_player.bedroom_tv.
 
 ## Detailed configuration instructions for end devices
