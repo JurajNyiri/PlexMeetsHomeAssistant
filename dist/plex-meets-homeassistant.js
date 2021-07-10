@@ -19239,12 +19239,42 @@ class PlayController {
     }
 }
 
-/* eslint-env browser */
-class ContentCardEditor extends HTMLElement {
+class PlexMeetsHomeAssistantEditor extends HTMLElement {
     constructor() {
         super(...arguments);
+        this.config = {};
+        this.fireEvent = (node, type, detail, options = {}) => {
+            // eslint-disable-next-line no-param-reassign
+            detail = detail === null || detail === undefined ? {} : detail;
+            const event = new Event(type, {
+                bubbles: options.bubbles === undefined ? true : options.bubbles,
+                cancelable: Boolean(options.cancelable),
+                composed: options.composed === undefined ? true : options.composed
+            });
+            event.detail = detail;
+            node.dispatchEvent(event);
+            return event;
+        };
+        this.render = () => {
+            console.log('render');
+            if (this.content)
+                this.content.remove();
+            this.content = document.createElement('div');
+            const ip = document.createElement('paper-input');
+            ip.label = 'Plex IP Address';
+            ip.value = this.config.ip;
+            this.content.appendChild(ip);
+            const token = document.createElement('paper-input');
+            token.label = 'Plex Token';
+            token.value = this.config.token;
+            this.content.appendChild(token);
+            this.appendChild(this.content);
+            this.fireEvent(this, 'config-changed', { config: this.config }); // todo remove me
+        };
         this.setConfig = (config) => {
             console.log(config);
+            this.config = JSON.parse(JSON.stringify(config));
+            this.render();
         };
         this.configChanged = (newConfig) => {
             const event = new Event('config-changed', {
@@ -21485,13 +21515,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         }
     }
     static getConfigElement() {
-        return document.createElement('content-card-editor');
-    }
-    static getStubConfig() {
-        return { entity: 'sun.sun' };
+        return document.createElement('plex-meets-homeassistant-editor');
     }
 }
-customElements.define('content-card-editor', ContentCardEditor);
+customElements.define('plex-meets-homeassistant-editor', PlexMeetsHomeAssistantEditor);
 customElements.define('plex-meets-homeassistant', PlexMeetsHomeAssistant);
 window.customCards = window.customCards || [];
 window.customCards.push({

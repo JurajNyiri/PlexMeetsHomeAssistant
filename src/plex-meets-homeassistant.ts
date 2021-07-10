@@ -6,7 +6,7 @@ import { Connection } from 'home-assistant-js-websocket';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
-import ContentCardEditor from './editor';
+import PlexMeetsHomeAssistantEditor from './editor';
 import {
 	escapeHtml,
 	getOffset,
@@ -136,12 +136,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	}
 
-	static getConfigElement() {
-		return document.createElement('content-card-editor');
-	}
-
-	static getStubConfig() {
-		return { entity: 'sun.sun' };
+	static getConfigElement(): HTMLElement {
+		return document.createElement('plex-meets-homeassistant-editor');
 	}
 
 	renderNewElementsIfNeeded = (): void => {
@@ -1557,7 +1553,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 }
 
-customElements.define('content-card-editor', ContentCardEditor);
+customElements.define('plex-meets-homeassistant-editor', PlexMeetsHomeAssistantEditor);
 customElements.define('plex-meets-homeassistant', PlexMeetsHomeAssistant);
 
 window.customCards = window.customCards || [];

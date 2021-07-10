@@ -22,6 +22,8 @@
 	},
 	"homepage": "https://github.com/JurajNyiri/PlexMeetsHomeAssistant#readme",
 	"dependencies": {
+		"@polymer/paper-input": "^3.2.1",
+		"@polymer/polymer": "^3.4.1",
 		"@vercel/ncc": "^0.28.5",
 		"axios": "^0.21.1",
 		"custom-card-helpers": "^1.7.0",
