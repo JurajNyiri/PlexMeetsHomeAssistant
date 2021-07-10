@@ -19588,7 +19588,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (lodash.isArray(this.config.entity)) {
                 lodash.forEach(this.config.entity, entity => {
-                    if (lodash.isString(entity)) ;
+                    if (lodash.isString(entity)) {
+                        const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
+                        if (entitiesDropdown) {
+                            this.plexValidSection.appendChild(entitiesDropdown);
+                        }
+                    }
                 });
             }
             if (!lodash.isEmpty(this.sections)) {
