@@ -25,6 +25,7 @@
 		"@vercel/ncc": "^0.28.5",
 		"axios": "^0.21.1",
 		"custom-card-helpers": "^1.7.0",
+		"home-assistant-js-websocket": "^5.10.0",
 		"lit-element": "^2.5.0",
 		"lodash": "^4.17.21"
 	},

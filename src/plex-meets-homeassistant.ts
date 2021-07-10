@@ -2,6 +2,7 @@
 /* eslint-env browser */
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
+import { Connection } from 'home-assistant-js-websocket';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
@@ -26,6 +27,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	plexPort: number | false = false;
 
 	detailsShown = false;
+
+	entityRegistry: Array<Record<string, any>> = [];
 
 	runBefore = '';
 
@@ -141,7 +144,61 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
+	fetchEntityRegistry = (conn: Connection): Promise<Array<Record<string, any>>> =>
+		conn.sendMessagePromise({
+			type: 'config/entity_registry/list'
+		});
+
 	loadInitialData = async (): Promise<void> => {
+		if (this.hassObj) {
+			this.entityRegistry = await this.fetchEntityRegistry(this.hassObj.connection);
+		}
+
+		let { entity } = JSON.parse(JSON.stringify(this.config));
+
+		const processEntity = (entityObj: Record<string, any>, entityString: string): void => {
+			_.forEach(this.entityRegistry, entityInRegister => {
+				if (_.isEqual(entityInRegister.entity_id, entityString)) {
+					switch (entityInRegister.platform) {
+						case 'cast':
+							if (_.isNil(entityObj.cast)) {
+								// eslint-disable-next-line no-param-reassign
+								entityObj.cast = [];
+							}
+							entityObj.cast.push(entityInRegister.entity_id);
+							break;
+						case 'androidtv':
+							if (_.isNil(entityObj.androidtv)) {
+								// eslint-disable-next-line no-param-reassign
+								entityObj.androidtv = [];
+							}
+							entityObj.androidtv.push(entityInRegister.entity_id);
+							break;
+						case 'kodi':
+							if (_.isNil(entityObj.kodi)) {
+								// eslint-disable-next-line no-param-reassign
+								entityObj.kodi = [];
+							}
+							entityObj.kodi.push(entityInRegister.entity_id);
+							break;
+						default:
+						// pass
+					}
+				}
+			});
+		};
+
+		const entityOrig = entity;
+		if (_.isString(entityOrig)) {
+			entity = {};
+			processEntity(entity, entityOrig);
+		} else if (_.isArray(entityOrig)) {
+			entity = {};
+			_.forEach(entityOrig, entityStr => {
+				processEntity(entity, entityStr);
+			});
+		}
+
 		window.addEventListener('scroll', () => {
 			// todo: improve performance by calculating this when needed only
 			if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this)) {
@@ -212,11 +269,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		try {
 			if (this.plex) {
 				if (this.hassObj) {
-					const entityConfig: Record<string, any> = JSON.parse(JSON.stringify(this.config.entity)); // todo: find a nicer solution
 					this.playController = new PlayController(
 						this.hassObj,
 						this.plex,
-						entityConfig,
+						entity,
 						this.runBefore,
 						this.runAfter,
 						this.config.libraryName
@@ -1428,10 +1484,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	setConfig = (config: any): void => {
 		this.plexProtocol = 'http';
-		if (!config.entity || config.entity.length === 0 || !_.isObject(config.entity)) {
+		if (!config.entity || config.entity.length === 0) {
 			throw new Error('You need to define at least one entity');
 		}
-		if (_.isObject(config.entity)) {
+		if (_.isPlainObject(config.entity)) {
 			let entityDefined = false;
 			// eslint-disable-next-line consistent-return
 			_.forEach(config.entity, (value, key) => {
@@ -1443,6 +1499,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (!entityDefined) {
 				throw new Error('You need to define at least one supported entity');
 			}
+		} else if (!_.isString(config.entity) && !_.isArray(config.entity)) {
+			throw new Error('You need to define at least one supported entity');
 		}
 		if (!config.token) {
 			throw new Error('You need to define a token');
