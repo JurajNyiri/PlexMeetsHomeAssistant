@@ -20391,48 +20391,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.hassObj) {
                 this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
-            let { entity } = JSON.parse(JSON.stringify(this.config));
-            const processEntity = (entityObj, entityString) => {
-                lodash.forEach(this.entityRegistry, entityInRegister => {
-                    if (lodash.isEqual(entityInRegister.entity_id, entityString)) {
-                        switch (entityInRegister.platform) {
-                            case 'cast':
-                                if (lodash.isNil(entityObj.cast)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.cast = [];
-                                }
-                                entityObj.cast.push(entityInRegister.entity_id);
-                                break;
-                            case 'androidtv':
-                                if (lodash.isNil(entityObj.androidtv)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.androidtv = [];
-                                }
-                                entityObj.androidtv.push(entityInRegister.entity_id);
-                                break;
-                            case 'kodi':
-                                if (lodash.isNil(entityObj.kodi)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.kodi = [];
-                                }
-                                entityObj.kodi.push(entityInRegister.entity_id);
-                                break;
-                            // pass
-                        }
-                    }
-                });
-            };
-            const entityOrig = entity;
-            if (lodash.isString(entityOrig)) {
-                entity = {};
-                processEntity(entity, entityOrig);
-            }
-            else if (lodash.isArray(entityOrig)) {
-                entity = {};
-                lodash.forEach(entityOrig, entityStr => {
-                    processEntity(entity, entityStr);
-                });
-            }
             window.addEventListener('scroll', () => {
                 // todo: improve performance by calculating this when needed only
                 if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this)) {
@@ -20494,6 +20452,52 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             });
             if (this.card) {
                 this.previousPageWidth = this.card.offsetWidth;
+            }
+            this.renderInitialData();
+            this.resizeBackground();
+        };
+        this.renderInitialData = async () => {
+            let { entity } = JSON.parse(JSON.stringify(this.config));
+            const processEntity = (entityObj, entityString) => {
+                lodash.forEach(this.entityRegistry, entityInRegister => {
+                    if (lodash.isEqual(entityInRegister.entity_id, entityString)) {
+                        switch (entityInRegister.platform) {
+                            case 'cast':
+                                if (lodash.isNil(entityObj.cast)) {
+                                    // eslint-disable-next-line no-param-reassign
+                                    entityObj.cast = [];
+                                }
+                                entityObj.cast.push(entityInRegister.entity_id);
+                                break;
+                            case 'androidtv':
+                                if (lodash.isNil(entityObj.androidtv)) {
+                                    // eslint-disable-next-line no-param-reassign
+                                    entityObj.androidtv = [];
+                                }
+                                entityObj.androidtv.push(entityInRegister.entity_id);
+                                break;
+                            case 'kodi':
+                                if (lodash.isNil(entityObj.kodi)) {
+                                    // eslint-disable-next-line no-param-reassign
+                                    entityObj.kodi = [];
+                                }
+                                entityObj.kodi.push(entityInRegister.entity_id);
+                                break;
+                            // pass
+                        }
+                    }
+                });
+            };
+            const entityOrig = entity;
+            if (lodash.isString(entityOrig)) {
+                entity = {};
+                processEntity(entity, entityOrig);
+            }
+            else if (lodash.isArray(entityOrig)) {
+                entity = {};
+                lodash.forEach(entityOrig, entityStr => {
+                    processEntity(entity, entityStr);
+                });
             }
             this.loading = true;
             this.renderPage();
@@ -20587,7 +20591,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
                 this.renderPage();
             }
-            this.resizeBackground();
         };
         this.render = () => {
             this.renderPage();
@@ -21592,6 +21595,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return playButton;
         };
         this.setConfig = (config) => {
+            console.log('setConfig from main');
             this.plexProtocol = 'http';
             if (!config.entity || config.entity.length === 0) {
                 throw new Error('You need to define at least one entity');
@@ -21644,6 +21648,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.showExtras = config.showExtras;
             }
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+            this.data = {};
+            this.renderInitialData();
         };
         this.getCardSize = () => {
             return 3;

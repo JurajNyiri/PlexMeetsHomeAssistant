@@ -160,51 +160,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
-		let { entity } = JSON.parse(JSON.stringify(this.config));
-
-		const processEntity = (entityObj: Record<string, any>, entityString: string): void => {
-			_.forEach(this.entityRegistry, entityInRegister => {
-				if (_.isEqual(entityInRegister.entity_id, entityString)) {
-					switch (entityInRegister.platform) {
-						case 'cast':
-							if (_.isNil(entityObj.cast)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.cast = [];
-							}
-							entityObj.cast.push(entityInRegister.entity_id);
-							break;
-						case 'androidtv':
-							if (_.isNil(entityObj.androidtv)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.androidtv = [];
-							}
-							entityObj.androidtv.push(entityInRegister.entity_id);
-							break;
-						case 'kodi':
-							if (_.isNil(entityObj.kodi)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.kodi = [];
-							}
-							entityObj.kodi.push(entityInRegister.entity_id);
-							break;
-						default:
-						// pass
-					}
-				}
-			});
-		};
-
-		const entityOrig = entity;
-		if (_.isString(entityOrig)) {
-			entity = {};
-			processEntity(entity, entityOrig);
-		} else if (_.isArray(entityOrig)) {
-			entity = {};
-			_.forEach(entityOrig, entityStr => {
-				processEntity(entity, entityStr);
-			});
-		}
-
 		window.addEventListener('scroll', () => {
 			// todo: improve performance by calculating this when needed only
 			if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this)) {
@@ -269,7 +224,55 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (this.card) {
 			this.previousPageWidth = this.card.offsetWidth;
 		}
+		this.renderInitialData();
+		this.resizeBackground();
+	};
 
+	renderInitialData = async (): Promise<void> => {
+		let { entity } = JSON.parse(JSON.stringify(this.config));
+
+		const processEntity = (entityObj: Record<string, any>, entityString: string): void => {
+			_.forEach(this.entityRegistry, entityInRegister => {
+				if (_.isEqual(entityInRegister.entity_id, entityString)) {
+					switch (entityInRegister.platform) {
+						case 'cast':
+							if (_.isNil(entityObj.cast)) {
+								// eslint-disable-next-line no-param-reassign
+								entityObj.cast = [];
+							}
+							entityObj.cast.push(entityInRegister.entity_id);
+							break;
+						case 'androidtv':
+							if (_.isNil(entityObj.androidtv)) {
+								// eslint-disable-next-line no-param-reassign
+								entityObj.androidtv = [];
+							}
+							entityObj.androidtv.push(entityInRegister.entity_id);
+							break;
+						case 'kodi':
+							if (_.isNil(entityObj.kodi)) {
+								// eslint-disable-next-line no-param-reassign
+								entityObj.kodi = [];
+							}
+							entityObj.kodi.push(entityInRegister.entity_id);
+							break;
+						default:
+						// pass
+					}
+				}
+			});
+		};
+
+		const entityOrig = entity;
+		if (_.isString(entityOrig)) {
+			entity = {};
+			processEntity(entity, entityOrig);
+		} else if (_.isArray(entityOrig)) {
+			entity = {};
+			_.forEach(entityOrig, entityStr => {
+				processEntity(entity, entityStr);
+			});
+		}
 		this.loading = true;
 		this.renderPage();
 		try {
@@ -366,8 +369,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
 			this.renderPage();
 		}
-
-		this.resizeBackground();
 	};
 
 	render = (): void => {
@@ -1489,6 +1490,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	setConfig = (config: any): void => {
+		console.log('setConfig from main');
 		this.plexProtocol = 'http';
 		if (!config.entity || config.entity.length === 0) {
 			throw new Error('You need to define at least one entity');
@@ -1541,6 +1543,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+		this.data = {};
+		this.renderInitialData();
 	};
 
 	getCardSize = (): number => {
