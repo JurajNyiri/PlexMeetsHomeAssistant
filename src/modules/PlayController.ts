@@ -16,26 +16,16 @@ class PlayController {
 
 	plex: Plex;
 
-	libraryName: string;
-
 	runBefore: Array<string> | false = false;
 
 	runAfter: Array<string> | false = false;
 
 	supported: any = supported;
 
-	constructor(
-		hass: HomeAssistant,
-		plex: Plex,
-		entity: Record<string, any>,
-		runBefore: string,
-		runAfter: string,
-		libraryName: string
-	) {
+	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>, runBefore: string, runAfter: string) {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
-		this.libraryName = libraryName;
 		if (!_.isEmpty(runBefore) && this.hass.states[runBefore]) {
 			this.runBefore = runBefore.split('.');
 		}
@@ -129,7 +119,7 @@ class PlayController {
 								'movie',
 								`plex://${JSON.stringify({
 									// eslint-disable-next-line @typescript-eslint/camelcase
-									library_name: this.libraryName,
+									library_name: data.librarySectionTitle,
 									title: data.title
 								})}`
 							);
@@ -140,7 +130,7 @@ class PlayController {
 								'EPISODE',
 								`plex://${JSON.stringify({
 									// eslint-disable-next-line @typescript-eslint/camelcase
-									library_name: this.libraryName,
+									library_name: data.librarySectionTitle,
 									// eslint-disable-next-line @typescript-eslint/camelcase
 									show_name: data.grandparentTitle,
 									// eslint-disable-next-line @typescript-eslint/camelcase
