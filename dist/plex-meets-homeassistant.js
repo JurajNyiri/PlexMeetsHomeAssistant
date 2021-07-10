@@ -19239,10 +19239,17 @@ class PlayController {
     }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 class PlexMeetsHomeAssistantEditor extends HTMLElement {
     constructor() {
         super(...arguments);
+        this.plexPort = false;
+        this.plexProtocol = 'http';
         this.config = {};
+        this.ip = document.createElement('paper-input');
+        this.token = document.createElement('paper-input');
+        this.port = document.createElement('paper-input');
+        this.libraryName = document.createElement('paper-dropdown-menu');
         this.fireEvent = (node, type, detail, options = {}) => {
             // eslint-disable-next-line no-param-reassign
             detail = detail === null || detail === undefined ? {} : detail;
@@ -19255,46 +19262,73 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             node.dispatchEvent(event);
             return event;
         };
-        this.render = () => {
+        this.valueUpdated = () => {
+            this.config.ip = this.ip.value;
+            this.config.token = this.token.value;
+            this.config.port = this.port.value;
+            this.config.libraryName = this.libraryName.value;
+            this.fireEvent(this, 'config-changed', { config: this.config }); // todo remove me
+        };
+        this.render = async () => {
             console.log('render');
             if (this.content)
                 this.content.remove();
             this.content = document.createElement('div');
-            const ip = document.createElement('paper-input');
-            ip.label = 'Plex IP Address';
-            ip.value = this.config.ip;
-            this.content.appendChild(ip);
-            const token = document.createElement('paper-input');
-            token.label = 'Plex Token';
-            token.value = this.config.token;
-            this.content.appendChild(token);
-            const port = document.createElement('paper-input');
-            port.label = 'Plex Port';
-            port.value = this.config.port;
-            port.type = 'number';
-            this.content.appendChild(port);
+            this.ip.label = 'Plex IP Address';
+            this.ip.value = this.config.ip;
+            this.ip.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.ip);
+            this.token.label = 'Plex Token';
+            this.token.value = this.config.token;
+            this.token.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.token);
+            this.port.label = 'Plex Port';
+            this.port.value = this.config.port;
+            this.port.type = 'number';
+            this.port.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.port);
             const addLibraryItem = (text) => {
                 const libraryItem = document.createElement('paper-item');
                 libraryItem.innerHTML = text;
                 return libraryItem;
             };
-            const library = document.createElement('paper-dropdown-menu');
             const libraryItems = document.createElement('paper-listbox');
             libraryItems.appendChild(addLibraryItem('Continue Watching'));
             libraryItems.appendChild(addLibraryItem('Deck'));
             libraryItems.appendChild(addLibraryItem('Recently Added'));
             libraryItems.appendChild(addLibraryItem('Watch Next'));
             libraryItems.slot = 'dropdown-content';
-            library.label = 'Plex Library';
-            library.appendChild(libraryItems);
-            library.style.width = '100%';
-            this.content.appendChild(library);
+            this.libraryName.label = 'Plex Library';
+            this.libraryName.disabled = true;
+            this.libraryName.appendChild(libraryItems);
+            this.libraryName.style.width = '100%';
+            this.libraryName.addEventListener('value-changed', this.valueUpdated);
+            this.content.appendChild(this.libraryName);
             this.appendChild(this.content);
-            this.fireEvent(this, 'config-changed', { config: this.config }); // todo remove me
+            if (this.plex) {
+                try {
+                    const sections = await this.plex.getSections();
+                    lodash.forEach(sections, (section) => {
+                        libraryItems.appendChild(addLibraryItem(section.title));
+                    });
+                    this.libraryName.disabled = false;
+                    this.libraryName.value = this.config.libraryName;
+                }
+                catch (err) {
+                    // pass
+                }
+            }
         };
         this.setConfig = (config) => {
             console.log(config);
             this.config = JSON.parse(JSON.stringify(config));
+            if (config.port) {
+                this.plexPort = config.port;
+            }
+            if (config.protocol) {
+                this.plexProtocol = config.protocol;
+            }
+            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.render();
         };
         this.configChanged = (newConfig) => {
