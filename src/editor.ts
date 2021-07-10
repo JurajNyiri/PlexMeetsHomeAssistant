@@ -32,6 +32,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	entities: Array<any> = [];
 
+	sections: Array<Record<string, any>> = [];
+
+	entitiesRegistry: false | Array<Record<string, any>> = false;
+
+	plexValidSection = document.createElement('div');
+
 	fireEvent = (
 		node: HTMLElement,
 		type: string,
@@ -56,10 +62,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.token = this.token.value;
 			this.config.port = this.port.value;
 			this.config.libraryName = this.libraryName.value;
-			this.config.entity = [];
-			_.forEach(this.entities, entity => {
-				this.config.entity.push(entity.value);
-			});
+			if (!_.isEmpty(this.entities)) {
+				this.config.entity = [];
+				_.forEach(this.entities, entity => {
+					this.config.entity.push(entity.value);
+				});
+			}
 			this.fireEvent(this, 'config-changed', { config: this.config });
 		}
 	};
@@ -70,37 +78,35 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			libraryItem.innerHTML = text;
 			return libraryItem;
 		};
-		const createEntitiesDropdown = (
-			entitiesRegistry: Array<Record<string, any>>,
-			selected: string,
-			changeHandler: Function
-		): HTMLElement => {
-			const entitiesDropDown: any = document.createElement('paper-dropdown-menu');
-			const entities: any = document.createElement('paper-listbox');
+		const createEntitiesDropdown = (selected: string, changeHandler: Function): HTMLElement | false => {
+			if (this.entitiesRegistry) {
+				const entitiesDropDown: any = document.createElement('paper-dropdown-menu');
+				const entities: any = document.createElement('paper-listbox');
 
-			_.forEach(entitiesRegistry, entityRegistry => {
-				if (
-					_.isEqual(entityRegistry.platform, 'cast') ||
-					_.isEqual(entityRegistry.platform, 'kodi') ||
-					_.isEqual(entityRegistry.platform, 'androidtv')
-				) {
-					entities.appendChild(addDropdownItem(entityRegistry.entity_id));
-				}
-			});
-			entities.slot = 'dropdown-content';
-			entitiesDropDown.label = 'Entity';
-			entitiesDropDown.value = selected;
-			entitiesDropDown.appendChild(entities);
-			entitiesDropDown.style.width = '100%';
-			entitiesDropDown.className = 'entitiesDropDown';
-			entitiesDropDown.addEventListener('value-changed', changeHandler);
-			this.entities.push(entitiesDropDown);
-			return entitiesDropDown;
+				_.forEach(this.entitiesRegistry, entityRegistry => {
+					if (
+						_.isEqual(entityRegistry.platform, 'cast') ||
+						_.isEqual(entityRegistry.platform, 'kodi') ||
+						_.isEqual(entityRegistry.platform, 'androidtv')
+					) {
+						entities.appendChild(addDropdownItem(entityRegistry.entity_id));
+					}
+				});
+				entities.slot = 'dropdown-content';
+				entitiesDropDown.label = 'Entity';
+				entitiesDropDown.value = selected;
+				entitiesDropDown.appendChild(entities);
+				entitiesDropDown.style.width = '100%';
+				entitiesDropDown.className = 'entitiesDropDown';
+				entitiesDropDown.addEventListener('value-changed', changeHandler);
+				this.entities.push(entitiesDropDown);
+				return entitiesDropDown;
+			}
+			return false;
 		};
 		if (this.content) this.content.remove();
-		let entitiesRegistry: false | Array<Record<string, any>> = false;
-		if (this.hassObj) {
-			entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
+		if (this.hassObj && !this.entitiesRegistry) {
+			this.entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
 		this.entities = [];
@@ -142,6 +148,19 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.libraryName.addEventListener('value-changed', this.valueUpdated);
 		this.content.appendChild(this.libraryName);
 
+		this.appendChild(this.content);
+
+		// todo: do verify better, do not query plex every time
+		this.sections = [];
+		if (this.plex) {
+			try {
+				this.sections = await this.plex.getSections();
+			} catch (err) {
+				// pass
+			}
+		}
+
+		this.plexValidSection.style.display = 'none';
 		const devicesTitle = document.createElement('h2');
 		devicesTitle.innerHTML = `Devices Configuration`;
 		devicesTitle.style.lineHeight = '29px';
@@ -154,43 +173,42 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		addDeviceButton.style.cursor = 'pointer';
 		addDeviceButton.innerHTML = '+';
 		addDeviceButton.addEventListener('click', () => {
-			if (entitiesRegistry) {
-				this.content.appendChild(createEntitiesDropdown(entitiesRegistry, '', this.valueUpdated));
-				this.scrollTop = this.scrollHeight - this.clientHeight;
+			const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
+			if (entitiesDropdown) {
+				this.content.appendChild(entitiesDropdown);
 			}
 		});
 		devicesTitle.appendChild(addDeviceButton);
 
-		this.content.appendChild(devicesTitle);
+		this.plexValidSection.innerHTML = '';
+		this.plexValidSection.appendChild(devicesTitle);
 		if (_.isString(this.config.entity)) {
 			this.config.entity = [this.config.entity];
 		}
 		if (_.isArray(this.config.entity)) {
 			_.forEach(this.config.entity, entity => {
-				if (entitiesRegistry && _.isString(entity)) {
-					this.content.appendChild(createEntitiesDropdown(entitiesRegistry, entity, this.valueUpdated));
+				if (_.isString(entity)) {
+					/*
+						const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
+						if (entitiesDropdown) {
+							this.plexValidSection.appendChild(entitiesDropdown);
+						}
+                        */
 				}
 			});
 		}
-
-		this.appendChild(this.content);
-
-		if (this.plex) {
-			try {
-				const sections = await this.plex.getSections();
-				_.forEach(sections, (section: Record<string, any>) => {
-					libraryItems.appendChild(addDropdownItem(section.title));
-				});
-				this.libraryName.disabled = false;
-				this.libraryName.value = this.config.libraryName;
-			} catch (err) {
-				// pass
-			}
+		if (!_.isEmpty(this.sections)) {
+			_.forEach(this.sections, (section: Record<string, any>) => {
+				libraryItems.appendChild(addDropdownItem(section.title));
+			});
+			this.libraryName.disabled = false;
+			this.libraryName.value = this.config.libraryName;
+			this.plexValidSection.style.display = 'block';
 		}
+		this.content.appendChild(this.plexValidSection);
 	};
 
 	setConfig = (config: Record<string, any>): void => {
-		console.log(config);
 		this.config = JSON.parse(JSON.stringify(config));
 
 		if (config.port) {
