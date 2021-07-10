@@ -19297,6 +19297,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 libraryItem.innerHTML = text;
                 return libraryItem;
             };
+            this.libraryName.innerHTML = '';
             const libraryItems = document.createElement('paper-listbox');
             libraryItems.appendChild(addLibraryItem('Continue Watching'));
             libraryItems.appendChild(addLibraryItem('Deck'));
