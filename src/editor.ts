@@ -22,6 +22,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	libraryName: any = document.createElement('paper-dropdown-menu');
 
+	tabs: any = document.createElement('paper-tabs');
+
+	devicesTabs = 0;
+
 	fireEvent = (
 		node: HTMLElement,
 		type: string,
@@ -52,6 +56,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		console.log('render');
 		if (this.content) this.content.remove();
 		this.content = document.createElement('div');
+
+		const plexTitle = document.createElement('h2');
+		plexTitle.innerHTML = 'Plex Configuration';
+		this.content.appendChild(plexTitle);
 
 		this.ip.label = 'Plex IP Address';
 		this.ip.value = this.config.ip;
@@ -86,6 +94,28 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.libraryName.style.width = '100%';
 		this.libraryName.addEventListener('value-changed', this.valueUpdated);
 		this.content.appendChild(this.libraryName);
+
+		const devicesTitle = document.createElement('h2');
+		devicesTitle.innerHTML = `Devices Configuration`;
+		devicesTitle.style.lineHeight = '29px';
+		const addDeviceButton = document.createElement('button');
+		addDeviceButton.style.float = 'right';
+		addDeviceButton.style.fontSize = '20px';
+		addDeviceButton.style.cursor = 'pointer';
+		addDeviceButton.innerHTML = '+';
+		addDeviceButton.addEventListener('click', () => {
+			this.devicesTabs += 1;
+			const tab = document.createElement('paper-tab');
+			tab.innerHTML = `${this.devicesTabs}`;
+			this.tabs.appendChild(tab);
+		});
+		devicesTitle.appendChild(addDeviceButton);
+		this.content.appendChild(devicesTitle);
+
+		this.tabs.innerHTML = '';
+		this.tabs.scrollable = 'yes';
+
+		this.content.appendChild(this.tabs);
 
 		this.appendChild(this.content);
 

@@ -19250,6 +19250,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.token = document.createElement('paper-input');
         this.port = document.createElement('paper-input');
         this.libraryName = document.createElement('paper-dropdown-menu');
+        this.tabs = document.createElement('paper-tabs');
+        this.devicesTabs = 0;
         this.fireEvent = (node, type, detail, options = {}) => {
             // eslint-disable-next-line no-param-reassign
             detail = detail === null || detail === undefined ? {} : detail;
@@ -19274,6 +19276,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             if (this.content)
                 this.content.remove();
             this.content = document.createElement('div');
+            const plexTitle = document.createElement('h2');
+            plexTitle.innerHTML = 'Plex Configuration';
+            this.content.appendChild(plexTitle);
             this.ip.label = 'Plex IP Address';
             this.ip.value = this.config.ip;
             this.ip.addEventListener('change', this.valueUpdated);
@@ -19304,6 +19309,25 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.libraryName.style.width = '100%';
             this.libraryName.addEventListener('value-changed', this.valueUpdated);
             this.content.appendChild(this.libraryName);
+            const devicesTitle = document.createElement('h2');
+            devicesTitle.innerHTML = `Devices Configuration`;
+            devicesTitle.style.lineHeight = '29px';
+            const addDeviceButton = document.createElement('button');
+            addDeviceButton.style.float = 'right';
+            addDeviceButton.style.fontSize = '20px';
+            addDeviceButton.style.cursor = 'pointer';
+            addDeviceButton.innerHTML = '+';
+            addDeviceButton.addEventListener('click', () => {
+                this.devicesTabs += 1;
+                const tab = document.createElement('paper-tab');
+                tab.innerHTML = `${this.devicesTabs}`;
+                this.tabs.appendChild(tab);
+            });
+            devicesTitle.appendChild(addDeviceButton);
+            this.content.appendChild(devicesTitle);
+            this.tabs.innerHTML = '';
+            this.tabs.scrollable = 'yes';
+            this.content.appendChild(this.tabs);
             this.appendChild(this.content);
             if (this.plex) {
                 try {
