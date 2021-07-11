@@ -20538,12 +20538,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.loading = true;
             this.renderPage();
             try {
-                if (this.plex) {
-                    if (this.hassObj) {
-                        this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
-                        if (this.playController) {
-                            await this.playController.init();
-                        }
+                if (this.plex && this.hassObj) {
+                    this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
+                    if (this.playController) {
+                        await this.playController.init();
                     }
                     await this.plex.init();
                     try {
@@ -20620,7 +20618,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.render();
                 }
                 else {
-                    throw Error('Plex not initialized.');
+                    setTimeout(() => {
+                        this.renderInitialData();
+                    }, 250);
                 }
             }
             catch (err) {
