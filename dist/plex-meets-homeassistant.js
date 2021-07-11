@@ -21434,7 +21434,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.episodesElem.innerHTML = '';
                         this.episodesElem.style.transition = `0s`;
                         this.episodesElem.style.top = `${top + 2000}px`;
-                        if (this.showExtras) {
+                        if (lodash.isEqual(data.type, 'season')) {
+                            const episodesData = await this.plex.getLibraryData(data.key.split('/')[3]);
+                            lodash.forEach(episodesData, episodeData => {
+                                if (this.episodesElem && this.playController && this.plex) {
+                                    this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData));
+                                }
+                            });
+                        }
+                        else if (this.showExtras) {
                             const extras = dataDetails.Extras.Metadata;
                             lodash.forEach(extras, extrasData => {
                                 if (this.episodesElem && this.playController && this.plex) {
