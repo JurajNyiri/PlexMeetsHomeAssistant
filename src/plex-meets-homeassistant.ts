@@ -865,16 +865,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.detailElem.style.transition = '0s';
 			this.detailElem.style.top = `${top - 1000}px`;
 			clearInterval(this.showDetailsTimeout);
-			this.showDetailsTimeout = setTimeout(() => {
-				if (this.detailElem) {
+			// eslint-disable-next-line @typescript-eslint/no-misused-promises
+			this.showDetailsTimeout = setTimeout(async () => {
+				if (this.detailElem && this.plex) {
 					this.detailElem.style.visibility = 'visible';
 					this.detailElem.style.transition = '0.7s';
 					this.detailElem.style.top = `${top}px`;
 
+					let mainData = data;
+					if (_.isEqual(data.type, 'season')) {
+						mainData = await this.plex.getDetails(data.parentKey.split('/')[3]);
+						mainData.title = `${mainData.title} - ${data.title}`;
+					}
 					const directorElem = this.getElementsByClassName('metaInfoDetailsData')[0] as HTMLElement;
 					if (directorElem.parentElement) {
-						if (data.Director && data.Director.length > 0) {
-							directorElem.innerHTML = escapeHtml(data.Director[0].tag);
+						if (mainData.Director && mainData.Director.length > 0) {
+							directorElem.innerHTML = escapeHtml(mainData.Director[0].tag);
 							directorElem.parentElement.style.display = 'table-row';
 						} else {
 							directorElem.parentElement.style.display = 'none';
@@ -883,8 +889,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 					const writerElem = this.getElementsByClassName('metaInfoDetailsData')[1] as HTMLElement;
 					if (writerElem.parentElement) {
-						if (data.Writer && data.Writer.length > 0) {
-							writerElem.innerHTML = escapeHtml(data.Writer[0].tag);
+						if (mainData.Writer && mainData.Writer.length > 0) {
+							writerElem.innerHTML = escapeHtml(mainData.Writer[0].tag);
 							writerElem.parentElement.style.display = 'table-row';
 						} else {
 							writerElem.parentElement.style.display = 'none';
@@ -892,8 +898,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 					const studioElem = this.getElementsByClassName('metaInfoDetailsData')[2] as HTMLElement;
 					if (studioElem.parentElement) {
-						if (data.studio) {
-							studioElem.innerHTML = escapeHtml(data.studio);
+						if (mainData.studio) {
+							studioElem.innerHTML = escapeHtml(mainData.studio);
 							studioElem.parentElement.style.display = 'table-row';
 						} else {
 							studioElem.parentElement.style.display = 'none';
@@ -901,9 +907,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 					const genreElem = this.getElementsByClassName('metaInfoDetailsData')[3] as HTMLElement;
 					if (genreElem.parentElement) {
-						if (data.Genre && data.Genre.length > 0) {
+						if (mainData.Genre && mainData.Genre.length > 0) {
 							let genre = '';
-							_.forEach(data.Genre, tag => {
+							_.forEach(mainData.Genre, tag => {
 								genre += `${tag.tag}, `;
 							});
 							genreElem.innerHTML = escapeHtml(genre.slice(0, -2));
@@ -912,22 +918,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							genreElem.parentElement.style.display = 'none';
 						}
 					}
-					(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(data.title);
-					(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(data.year);
-					(this.getElementsByClassName('metaInfo')[0] as HTMLElement).innerHTML = `${(data.duration !== undefined
+					(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(mainData.title);
+					(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.year);
+					(this.getElementsByClassName('metaInfo')[0] as HTMLElement).innerHTML = `${(mainData.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
-								parseInt(escapeHtml(data.duration), 10) / 60 / 1000
+								parseInt(escapeHtml(mainData.duration), 10) / 60 / 1000
 						  )} min</span>`
 						: '') +
-						(data.contentRating !== undefined
-							? `<span class='contentRatingDetail'>${escapeHtml(data.contentRating)}</span>`
+						(mainData.contentRating !== undefined
+							? `<span class='contentRatingDetail'>${escapeHtml(mainData.contentRating)}</span>`
 							: '') +
-						(data.rating !== undefined
-							? `<span class='ratingDetail'>${data.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${Math.round(
-									parseFloat(escapeHtml(data.rating)) * 10
+						(mainData.rating !== undefined
+							? `<span class='ratingDetail'>${mainData.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${Math.round(
+									parseFloat(escapeHtml(mainData.rating)) * 10
 							  ) / 10}</span>`
 							: '')}<div class='clear'></div>`;
-					(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(data.summary);
+					(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(mainData.summary);
 
 					/* todo temp disabled
 					if (data.type === 'movie') {
