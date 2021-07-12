@@ -175,7 +175,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		window.addEventListener('scroll', () => {
 			// todo: improve performance by calculating this when needed only
-			if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this)) {
+			if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this) && this.isVisible) {
 				const seasonContainers = this.getElementsByClassName('seasonContainer') as HTMLCollectionOf<HTMLElement>;
 				const episodeContainers = this.getElementsByClassName('episodeContainer') as HTMLCollectionOf<HTMLElement>;
 				const seasonElems = this.getElementsByClassName('seasonElem') as HTMLCollectionOf<HTMLElement>;
@@ -215,23 +215,25 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {
-			if (!this.detailsShown) {
-				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-				let isFullScreen = false;
-				if (videoPlayer.children.length > 0) {
-					isFullScreen = isVideoFullScreen(this);
-				}
+			if (this.isVisible) {
+				if (!this.detailsShown) {
+					const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+					let isFullScreen = false;
+					if (videoPlayer.children.length > 0) {
+						isFullScreen = isVideoFullScreen(this);
+					}
 
-				if (this.card && this.movieElems.length > 0 && !isFullScreen) {
-					if (this.previousPageWidth !== this.card.offsetWidth) {
-						this.previousPageWidth = this.card.offsetWidth;
-						this.renderPage();
-						const contentbg = this.getElementsByClassName('contentbg');
-						this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
+					if (this.card && this.movieElems.length > 0 && !isFullScreen) {
+						if (this.previousPageWidth !== this.card.offsetWidth) {
+							this.previousPageWidth = this.card.offsetWidth;
+							this.renderPage();
+							const contentbg = this.getElementsByClassName('contentbg');
+							this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
+						}
 					}
 				}
+				this.renderNewElementsIfNeeded();
 			}
-			this.renderNewElementsIfNeeded();
 		});
 
 		if (this.card) {
