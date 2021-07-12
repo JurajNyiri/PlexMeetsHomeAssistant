@@ -19461,6 +19461,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.showSearch = document.createElement('paper-dropdown-menu');
         this.devicesTabs = 0;
         this.entities = [];
+        this.scriptEntities = [];
         this.sections = [];
         this.entitiesRegistry = false;
         this.plexValidSection = document.createElement('div');
@@ -19565,6 +19566,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             if (this.content)
                 this.content.remove();
             if (this.hassObj && !this.entitiesRegistry) {
+                lodash.forOwn(this.hassObj.states, (value, key) => {
+                    if (lodash.startsWith(key, 'script.')) {
+                        this.scriptEntities.push(key);
+                    }
+                });
+                console.log(this.scriptEntities);
                 this.entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
             this.entities = [];

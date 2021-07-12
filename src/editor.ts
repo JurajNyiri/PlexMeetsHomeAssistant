@@ -46,6 +46,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	entities: Array<any> = [];
 
+	scriptEntities: Array<string> = [];
+
 	sections: Array<Record<string, any>> = [];
 
 	entitiesRegistry: false | Array<Record<string, any>> = false;
@@ -159,6 +161,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		};
 		if (this.content) this.content.remove();
 		if (this.hassObj && !this.entitiesRegistry) {
+			_.forOwn(this.hassObj.states, (value, key) => {
+				if (_.startsWith(key, 'script.')) {
+					this.scriptEntities.push(key);
+				}
+			});
+			console.log(this.scriptEntities);
 			this.entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
