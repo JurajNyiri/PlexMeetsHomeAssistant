@@ -320,16 +320,35 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.showExtras);
 
 		let hasUIConfig = true;
+		let canConvert = true;
 		if (_.isArray(this.config.entity)) {
 			// eslint-disable-next-line consistent-return
 			_.forEach(this.config.entity, entity => {
 				if (_.isObjectLike(entity)) {
+					canConvert = !_.includes(_.keys(this.config.entity), 'plexPlayer');
 					hasUIConfig = false;
 					return false;
 				}
 			});
 		} else if (_.isObjectLike(this.config.entity)) {
+			canConvert = !_.includes(_.keys(this.config.entity), 'plexPlayer');
 			hasUIConfig = false;
+			if (canConvert) {
+				const convertedEntities: Array<string> = [];
+				hasUIConfig = true;
+				if (_.isObjectLike(this.config.entity)) {
+					_.forOwn(this.config.entity, value => {
+						if (_.isString(value)) {
+							convertedEntities.push(value);
+						} else if (_.isArray(value)) {
+							_.forEach(value, valueStr => {
+								convertedEntities.push(valueStr);
+							});
+						}
+					});
+				}
+				this.config.entity = convertedEntities;
+			}
 		}
 
 		const devicesTitle = document.createElement('h2');

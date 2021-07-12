@@ -19714,17 +19714,37 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.showExtras.value = showExtrasValue;
             this.plexValidSection.appendChild(this.showExtras);
             let hasUIConfig = true;
+            let canConvert = true;
             if (lodash.isArray(this.config.entity)) {
                 // eslint-disable-next-line consistent-return
                 lodash.forEach(this.config.entity, entity => {
                     if (lodash.isObjectLike(entity)) {
+                        canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
                         hasUIConfig = false;
                         return false;
                     }
                 });
             }
             else if (lodash.isObjectLike(this.config.entity)) {
+                canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
                 hasUIConfig = false;
+                if (canConvert) {
+                    const convertedEntities = [];
+                    hasUIConfig = true;
+                    if (lodash.isObjectLike(this.config.entity)) {
+                        lodash.forOwn(this.config.entity, value => {
+                            if (lodash.isString(value)) {
+                                convertedEntities.push(value);
+                            }
+                            else if (lodash.isArray(value)) {
+                                lodash.forEach(value, valueStr => {
+                                    convertedEntities.push(valueStr);
+                                });
+                            }
+                        });
+                    }
+                    this.config.entity = convertedEntities;
+                }
             }
             const devicesTitle = document.createElement('h2');
             devicesTitle.innerHTML = `Devices Configuration`;
