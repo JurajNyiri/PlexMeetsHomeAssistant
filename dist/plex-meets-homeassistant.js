@@ -20818,34 +20818,58 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.renderInitialData = async () => {
             let { entity } = JSON.parse(JSON.stringify(this.config));
             const processEntity = (entityObj, entityString) => {
-                lodash.forEach(this.entityRegistry, entityInRegister => {
-                    if (lodash.isEqual(entityInRegister.entity_id, entityString)) {
-                        switch (entityInRegister.platform) {
-                            case 'cast':
-                                if (lodash.isNil(entityObj.cast)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.cast = [];
-                                }
-                                entityObj.cast.push(entityInRegister.entity_id);
-                                break;
-                            case 'androidtv':
-                                if (lodash.isNil(entityObj.androidtv)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.androidtv = [];
-                                }
-                                entityObj.androidtv.push(entityInRegister.entity_id);
-                                break;
-                            case 'kodi':
-                                if (lodash.isNil(entityObj.kodi)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.kodi = [];
-                                }
-                                entityObj.kodi.push(entityInRegister.entity_id);
-                                break;
-                            // pass
-                        }
+                let realEntityString = entityString;
+                let isPlexPlayer = false;
+                if (lodash.startsWith(entityString, 'plexPlayer | ')) {
+                    // eslint-disable-next-line prefer-destructuring
+                    realEntityString = entityString.split(' | ')[3];
+                    isPlexPlayer = true;
+                }
+                else if (lodash.startsWith(entityString, 'androidtv | ') ||
+                    lodash.startsWith(entityString, 'kodi | ') ||
+                    lodash.startsWith(entityString, 'cast | ')) {
+                    // eslint-disable-next-line prefer-destructuring
+                    realEntityString = entityString.split(' | ')[1];
+                    isPlexPlayer = false;
+                }
+                if (isPlexPlayer) {
+                    if (lodash.isNil(entityObj.plexPlayer)) {
+                        // eslint-disable-next-line no-param-reassign
+                        entityObj.plexPlayer = [];
                     }
-                });
+                    entityObj.plexPlayer.push(realEntityString);
+                }
+                else {
+                    lodash.forEach(this.entityRegistry, entityInRegister => {
+                        if (lodash.isEqual(entityInRegister.entity_id, realEntityString)) {
+                            switch (entityInRegister.platform) {
+                                case 'cast':
+                                    if (lodash.isNil(entityObj.cast)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.cast = [];
+                                    }
+                                    entityObj.cast.push(entityInRegister.entity_id);
+                                    break;
+                                case 'androidtv':
+                                    if (lodash.isNil(entityObj.androidtv)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.androidtv = [];
+                                    }
+                                    entityObj.androidtv.push(entityInRegister.entity_id);
+                                    break;
+                                case 'kodi':
+                                    if (lodash.isNil(entityObj.kodi)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.kodi = [];
+                                    }
+                                    entityObj.kodi.push(entityInRegister.entity_id);
+                                    break;
+                                // pass
+                            }
+                        }
+                    });
+                }
+                console.log(realEntityString);
             };
             const entityOrig = entity;
             if (lodash.isString(entityOrig)) {
@@ -20858,6 +20882,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     processEntity(entity, entityStr);
                 });
             }
+            console.log(entity);
             this.loading = true;
             this.renderPage();
             try {

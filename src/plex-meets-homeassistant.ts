@@ -235,35 +235,59 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		let { entity } = JSON.parse(JSON.stringify(this.config));
 
 		const processEntity = (entityObj: Record<string, any>, entityString: string): void => {
-			_.forEach(this.entityRegistry, entityInRegister => {
-				if (_.isEqual(entityInRegister.entity_id, entityString)) {
-					switch (entityInRegister.platform) {
-						case 'cast':
-							if (_.isNil(entityObj.cast)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.cast = [];
-							}
-							entityObj.cast.push(entityInRegister.entity_id);
-							break;
-						case 'androidtv':
-							if (_.isNil(entityObj.androidtv)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.androidtv = [];
-							}
-							entityObj.androidtv.push(entityInRegister.entity_id);
-							break;
-						case 'kodi':
-							if (_.isNil(entityObj.kodi)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.kodi = [];
-							}
-							entityObj.kodi.push(entityInRegister.entity_id);
-							break;
-						default:
-						// pass
-					}
+			let realEntityString = entityString;
+			let isPlexPlayer = false;
+			if (_.startsWith(entityString, 'plexPlayer | ')) {
+				// eslint-disable-next-line prefer-destructuring
+				realEntityString = entityString.split(' | ')[3];
+				isPlexPlayer = true;
+			} else if (
+				_.startsWith(entityString, 'androidtv | ') ||
+				_.startsWith(entityString, 'kodi | ') ||
+				_.startsWith(entityString, 'cast | ')
+			) {
+				// eslint-disable-next-line prefer-destructuring
+				realEntityString = entityString.split(' | ')[1];
+				isPlexPlayer = false;
+			}
+			if (isPlexPlayer) {
+				if (_.isNil(entityObj.plexPlayer)) {
+					// eslint-disable-next-line no-param-reassign
+					entityObj.plexPlayer = [];
 				}
-			});
+				entityObj.plexPlayer.push(realEntityString);
+			} else {
+				_.forEach(this.entityRegistry, entityInRegister => {
+					if (_.isEqual(entityInRegister.entity_id, realEntityString)) {
+						switch (entityInRegister.platform) {
+							case 'cast':
+								if (_.isNil(entityObj.cast)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.cast = [];
+								}
+								entityObj.cast.push(entityInRegister.entity_id);
+								break;
+							case 'androidtv':
+								if (_.isNil(entityObj.androidtv)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.androidtv = [];
+								}
+								entityObj.androidtv.push(entityInRegister.entity_id);
+								break;
+							case 'kodi':
+								if (_.isNil(entityObj.kodi)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.kodi = [];
+								}
+								entityObj.kodi.push(entityInRegister.entity_id);
+								break;
+							default:
+							// pass
+						}
+					}
+				});
+			}
+			console.log(realEntityString);
 		};
 
 		const entityOrig = entity;
@@ -276,6 +300,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				processEntity(entity, entityStr);
 			});
 		}
+		console.log(entity);
 		this.loading = true;
 		this.renderPage();
 		try {
