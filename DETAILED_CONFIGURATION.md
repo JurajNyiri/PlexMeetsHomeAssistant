@@ -352,3 +352,42 @@ entity:
       port: 32400
       protocol: http
 ```
+
+## Sorting
+
+You can use _:desc_ or _:asc_ after every value to change the order from ascending to descending. For example, titlesort would become titleSort:asc, or titleSort:desc.
+
+### TV Shows
+
+| Sort Value            | Description                                       |
+| --------------------- | ------------------------------------------------- |
+| titleSort             | Sorts by title, removing words like "the"         |
+| title                 | Sorts by title, without removing words like "the" |
+| year                  | Sorts by year                                     |
+| originallyAvailableAt | Sorts by release date                             |
+| rating                | Sorts by critic rating                            |
+| audienceRating        | Sorts by audience rating                          |
+| userRating            | Sorts by user rating                              |
+| contentRating         | Sorts by content rating                           |
+| unviewedLeafCount     | Sorts by unplayed count                           |
+| episode.addedAt       | Sorts by last episode date added                  |
+| addedAt               | Sorts by date added                               |
+| lastViewedAt          | Sorts by date viewed                              |
+
+### Movies
+
+| Sort Value            | Description                                       |
+| --------------------- | ------------------------------------------------- |
+| titleSort             | Sorts by title, removing words like "the"         |
+| title                 | Sorts by title, without removing words like "the" |
+| originallyAvailableAt | Sorts by release date                             |
+| rating                | Sorts by critic rating                            |
+| audienceRating        | Sorts by audience rating                          |
+| userRating            | Sorts by user rating                              |
+| duration              | Sorts by duration                                 |
+| viewOffset            | Sorts by progress                                 |
+| viewCount             | Sorts by plays                                    |
+| addedAt               | Sorts by date added                               |
+| lastViewedAt          | Sorts by date viewed                              |
+| mediaHeight           | Sorts by resolution                               |
+| mediaBitrate          | Sorts by bitrate                                  |
