@@ -19978,6 +19978,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             if (!lodash.isNil(config.runAfter)) {
                 this.config.runAfter = config.runAfter;
             }
+            if (lodash.isNumber(this.config.maxCount)) {
+                this.config.maxCount = `${this.config.maxCount}`;
+            }
             this.render();
         };
         this.configChanged = (newConfig) => {
