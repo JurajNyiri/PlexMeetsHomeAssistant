@@ -332,13 +332,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			hasUIConfig = false;
 		}
 
+		const devicesTitle = document.createElement('h2');
+		devicesTitle.innerHTML = `Devices Configuration`;
+		devicesTitle.style.lineHeight = '29px';
+		devicesTitle.style.marginBottom = '0px';
+		devicesTitle.style.marginTop = '20px';
 		if (hasUIConfig) {
-			const devicesTitle = document.createElement('h2');
-			devicesTitle.innerHTML = `Devices Configuration`;
-			devicesTitle.style.lineHeight = '29px';
-			devicesTitle.style.marginBottom = '0px';
-			devicesTitle.style.marginTop = '20px';
-
 			const addDeviceButton = document.createElement('button');
 			addDeviceButton.style.float = 'right';
 			addDeviceButton.style.fontSize = '20px';
@@ -351,8 +350,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				}
 			});
 			devicesTitle.appendChild(addDeviceButton);
+		}
 
-			this.plexValidSection.appendChild(devicesTitle);
+		this.plexValidSection.appendChild(devicesTitle);
+		// todo: convert entities setup to simple one if not using plexPlayer
+		if (hasUIConfig) {
 			if (_.isString(this.config.entity)) {
 				this.config.entity = [this.config.entity];
 			}
@@ -366,6 +368,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					}
 				});
 			}
+		} else {
+			const entitiesUINotAvailable = document.createElement('div');
+			entitiesUINotAvailable.innerHTML =
+				'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.';
+			this.plexValidSection.appendChild(entitiesUINotAvailable);
 		}
 
 		if (!_.isEmpty(this.sections)) {
