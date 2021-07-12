@@ -56,6 +56,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	sections: Array<Record<string, any>> = [];
 
+	clients: Record<string, any> = {};
+
 	entitiesRegistry: false | Array<Record<string, any>> = false;
 
 	plexValidSection = document.createElement('div');
@@ -157,15 +159,33 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				const entities: any = document.createElement('paper-listbox');
 
 				entities.appendChild(addDropdownItem(''));
+				const addedEntityStrings: Array<string> = [];
 				_.forEach(this.entitiesRegistry, entityRegistry => {
 					if (
 						_.isEqual(entityRegistry.platform, 'cast') ||
 						_.isEqual(entityRegistry.platform, 'kodi') ||
 						_.isEqual(entityRegistry.platform, 'androidtv')
 					) {
-						entities.appendChild(addDropdownItem(entityRegistry.entity_id));
+						const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
+						entities.appendChild(addDropdownItem(entityName));
+						addedEntityStrings.push(entityName);
 					}
 				});
+				_.forEach(this.clients, value => {
+					const entityName = `plexPlayer | ${value.name} | ${value.address} | ${value.machineIdentifier}`;
+					entities.appendChild(addDropdownItem(entityName));
+					addedEntityStrings.push(entityName);
+				});
+
+				if (_.isArray(this.config.entity)) {
+					_.forEach(this.config.entity, value => {
+						if (!_.includes(addedEntityStrings, value)) {
+							entities.appendChild(addDropdownItem(value));
+							addedEntityStrings.push(value);
+						}
+					});
+				}
+
 				entities.slot = 'dropdown-content';
 				entitiesDropDown.label = 'Entity';
 				entitiesDropDown.value = selected;
@@ -245,15 +265,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.appendChild(this.content);
 
-		// todo: do verify better, do not query plex every time
-		this.sections = [];
-
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 		this.sections = await this.plex.getSections();
+		this.clients = await this.plex.getClients();
 
 		this.plexValidSection.style.display = 'none';
 		this.plexValidSection.innerHTML = '';
 
+		// todo: modify this to work with plexPlayer
 		let hasUIConfig = true;
 		let canConvert = true;
 		if (_.isArray(this.config.entity)) {

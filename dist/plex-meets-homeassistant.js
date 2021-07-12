@@ -19466,6 +19466,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.entities = [];
         this.scriptEntities = [];
         this.sections = [];
+        this.clients = {};
         this.entitiesRegistry = false;
         this.plexValidSection = document.createElement('div');
         this.loaded = false;
@@ -19560,13 +19561,29 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     const entitiesDropDown = document.createElement('paper-dropdown-menu');
                     const entities = document.createElement('paper-listbox');
                     entities.appendChild(addDropdownItem(''));
+                    const addedEntityStrings = [];
                     lodash.forEach(this.entitiesRegistry, entityRegistry => {
                         if (lodash.isEqual(entityRegistry.platform, 'cast') ||
                             lodash.isEqual(entityRegistry.platform, 'kodi') ||
                             lodash.isEqual(entityRegistry.platform, 'androidtv')) {
-                            entities.appendChild(addDropdownItem(entityRegistry.entity_id));
+                            const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
+                            entities.appendChild(addDropdownItem(entityName));
+                            addedEntityStrings.push(entityName);
                         }
                     });
+                    lodash.forEach(this.clients, value => {
+                        const entityName = `plexPlayer | ${value.name} | ${value.address} | ${value.machineIdentifier}`;
+                        entities.appendChild(addDropdownItem(entityName));
+                        addedEntityStrings.push(entityName);
+                    });
+                    if (lodash.isArray(this.config.entity)) {
+                        lodash.forEach(this.config.entity, value => {
+                            if (!lodash.includes(addedEntityStrings, value)) {
+                                entities.appendChild(addDropdownItem(value));
+                                addedEntityStrings.push(value);
+                            }
+                        });
+                    }
                     entities.slot = 'dropdown-content';
                     entitiesDropDown.label = 'Entity';
                     entitiesDropDown.value = selected;
@@ -19639,12 +19656,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.libraryName.addEventListener('value-changed', this.valueUpdated);
             this.content.appendChild(this.libraryName);
             this.appendChild(this.content);
-            // todo: do verify better, do not query plex every time
-            this.sections = [];
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.sections = await this.plex.getSections();
+            this.clients = await this.plex.getClients();
             this.plexValidSection.style.display = 'none';
             this.plexValidSection.innerHTML = '';
+            // todo: modify this to work with plexPlayer
             let hasUIConfig = true;
             let canConvert = true;
             if (lodash.isArray(this.config.entity)) {
