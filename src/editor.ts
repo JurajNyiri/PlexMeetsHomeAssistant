@@ -30,6 +30,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	tabs: any = document.createElement('paper-tabs');
 
+	sort: any = document.createElement('paper-dropdown-menu');
+
+	sortOrder: any = document.createElement('paper-dropdown-menu');
+
 	devicesTabs = 0;
 
 	hassObj: HomeAssistant | undefined;
@@ -61,6 +65,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	};
 
 	valueUpdated = (): void => {
+		console.log('valueUpdated');
 		if (!_.isEmpty(this.libraryName.value)) {
 			const originalConfig = _.clone(this.config);
 			this.config.ip = this.ip.value;
@@ -69,21 +74,24 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.libraryName = this.libraryName.value;
 
 			this.config.protocol = this.protocol.value;
+			this.config.sort = `${this.sort.value}:${this.sortOrder.value}`;
 			if (_.isEmpty(this.maxCount.value)) {
 				this.config.maxCount = '';
 			} else {
-				this.config.maxCount = parseInt(this.maxCount.value, 10);
+				this.config.maxCount = this.maxCount.value;
 			}
 
 			if (!_.isEmpty(this.entities)) {
 				this.config.entity = [];
 				_.forEach(this.entities, entity => {
-					if (!_.isEmpty(entity.value)) {
+					if (!_.isEmpty(entity.value) && !_.includes(this.config.entity, entity.value)) {
 						this.config.entity.push(entity.value);
 					}
 				});
 			}
 			if (!_.isEqual(this.config, originalConfig)) {
+				console.log(this.config);
+				console.log(originalConfig);
 				this.fireEvent(this, 'config-changed', { config: this.config });
 			}
 		}
@@ -168,12 +176,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.port.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.port);
 
-		this.maxCount.label = 'Maximum number of items to display';
-		this.maxCount.value = this.config.maxCount;
-		this.maxCount.type = 'number';
-		this.maxCount.addEventListener('change', this.valueUpdated);
-		this.content.appendChild(this.maxCount);
-
 		this.libraryName.innerHTML = '';
 		const libraryItems: any = document.createElement('paper-listbox');
 		libraryItems.appendChild(addDropdownItem('Continue Watching'));
@@ -201,6 +203,69 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		}
 
 		this.plexValidSection.style.display = 'none';
+		this.plexValidSection.innerHTML = '';
+
+		const viewTitle = document.createElement('h2');
+		viewTitle.innerHTML = `View Configuration`;
+		viewTitle.style.lineHeight = '29px';
+		viewTitle.style.marginBottom = '0px';
+		viewTitle.style.marginTop = '20px';
+		this.plexValidSection.appendChild(viewTitle);
+
+		this.maxCount.label = 'Maximum number of items to display';
+		this.maxCount.value = this.config.maxCount;
+		this.maxCount.type = 'number';
+		this.maxCount.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.maxCount);
+
+		this.sort.innerHTML = '';
+		const sortItems: any = document.createElement('paper-listbox');
+		sortItems.appendChild(addDropdownItem('titleSort'));
+		sortItems.appendChild(addDropdownItem('title'));
+		sortItems.appendChild(addDropdownItem('year'));
+		sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
+		sortItems.appendChild(addDropdownItem('rating'));
+		sortItems.appendChild(addDropdownItem('audienceRating'));
+		sortItems.appendChild(addDropdownItem('userRating'));
+		sortItems.appendChild(addDropdownItem('contentRating'));
+		sortItems.appendChild(addDropdownItem('unviewedLeafCount'));
+		sortItems.appendChild(addDropdownItem('episode.addedAt'));
+		sortItems.appendChild(addDropdownItem('addedAt'));
+		sortItems.appendChild(addDropdownItem('lastViewedAt'));
+		sortItems.slot = 'dropdown-content';
+		this.sort.label = 'Sort';
+		this.sort.appendChild(sortItems);
+		this.sort.style.width = '100%';
+		this.sort.addEventListener('value-changed', this.valueUpdated);
+		if (_.isEmpty(this.config.sort)) {
+			this.sort.value = 'title';
+		} else {
+			// eslint-disable-next-line prefer-destructuring
+			this.sort.value = this.config.sort.split(':')[0];
+		}
+		this.plexValidSection.appendChild(this.sort);
+
+		this.sortOrder.innerHTML = '';
+		const sortOrderItems: any = document.createElement('paper-listbox');
+		sortOrderItems.appendChild(addDropdownItem('asc'));
+		sortOrderItems.appendChild(addDropdownItem('desc'));
+		sortOrderItems.slot = 'dropdown-content';
+		this.sortOrder.label = 'Sort Order';
+		this.sortOrder.appendChild(sortOrderItems);
+		this.sortOrder.style.width = '100%';
+		this.sortOrder.addEventListener('value-changed', this.valueUpdated);
+		if (_.isEmpty(this.config.sort)) {
+			this.sortOrder.value = 'asc';
+		} else {
+			const sortOrder = this.config.sort.split(':')[1];
+			if (_.isEmpty(sortOrder)) {
+				this.sortOrder.value = 'asc';
+			} else {
+				this.sortOrder.value = sortOrder;
+			}
+		}
+		this.plexValidSection.appendChild(this.sortOrder);
+
 		const devicesTitle = document.createElement('h2');
 		devicesTitle.innerHTML = `Devices Configuration`;
 		devicesTitle.style.lineHeight = '29px';
@@ -220,7 +285,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		});
 		devicesTitle.appendChild(addDeviceButton);
 
-		this.plexValidSection.innerHTML = '';
 		this.plexValidSection.appendChild(devicesTitle);
 		if (_.isString(this.config.entity)) {
 			this.config.entity = [this.config.entity];
@@ -257,6 +321,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.plexProtocol = config.protocol;
 		} else {
 			this.config.protocol = 'http';
+		}
+
+		if (!config.sort) {
+			this.config.sort = 'titleSort:asc';
 		}
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);

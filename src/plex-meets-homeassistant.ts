@@ -353,6 +353,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.loading = false;
 				this.render();
 			} else {
+				console.log('RETRY');
 				setTimeout(() => {
 					this.renderInitialData();
 				}, 250);
