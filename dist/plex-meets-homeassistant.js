@@ -19459,6 +19459,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.playTrailer = document.createElement('paper-dropdown-menu');
         this.showExtras = document.createElement('paper-dropdown-menu');
         this.showSearch = document.createElement('paper-dropdown-menu');
+        this.runBefore = document.createElement('paper-dropdown-menu');
+        this.runAfter = document.createElement('paper-dropdown-menu');
         this.devicesTabs = 0;
         this.entities = [];
         this.scriptEntities = [];
@@ -19528,6 +19530,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 else if (lodash.isEqual(this.showSearch.value, 'No')) {
                     this.config.showSearch = false;
                 }
+                this.config.runBefore = this.runBefore.value;
+                this.config.runAfter = this.runAfter.value;
             }
             if (!lodash.isEqual(this.config, originalConfig)) {
                 this.fireEvent(this, 'config-changed', { config: this.config });
@@ -19571,7 +19575,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         this.scriptEntities.push(key);
                     }
                 });
-                console.log(this.scriptEntities);
                 this.entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
             this.entities = [];
@@ -19742,6 +19745,32 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             this.showSearch.value = showSearchValue;
             this.plexValidSection.appendChild(this.showSearch);
+            this.runBefore.innerHTML = '';
+            const runBeforeItems = document.createElement('paper-listbox');
+            runBeforeItems.appendChild(addDropdownItem(''));
+            lodash.forEach(this.scriptEntities, entity => {
+                runBeforeItems.appendChild(addDropdownItem(entity));
+            });
+            runBeforeItems.slot = 'dropdown-content';
+            this.runBefore.label = 'Script to execute before starting the media';
+            this.runBefore.appendChild(runBeforeItems);
+            this.runBefore.style.width = '100%';
+            this.runBefore.addEventListener('value-changed', this.valueUpdated);
+            this.runBefore.value = this.config.runBefore;
+            this.plexValidSection.appendChild(this.runBefore);
+            this.runAfter.innerHTML = '';
+            const runAfterItems = document.createElement('paper-listbox');
+            runAfterItems.appendChild(addDropdownItem(''));
+            lodash.forEach(this.scriptEntities, entity => {
+                runAfterItems.appendChild(addDropdownItem(entity));
+            });
+            runAfterItems.slot = 'dropdown-content';
+            this.runAfter.label = 'Script to execute after starting the media';
+            this.runAfter.appendChild(runAfterItems);
+            this.runAfter.style.width = '100%';
+            this.runAfter.addEventListener('value-changed', this.valueUpdated);
+            this.runAfter.value = this.config.runAfter;
+            this.plexValidSection.appendChild(this.runAfter);
             let hasUIConfig = true;
             let canConvert = true;
             if (lodash.isArray(this.config.entity)) {
@@ -19861,6 +19890,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             else {
                 this.config.showSearch = true;
+            }
+            if (!lodash.isNil(config.runBefore)) {
+                this.config.runBefore = config.runBefore;
+            }
+            if (!lodash.isNil(config.runAfter)) {
+                this.config.runAfter = config.runAfter;
             }
             this.render();
         };
@@ -21911,10 +21946,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.maxCount && config.maxCount !== '') {
                 this.maxCount = config.maxCount;
             }
-            if (config.runBefore) {
+            if (config.runBefore && !lodash.isEqual(config.runBefore, '')) {
                 this.runBefore = config.runBefore;
             }
-            if (config.runAfter) {
+            if (config.runAfter && !lodash.isEqual(config.runAfter, '')) {
                 this.runAfter = config.runAfter;
             }
             if (!lodash.isNil(config.playTrailer)) {

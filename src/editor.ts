@@ -40,6 +40,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	showSearch: any = document.createElement('paper-dropdown-menu');
 
+	runBefore: any = document.createElement('paper-dropdown-menu');
+
+	runAfter: any = document.createElement('paper-dropdown-menu');
+
 	devicesTabs = 0;
 
 	hassObj: HomeAssistant | undefined;
@@ -120,6 +124,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			} else if (_.isEqual(this.showSearch.value, 'No')) {
 				this.config.showSearch = false;
 			}
+			this.config.runBefore = this.runBefore.value;
+			this.config.runAfter = this.runAfter.value;
 		}
 		if (!_.isEqual(this.config, originalConfig)) {
 			this.fireEvent(this, 'config-changed', { config: this.config });
@@ -166,7 +172,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.scriptEntities.push(key);
 				}
 			});
-			console.log(this.scriptEntities);
 			this.entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
@@ -350,6 +355,34 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.showSearch.value = showSearchValue;
 		this.plexValidSection.appendChild(this.showSearch);
 
+		this.runBefore.innerHTML = '';
+		const runBeforeItems: any = document.createElement('paper-listbox');
+		runBeforeItems.appendChild(addDropdownItem(''));
+		_.forEach(this.scriptEntities, entity => {
+			runBeforeItems.appendChild(addDropdownItem(entity));
+		});
+		runBeforeItems.slot = 'dropdown-content';
+		this.runBefore.label = 'Script to execute before starting the media';
+		this.runBefore.appendChild(runBeforeItems);
+		this.runBefore.style.width = '100%';
+		this.runBefore.addEventListener('value-changed', this.valueUpdated);
+		this.runBefore.value = this.config.runBefore;
+		this.plexValidSection.appendChild(this.runBefore);
+
+		this.runAfter.innerHTML = '';
+		const runAfterItems: any = document.createElement('paper-listbox');
+		runAfterItems.appendChild(addDropdownItem(''));
+		_.forEach(this.scriptEntities, entity => {
+			runAfterItems.appendChild(addDropdownItem(entity));
+		});
+		runAfterItems.slot = 'dropdown-content';
+		this.runAfter.label = 'Script to execute after starting the media';
+		this.runAfter.appendChild(runAfterItems);
+		this.runAfter.style.width = '100%';
+		this.runAfter.addEventListener('value-changed', this.valueUpdated);
+		this.runAfter.value = this.config.runAfter;
+		this.plexValidSection.appendChild(this.runAfter);
+
 		let hasUIConfig = true;
 		let canConvert = true;
 		if (_.isArray(this.config.entity)) {
@@ -471,6 +504,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.showSearch = config.showSearch;
 		} else {
 			this.config.showSearch = true;
+		}
+
+		if (!_.isNil(config.runBefore)) {
+			this.config.runBefore = config.runBefore;
+		}
+
+		if (!_.isNil(config.runAfter)) {
+			this.config.runAfter = config.runAfter;
 		}
 
 		this.render();

@@ -1551,10 +1551,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (config.maxCount && config.maxCount !== '') {
 			this.maxCount = config.maxCount;
 		}
-		if (config.runBefore) {
+		if (config.runBefore && !_.isEqual(config.runBefore, '')) {
 			this.runBefore = config.runBefore;
 		}
-		if (config.runAfter) {
+		if (config.runAfter && !_.isEqual(config.runAfter, '')) {
 			this.runAfter = config.runAfter;
 		}
 		if (!_.isNil(config.playTrailer)) {
