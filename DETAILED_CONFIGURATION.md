@@ -19,10 +19,10 @@ _Available special libraries:_
 
 **entity**: You need to configure at least one supported media_player entity.
 
-- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#android-tv-or-fire-tv). It is also possible to use short declaration with androidtv.
-- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#kodi). It is also possible to use short declaration with kodi.
-- **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#all-other-plex-clients). It is required to use detailed declaration with "plexPlayer:" property.
-- **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#google-cast). It is also possible to use short declaration with cast.
+- **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](#android-tv-or-fire-tv). It is also possible to use short declaration with androidtv.
+- **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](#kodi). It is also possible to use short declaration with kodi.
+- **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](#all-other-plex-clients). It is required to use detailed declaration with "plexPlayer:" property.
+- **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](#google-cast). It is also possible to use short declaration with cast.
 
 **port**: _Optional_ Port of your plex sever.
 
@@ -30,7 +30,7 @@ _Available special libraries:_
 
 **maxCount**: _Optional_ Maximum number of items to display in card.
 
-**sort**: _Optional_ Define sort by. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant#sorting)
+**sort**: _Optional_ Define sort by. See [detailed instructions](#sorting)
 
 **runBefore**: _Optional_ Specify a script to run before playing. This can be for example a script which turns on your TV and waits 5 seconds. If this is specified and provided entity/script exists, all the other play checks for availability of entity are ignored.
 
