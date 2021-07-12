@@ -19475,13 +19475,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         };
         this.valueUpdated = () => {
             console.log('valueUpdated');
+            const originalConfig = lodash.clone(this.config);
+            this.config.protocol = this.protocol.value;
+            this.config.ip = this.ip.value;
+            this.config.token = this.token.value;
+            this.config.port = this.port.value;
             if (!lodash.isEmpty(this.libraryName.value)) {
-                const originalConfig = lodash.clone(this.config);
-                this.config.ip = this.ip.value;
-                this.config.token = this.token.value;
-                this.config.port = this.port.value;
                 this.config.libraryName = this.libraryName.value;
-                this.config.protocol = this.protocol.value;
                 this.config.sort = `${this.sort.value}:${this.sortOrder.value}`;
                 if (lodash.isEmpty(this.maxCount.value)) {
                     this.config.maxCount = '';
@@ -19497,11 +19497,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         }
                     });
                 }
-                if (!lodash.isEqual(this.config, originalConfig)) {
-                    console.log(this.config);
-                    console.log(originalConfig);
-                    this.fireEvent(this, 'config-changed', { config: this.config });
-                }
+            }
+            if (!lodash.isEqual(this.config, originalConfig)) {
+                console.log(this.config);
+                console.log(originalConfig);
+                this.fireEvent(this, 'config-changed', { config: this.config });
             }
         };
         this.render = async () => {
