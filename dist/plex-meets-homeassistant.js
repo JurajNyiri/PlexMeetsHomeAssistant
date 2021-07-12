@@ -20745,7 +20745,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (!this.detailsShown &&
                 window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
                 this.renderedItems > 0) {
-                this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * (loadAdditionalRowsCount * 2);
+                this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
                 this.renderMovieElems();
                 this.calculatePositions();
             }
@@ -20873,7 +20873,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         }
                     });
                 }
-                console.log(realEntityString);
             };
             const entityOrig = entity;
             if (lodash.isString(entityOrig)) {
@@ -20886,7 +20885,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     processEntity(entity, entityStr);
                 });
             }
-            console.log(entity);
             this.loading = true;
             this.renderPage();
             try {
