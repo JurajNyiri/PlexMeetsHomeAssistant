@@ -1495,6 +1495,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	setConfig = (config: any): void => {
 		this.plexProtocol = 'http';
+		if (!config.ip) {
+			throw new Error('You need to define a Plex IP Address');
+		}
+		if (!config.token) {
+			throw new Error('You need to define a Plex Token');
+		}
+		if (!config.libraryName) {
+			throw new Error('You need to define a libraryName');
+		}
 		if (!config.entity || config.entity.length === 0) {
 			throw new Error('You need to define at least one entity');
 		}
@@ -1512,15 +1521,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			}
 		} else if (!_.isString(config.entity) && !_.isArray(config.entity)) {
 			throw new Error('You need to define at least one supported entity');
-		}
-		if (!config.token) {
-			throw new Error('You need to define a token');
-		}
-		if (!config.ip) {
-			throw new Error('You need to define a ip');
-		}
-		if (!config.libraryName) {
-			throw new Error('You need to define a libraryName');
 		}
 		this.config = config;
 		if (config.protocol) {

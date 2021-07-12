@@ -71,6 +71,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.config.ip = this.ip.value;
 		this.config.token = this.token.value;
 		this.config.port = this.port.value;
+		if (!this.config.entity) {
+			this.config.entity = [];
+		}
 		if (!_.isEmpty(this.libraryName.value)) {
 			this.config.libraryName = this.libraryName.value;
 

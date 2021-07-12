@@ -19480,6 +19480,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.config.ip = this.ip.value;
             this.config.token = this.token.value;
             this.config.port = this.port.value;
+            if (!this.config.entity) {
+                this.config.entity = [];
+            }
             if (!lodash.isEmpty(this.libraryName.value)) {
                 this.config.libraryName = this.libraryName.value;
                 this.config.sort = `${this.sort.value}:${this.sortOrder.value}`;
@@ -21711,6 +21714,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
+            if (!config.ip) {
+                throw new Error('You need to define a Plex IP Address');
+            }
+            if (!config.token) {
+                throw new Error('You need to define a Plex Token');
+            }
+            if (!config.libraryName) {
+                throw new Error('You need to define a libraryName');
+            }
             if (!config.entity || config.entity.length === 0) {
                 throw new Error('You need to define at least one entity');
             }
@@ -21729,15 +21741,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else if (!lodash.isString(config.entity) && !lodash.isArray(config.entity)) {
                 throw new Error('You need to define at least one supported entity');
-            }
-            if (!config.token) {
-                throw new Error('You need to define a token');
-            }
-            if (!config.ip) {
-                throw new Error('You need to define a ip');
-            }
-            if (!config.libraryName) {
-                throw new Error('You need to define a libraryName');
             }
             this.config = config;
             if (config.protocol) {
