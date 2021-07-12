@@ -501,6 +501,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 				CSS_STYLE.episodeWidth = Math.floor(areaSize / episodesInRow - marginRight);
 				CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
+			} else {
+				setTimeout(() => {
+					this.renderPage();
+				}, 250);
 			}
 		}
 
