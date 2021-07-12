@@ -2,7 +2,7 @@
 
 Custom Home Assistant card which integrates plex into Home Assistant and makes it possible to launch movies or tv shows on TV with a simple click.
 
-Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect and Google Cast is also supported.
+Supported are **ALL** Plex clients, some even with enhanced functionality. Kodi with PlexKodiConnect, Android TV and Google Cast is also supported.
 
 Video of the card:
 
