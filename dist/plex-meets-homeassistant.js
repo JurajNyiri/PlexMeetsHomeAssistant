@@ -19491,11 +19491,19 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (!lodash.isEmpty(this.libraryName.value)) {
                 this.config.libraryName = this.libraryName.value;
-                let sortOrderValue = 'asc';
-                if (lodash.isEqual(this.sortOrder.value, 'Descending')) {
+                let sortOrderValue = '';
+                if (lodash.isEqual(this.sortOrder.value, 'Ascending')) {
+                    sortOrderValue = 'asc';
+                }
+                else if (lodash.isEqual(this.sortOrder.value, 'Descending')) {
                     sortOrderValue = 'desc';
                 }
-                this.config.sort = `${this.sort.value}:${sortOrderValue}`;
+                if (!lodash.isEmpty(sortOrderValue) && !lodash.isEmpty(this.sort.value)) {
+                    this.config.sort = `${this.sort.value}:${sortOrderValue}`;
+                }
+                else {
+                    this.config.sort = ``;
+                }
                 if (lodash.isEmpty(this.maxCount.value)) {
                     this.config.maxCount = '';
                 }
@@ -19724,30 +19732,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.plexValidSection.appendChild(this.maxCount);
             this.sort.innerHTML = '';
             const sortItems = document.createElement('paper-listbox');
-            sortItems.appendChild(addDropdownItem('titleSort'));
-            sortItems.appendChild(addDropdownItem('title'));
-            sortItems.appendChild(addDropdownItem('year'));
-            sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
-            sortItems.appendChild(addDropdownItem('rating'));
-            sortItems.appendChild(addDropdownItem('audienceRating'));
-            sortItems.appendChild(addDropdownItem('userRating'));
-            sortItems.appendChild(addDropdownItem('contentRating'));
-            sortItems.appendChild(addDropdownItem('unviewedLeafCount'));
-            sortItems.appendChild(addDropdownItem('episode.addedAt'));
-            sortItems.appendChild(addDropdownItem('addedAt'));
-            sortItems.appendChild(addDropdownItem('lastViewedAt'));
             sortItems.slot = 'dropdown-content';
             this.sort.label = 'Sort';
             this.sort.appendChild(sortItems);
             this.sort.style.width = '100%';
             this.sort.addEventListener('value-changed', this.valueUpdated);
-            if (lodash.isEmpty(this.config.sort)) {
-                this.sort.value = 'title';
-            }
-            else {
-                // eslint-disable-next-line prefer-destructuring
-                this.sort.value = this.config.sort.split(':')[0];
-            }
             this.plexValidSection.appendChild(this.sort);
             this.sortOrder.innerHTML = '';
             const sortOrderItems = document.createElement('paper-listbox');
@@ -19855,6 +19844,70 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 });
                 this.libraryName.disabled = false;
                 this.libraryName.value = this.config.libraryName;
+                let libraryType = '';
+                lodash.forEach(this.sections, section => {
+                    if (lodash.isEqual(section.title, this.libraryName.value)) {
+                        libraryType = section.type;
+                        return false;
+                    }
+                });
+                console.log(libraryType);
+                if (lodash.isEqual(libraryType, 'show')) {
+                    sortItems.appendChild(addDropdownItem('titleSort'));
+                    sortItems.appendChild(addDropdownItem('title'));
+                    sortItems.appendChild(addDropdownItem('year'));
+                    sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
+                    sortItems.appendChild(addDropdownItem('rating'));
+                    sortItems.appendChild(addDropdownItem('audienceRating'));
+                    sortItems.appendChild(addDropdownItem('userRating'));
+                    sortItems.appendChild(addDropdownItem('contentRating'));
+                    sortItems.appendChild(addDropdownItem('unviewedLeafCount'));
+                    sortItems.appendChild(addDropdownItem('episode.addedAt'));
+                    sortItems.appendChild(addDropdownItem('addedAt'));
+                    sortItems.appendChild(addDropdownItem('lastViewedAt'));
+                    this.sort.style.display = 'block';
+                    this.sortOrder.style.display = 'block';
+                }
+                else if (lodash.isEqual(libraryType, 'movie')) {
+                    sortItems.appendChild(addDropdownItem('titleSort'));
+                    sortItems.appendChild(addDropdownItem('title'));
+                    sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
+                    sortItems.appendChild(addDropdownItem('rating'));
+                    sortItems.appendChild(addDropdownItem('audienceRating'));
+                    sortItems.appendChild(addDropdownItem('userRating'));
+                    sortItems.appendChild(addDropdownItem('duration'));
+                    sortItems.appendChild(addDropdownItem('viewOffset'));
+                    sortItems.appendChild(addDropdownItem('viewCount'));
+                    sortItems.appendChild(addDropdownItem('addedAt'));
+                    sortItems.appendChild(addDropdownItem('lastViewedAt'));
+                    sortItems.appendChild(addDropdownItem('mediaHeight'));
+                    sortItems.appendChild(addDropdownItem('mediaBitrate'));
+                    this.sort.style.display = 'block';
+                    this.sortOrder.style.display = 'block';
+                }
+                else {
+                    this.sort.style.display = 'none';
+                    this.sortOrder.style.display = 'none';
+                    this.config.sort = '';
+                }
+                if (lodash.isEmpty(this.config.sort)) {
+                    this.sort.value = '';
+                    this.sortOrder.value = '';
+                }
+                else {
+                    // eslint-disable-next-line prefer-destructuring
+                    this.sort.value = this.config.sort.split(':')[0];
+                    const sortOrder = this.config.sort.split(':')[1];
+                    if (lodash.isEmpty(sortOrder)) {
+                        this.sortOrder.value = 'Ascending';
+                    }
+                    else if (lodash.isEqual(sortOrder, 'asc')) {
+                        this.sortOrder.value = 'Ascending';
+                    }
+                    else if (lodash.isEqual(sortOrder, 'desc')) {
+                        this.sortOrder.value = 'Descending';
+                    }
+                }
                 this.plexValidSection.style.display = 'block';
             }
             this.content.appendChild(this.plexValidSection);
