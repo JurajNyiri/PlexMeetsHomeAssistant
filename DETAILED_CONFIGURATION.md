@@ -66,7 +66,9 @@ entity:
   - media_player.kodi_123456qwe789rty # created by kodi integration
 ```
 
-Example of card configuration using detailed definitions, **will not work through UI because of plexPlayer key**:
+Example of card configuration using detailed definitions:
+
+**Does not work through configuration UI because of plexPlayer key**
 
 ```
 type: 'custom:plex-meets-homeassistant'
@@ -84,7 +86,9 @@ entity:
   cast: media_player.bedroom_tv
 ```
 
-Complex example using detailed definitions, lists and shared plex server for plexPlayer, **will not work through UI because of plexPlayer key**::
+Complex example using detailed definitions, lists and shared plex server for plexPlayer:
+
+**Does not work through configuration UI because of plexPlayer key**
 
 ```
 type: 'custom:plex-meets-homeassistant'
