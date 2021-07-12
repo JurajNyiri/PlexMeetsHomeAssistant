@@ -45,6 +45,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	showExtras = true;
 
+	showSearch = true;
+
 	previousPageWidth = 0;
 
 	runAfter = '';
@@ -355,7 +357,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.loading = false;
 				this.render();
 			} else {
-				console.log('RETRY');
 				setTimeout(() => {
 					this.renderInitialData();
 				}, 250);
@@ -459,6 +460,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	renderPage = (): void => {
 		this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
+		if (this.showSearch) {
+			this.searchInputElem.style.display = 'block';
+		} else {
+			this.searchInputElem.style.display = 'none';
+		}
+
 		if (this.card) {
 			const marginRight = 10; // needs to be equal to .container margin right
 			const areaSize =
@@ -490,7 +497,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.card.style.overflow = 'hidden';
 			this.card.style.padding = '16px';
 			this.card.style.paddingRight = '6px';
+
 			this.card.appendChild(this.searchInput());
+			if (this.showSearch) {
+				this.searchInputElem.style.display = 'block';
+			} else {
+				this.searchInputElem.style.display = 'none';
+			}
+
 			this.appendChild(this.card);
 		}
 
@@ -1548,6 +1562,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (!_.isNil(config.showExtras)) {
 			this.showExtras = config.showExtras;
+		}
+		if (!_.isNil(config.showSearch)) {
+			this.showSearch = config.showSearch;
 		}
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);

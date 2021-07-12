@@ -38,6 +38,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	showExtras: any = document.createElement('paper-dropdown-menu');
 
+	showSearch: any = document.createElement('paper-dropdown-menu');
+
 	devicesTabs = 0;
 
 	hassObj: HomeAssistant | undefined;
@@ -110,6 +112,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				this.config.showExtras = true;
 			} else if (_.isEqual(this.showExtras.value, 'No')) {
 				this.config.showExtras = false;
+			}
+			if (_.isEqual(this.showSearch.value, 'Yes')) {
+				this.config.showSearch = true;
+			} else if (_.isEqual(this.showSearch.value, 'No')) {
+				this.config.showSearch = false;
 			}
 		}
 		if (!_.isEqual(this.config, originalConfig)) {
@@ -319,6 +326,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.showExtras.value = showExtrasValue;
 		this.plexValidSection.appendChild(this.showExtras);
 
+		this.showSearch.innerHTML = '';
+		const showSearchItems: any = document.createElement('paper-listbox');
+		showSearchItems.appendChild(addDropdownItem('Yes'));
+		showSearchItems.appendChild(addDropdownItem('No'));
+		showSearchItems.slot = 'dropdown-content';
+		this.showSearch.label = 'Show Search';
+		this.showSearch.appendChild(showSearchItems);
+		this.showSearch.style.width = '100%';
+		this.showSearch.addEventListener('value-changed', this.valueUpdated);
+		let showSearchValue = 'Yes';
+		if (!this.config.showSearch) {
+			showSearchValue = 'No';
+		}
+		this.showSearch.value = showSearchValue;
+		this.plexValidSection.appendChild(this.showSearch);
+
 		let hasUIConfig = true;
 		let canConvert = true;
 		if (_.isArray(this.config.entity)) {
@@ -431,11 +454,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		}
 
 		if (!_.isNil(config.showExtras)) {
-			console.log('A');
 			this.config.showExtras = config.showExtras;
 		} else {
-			console.log('B');
 			this.config.showExtras = true;
+		}
+
+		if (!_.isNil(config.showSearch)) {
+			this.config.showSearch = config.showSearch;
+		} else {
+			this.config.showSearch = true;
 		}
 
 		this.render();

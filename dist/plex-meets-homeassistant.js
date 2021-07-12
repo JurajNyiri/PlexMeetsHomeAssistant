@@ -19458,6 +19458,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.sortOrder = document.createElement('paper-dropdown-menu');
         this.playTrailer = document.createElement('paper-dropdown-menu');
         this.showExtras = document.createElement('paper-dropdown-menu');
+        this.showSearch = document.createElement('paper-dropdown-menu');
         this.devicesTabs = 0;
         this.entities = [];
         this.sections = [];
@@ -19519,6 +19520,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 }
                 else if (lodash.isEqual(this.showExtras.value, 'No')) {
                     this.config.showExtras = false;
+                }
+                if (lodash.isEqual(this.showSearch.value, 'Yes')) {
+                    this.config.showSearch = true;
+                }
+                else if (lodash.isEqual(this.showSearch.value, 'No')) {
+                    this.config.showSearch = false;
                 }
             }
             if (!lodash.isEqual(this.config, originalConfig)) {
@@ -19713,6 +19720,21 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             this.showExtras.value = showExtrasValue;
             this.plexValidSection.appendChild(this.showExtras);
+            this.showSearch.innerHTML = '';
+            const showSearchItems = document.createElement('paper-listbox');
+            showSearchItems.appendChild(addDropdownItem('Yes'));
+            showSearchItems.appendChild(addDropdownItem('No'));
+            showSearchItems.slot = 'dropdown-content';
+            this.showSearch.label = 'Show Search';
+            this.showSearch.appendChild(showSearchItems);
+            this.showSearch.style.width = '100%';
+            this.showSearch.addEventListener('value-changed', this.valueUpdated);
+            let showSearchValue = 'Yes';
+            if (!this.config.showSearch) {
+                showSearchValue = 'No';
+            }
+            this.showSearch.value = showSearchValue;
+            this.plexValidSection.appendChild(this.showSearch);
             let hasUIConfig = true;
             let canConvert = true;
             if (lodash.isArray(this.config.entity)) {
@@ -19822,12 +19844,16 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 this.config.playTrailer = true;
             }
             if (!lodash.isNil(config.showExtras)) {
-                console.log('A');
                 this.config.showExtras = config.showExtras;
             }
             else {
-                console.log('B');
                 this.config.showExtras = true;
+            }
+            if (!lodash.isNil(config.showSearch)) {
+                this.config.showSearch = config.showSearch;
+            }
+            else {
+                this.config.showSearch = true;
             }
             this.render();
         };
@@ -20568,6 +20594,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.runBefore = '';
         this.playTrailer = true;
         this.showExtras = true;
+        this.showSearch = true;
         this.previousPageWidth = 0;
         this.runAfter = '';
         this.columnsCount = 0;
@@ -20795,7 +20822,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.render();
                 }
                 else {
-                    console.log('RETRY');
                     setTimeout(() => {
                         this.renderInitialData();
                     }, 250);
@@ -20887,6 +20913,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.renderPage = () => {
             this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
+            if (this.showSearch) {
+                this.searchInputElem.style.display = 'block';
+            }
+            else {
+                this.searchInputElem.style.display = 'none';
+            }
             if (this.card) {
                 const marginRight = 10; // needs to be equal to .container margin right
                 const areaSize = this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);
@@ -20914,6 +20946,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.card.style.padding = '16px';
                 this.card.style.paddingRight = '6px';
                 this.card.appendChild(this.searchInput());
+                if (this.showSearch) {
+                    this.searchInputElem.style.display = 'block';
+                }
+                else {
+                    this.searchInputElem.style.display = 'none';
+                }
                 this.appendChild(this.card);
             }
             this.content = document.createElement('div');
@@ -21877,6 +21915,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             if (!lodash.isNil(config.showExtras)) {
                 this.showExtras = config.showExtras;
+            }
+            if (!lodash.isNil(config.showSearch)) {
+                this.showSearch = config.showSearch;
             }
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.data = {};
