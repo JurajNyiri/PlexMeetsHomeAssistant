@@ -23,13 +23,13 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 ## Configuration
 
-You can use UI to configure your card which will automatically load up your libraries and entities. If you wish, you can use card code to configure everything manually. See [Detailed Configuration](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md) if you wish to see a lot more information about every property of the card.
+You can use UI to configure your card which will automatically load up your libraries and entities. If you wish, you can use card code to configure everything manually. See [Detailed Configuration](DETAILED_CONFIGURATION.md) if you wish to see a lot more information about every property of the card.
 
 Supported target devices are all entities from integrations [Android TV](https://www.home-assistant.io/integrations/androidtv/), [Kodi](https://www.home-assistant.io/integrations/kodi/) and [Google Cast](https://www.home-assistant.io/integrations/cast/).
 
-Supported are also any other devices, available to be cast into from Plex web interface. These are not currently possible to be set up via UI configuration and you will need to edit card code manually for them. Information about this is inside [Detailed Configuration - All other plex clients](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md#all-other-plex-clients). You can still use UI to edit anything else.
+Supported are also any other devices, available to be cast into from Plex web interface. These are not currently possible to be set up via UI configuration and you will need to edit card code manually for them. Information about this is inside [Detailed Configuration - All other plex clients](DETAILED_CONFIGURATION.md#all-other-plex-clients). You can still use UI to edit anything else.
 
-![Configuration via UI](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/ui_configuration.png)
+![Configuration via UI](images/ui_configuration.png)
 
 ### Quick guides:
 
@@ -44,11 +44,11 @@ Join [Discord](https://discord.gg/jqqz9jQXWx) or [Home Assistant Community](http
 
 ## Images
 
-![View without hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/design_preview/1.png)
+![View without hover](images/design_preview/1.png)
 
-![View with hover](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/design_preview/2.png)
+![View with hover](images/design_preview/2.png)
 
-![Expanded movie view](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/design_preview/3.png)
+![Expanded movie view](images/design_preview/3.png)
 
 # Want to buy me a beer?
 

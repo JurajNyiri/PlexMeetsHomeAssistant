@@ -172,11 +172,11 @@ Play button is only visible if all the conditions inside Availability section of
 <details>
     <summary>Images of installation of Kodi Recently Added Media</summary>
 
-![Click on add integration in integrations](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/1.png)
+![Click on add integration in integrations](images/kodi_setup/1.png)
 
-![Find integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/2.png)
+![Find integration Kodi Media Sensors](images/kodi_setup/2.png)
 
-![Configure integration Kodi Media Sensors](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/kodi_setup/3.png)
+![Configure integration Kodi Media Sensors](images/kodi_setup/3.png)
 
 </details>
 
@@ -241,7 +241,7 @@ Notice: While easy, it might not work if you have multiple devices with the same
 - Open your Plex web GUI
 - Click on cast on the top right corner and note down name of your device
 
-![Plex cast](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/plex_player/1.png)
+![Plex cast](images/plex_player/1.png)
 
 - Add it to card, example:
 
