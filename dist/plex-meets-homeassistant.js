@@ -19486,7 +19486,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (!lodash.isEmpty(this.libraryName.value)) {
                 this.config.libraryName = this.libraryName.value;
-                this.config.sort = `${this.sort.value}:${this.sortOrder.value}`;
+                let sortOrderValue = 'asc';
+                if (lodash.isEqual(this.sortOrder.value, 'Descending')) {
+                    sortOrderValue = 'desc';
+                }
+                this.config.sort = `${this.sort.value}:${sortOrderValue}`;
                 if (lodash.isEmpty(this.maxCount.value)) {
                     this.config.maxCount = '';
                 }
@@ -19649,23 +19653,26 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.plexValidSection.appendChild(this.sort);
             this.sortOrder.innerHTML = '';
             const sortOrderItems = document.createElement('paper-listbox');
-            sortOrderItems.appendChild(addDropdownItem('asc'));
-            sortOrderItems.appendChild(addDropdownItem('desc'));
+            sortOrderItems.appendChild(addDropdownItem('Ascending'));
+            sortOrderItems.appendChild(addDropdownItem('Descending'));
             sortOrderItems.slot = 'dropdown-content';
             this.sortOrder.label = 'Sort Order';
             this.sortOrder.appendChild(sortOrderItems);
             this.sortOrder.style.width = '100%';
             this.sortOrder.addEventListener('value-changed', this.valueUpdated);
             if (lodash.isEmpty(this.config.sort)) {
-                this.sortOrder.value = 'asc';
+                this.sortOrder.value = 'Ascending';
             }
             else {
                 const sortOrder = this.config.sort.split(':')[1];
                 if (lodash.isEmpty(sortOrder)) {
-                    this.sortOrder.value = 'asc';
+                    this.sortOrder.value = 'Ascending';
                 }
-                else {
-                    this.sortOrder.value = sortOrder;
+                else if (lodash.isEqual(sortOrder, 'asc')) {
+                    this.sortOrder.value = 'Ascending';
+                }
+                else if (lodash.isEqual(sortOrder, 'desc')) {
+                    this.sortOrder.value = 'Descending';
                 }
             }
             this.plexValidSection.appendChild(this.sortOrder);

@@ -79,7 +79,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		if (!_.isEmpty(this.libraryName.value)) {
 			this.config.libraryName = this.libraryName.value;
 
-			this.config.sort = `${this.sort.value}:${this.sortOrder.value}`;
+			let sortOrderValue = 'asc';
+			if (_.isEqual(this.sortOrder.value, 'Descending')) {
+				sortOrderValue = 'desc';
+			}
+			this.config.sort = `${this.sort.value}:${sortOrderValue}`;
 			if (_.isEmpty(this.maxCount.value)) {
 				this.config.maxCount = '';
 			} else {
@@ -256,21 +260,23 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.sortOrder.innerHTML = '';
 		const sortOrderItems: any = document.createElement('paper-listbox');
-		sortOrderItems.appendChild(addDropdownItem('asc'));
-		sortOrderItems.appendChild(addDropdownItem('desc'));
+		sortOrderItems.appendChild(addDropdownItem('Ascending'));
+		sortOrderItems.appendChild(addDropdownItem('Descending'));
 		sortOrderItems.slot = 'dropdown-content';
 		this.sortOrder.label = 'Sort Order';
 		this.sortOrder.appendChild(sortOrderItems);
 		this.sortOrder.style.width = '100%';
 		this.sortOrder.addEventListener('value-changed', this.valueUpdated);
 		if (_.isEmpty(this.config.sort)) {
-			this.sortOrder.value = 'asc';
+			this.sortOrder.value = 'Ascending';
 		} else {
 			const sortOrder = this.config.sort.split(':')[1];
 			if (_.isEmpty(sortOrder)) {
-				this.sortOrder.value = 'asc';
-			} else {
-				this.sortOrder.value = sortOrder;
+				this.sortOrder.value = 'Ascending';
+			} else if (_.isEqual(sortOrder, 'asc')) {
+				this.sortOrder.value = 'Ascending';
+			} else if (_.isEqual(sortOrder, 'desc')) {
+				this.sortOrder.value = 'Descending';
 			}
 		}
 		this.plexValidSection.appendChild(this.sortOrder);
