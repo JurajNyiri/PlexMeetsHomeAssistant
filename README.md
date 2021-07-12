@@ -25,9 +25,13 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 You can use UI to configure your card which will automatically load up your libraries and entities. If you wish, you can use card code to configure everything manually. See [Detailed Configuration](DETAILED_CONFIGURATION.md) if you wish to see a lot more information about every property of the card.
 
-Supported target devices are all entities from integrations [Android TV](https://www.home-assistant.io/integrations/androidtv/), [Kodi](https://www.home-assistant.io/integrations/kodi/) and [Google Cast](https://www.home-assistant.io/integrations/cast/).
+Supported target devices are all entities from integrations [Android TV](https://www.home-assistant.io/integrations/androidtv/), [Kodi](https://www.home-assistant.io/integrations/kodi/), [Google Cast](https://www.home-assistant.io/integrations/cast/) and any other Plex player available for casting through Plex web interface.
 
-Supported are also any other devices, available to be cast into from Plex web interface. These are not currently possible to be set up via UI configuration and you will need to edit card code manually for them. Information about this is inside [Detailed Configuration - All other plex clients](DETAILED_CONFIGURATION.md#all-other-plex-clients). You can still use UI to edit anything else.
+### Regarding "all other plex players" without entities
+
+In order for devices which do not have entities to be detected, they need to have plex app running when configuring the card or trying to play content.
+
+If you are trying to play content on a local device from a remote Plex server **or** trying to play local Plex content on a remote device, you need to configure identifier and server for this device. This can only be done manually through card code configuration. See [Detailed Configuration - All other plex clients](DETAILED_CONFIGURATION.md#all-other-plex-clients). You can still use UI to edit anything else except entities while manually using plexPlayer key in entities.
 
 ![Configuration via UI](images/ui_configuration.png)
 
