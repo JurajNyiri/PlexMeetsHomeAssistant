@@ -219,7 +219,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.protocol.innerHTML = '';
 		const protocolItems: any = document.createElement('paper-listbox');
-		protocolItems.appendChild(addDropdownItem('http'));
+		// eslint-disable-next-line no-restricted-globals
+		const pageProtocol = location.protocol;
+		if (_.isEqual(pageProtocol, 'http:')) {
+			protocolItems.appendChild(addDropdownItem('http'));
+		}
 		protocolItems.appendChild(addDropdownItem('https'));
 		protocolItems.slot = 'dropdown-content';
 		this.protocol.label = 'Plex Protocol';
@@ -227,7 +231,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.protocol.style.width = '100%';
 		this.protocol.addEventListener('value-changed', this.valueUpdated);
 		if (_.isEmpty(this.config.protocol)) {
-			this.protocol.value = 'http';
+			if (_.isEqual(pageProtocol, 'http:')) {
+				this.protocol.value = 'http';
+			} else {
+				this.protocol.value = 'https';
+			}
 		} else {
 			this.protocol.value = this.config.protocol;
 		}
@@ -556,10 +564,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.plexPort = false;
 		}
 
+		// eslint-disable-next-line no-restricted-globals
+		const pageProtocol = location.protocol;
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
-		} else {
+		} else if (_.isEqual(pageProtocol, 'http:')) {
 			this.config.protocol = 'http';
+		} else {
+			this.config.protocol = 'https';
 		}
 
 		if (!config.sort) {
