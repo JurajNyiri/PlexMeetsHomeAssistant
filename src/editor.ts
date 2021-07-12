@@ -200,16 +200,16 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.ip.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.ip);
 
-		this.token.label = 'Plex Token';
-		this.token.value = this.config.token;
-		this.token.addEventListener('change', this.valueUpdated);
-		this.content.appendChild(this.token);
-
 		this.port.label = 'Plex Port';
 		this.port.value = this.config.port;
 		this.port.type = 'number';
 		this.port.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.port);
+
+		this.token.label = 'Plex Token';
+		this.token.value = this.config.token;
+		this.token.addEventListener('change', this.valueUpdated);
+		this.content.appendChild(this.token);
 
 		this.libraryName.innerHTML = '';
 		const libraryItems: any = document.createElement('paper-listbox');
