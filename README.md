@@ -29,6 +29,8 @@ Supported target devices are all entities from integrations [Android TV](https:/
 
 Supported are also any other devices, available to be cast into from Plex web interface. These are not currently possible to be set up via UI configuration and you will need to edit card code manually for them. Information about this is inside [Detailed Configuration - All other plex clients](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md#all-other-plex-clients). You can still use UI to edit anything else.
 
+![Configuration via UI](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/images/ui_configuration.png)
+
 ### Quick guides:
 
 - [Guide How to get Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
