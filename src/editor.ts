@@ -44,6 +44,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	runAfter: any = document.createElement('paper-dropdown-menu');
 
+	entitiesSection: any = document.createElement('div');
+
 	devicesTabs = 0;
 
 	hassObj: HomeAssistant | undefined;
@@ -241,6 +243,83 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.style.display = 'none';
 		this.plexValidSection.innerHTML = '';
 
+		let hasUIConfig = true;
+		let canConvert = true;
+		if (_.isArray(this.config.entity)) {
+			// eslint-disable-next-line consistent-return
+			_.forEach(this.config.entity, entity => {
+				if (_.isObjectLike(entity)) {
+					canConvert = !_.includes(_.keys(this.config.entity), 'plexPlayer');
+					hasUIConfig = false;
+					return false;
+				}
+			});
+		} else if (_.isObjectLike(this.config.entity)) {
+			canConvert = !_.includes(_.keys(this.config.entity), 'plexPlayer');
+			hasUIConfig = false;
+			if (canConvert) {
+				const convertedEntities: Array<string> = [];
+				hasUIConfig = true;
+				if (_.isObjectLike(this.config.entity)) {
+					_.forOwn(this.config.entity, value => {
+						if (_.isString(value)) {
+							convertedEntities.push(value);
+						} else if (_.isArray(value)) {
+							_.forEach(value, valueStr => {
+								convertedEntities.push(valueStr);
+							});
+						}
+					});
+				}
+				this.config.entity = convertedEntities;
+			}
+		}
+
+		const devicesTitle = document.createElement('h2');
+		devicesTitle.innerHTML = `Devices Configuration`;
+		devicesTitle.style.lineHeight = '29px';
+		devicesTitle.style.marginBottom = '0px';
+		devicesTitle.style.marginTop = '20px';
+		if (hasUIConfig) {
+			const addDeviceButton = document.createElement('button');
+			addDeviceButton.style.float = 'right';
+			addDeviceButton.style.fontSize = '20px';
+			addDeviceButton.style.cursor = 'pointer';
+			addDeviceButton.innerHTML = '+';
+			addDeviceButton.addEventListener('click', () => {
+				const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
+				if (entitiesDropdown) {
+					this.entitiesSection.appendChild(entitiesDropdown);
+				}
+			});
+			devicesTitle.appendChild(addDeviceButton);
+		}
+
+		this.plexValidSection.appendChild(devicesTitle);
+		this.entitiesSection.innerHTML = '';
+		this.plexValidSection.appendChild(this.entitiesSection);
+		// todo: convert entities setup to simple one if not using plexPlayer
+		if (hasUIConfig) {
+			if (_.isString(this.config.entity)) {
+				this.config.entity = [this.config.entity];
+			}
+			if (_.isArray(this.config.entity)) {
+				_.forEach(this.config.entity, entity => {
+					if (_.isString(entity)) {
+						const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
+						if (entitiesDropdown) {
+							this.entitiesSection.appendChild(entitiesDropdown);
+						}
+					}
+				});
+			}
+		} else {
+			const entitiesUINotAvailable = document.createElement('div');
+			entitiesUINotAvailable.innerHTML =
+				'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.';
+			this.plexValidSection.appendChild(entitiesUINotAvailable);
+		}
+
 		const viewTitle = document.createElement('h2');
 		viewTitle.innerHTML = `View Configuration`;
 		viewTitle.style.lineHeight = '29px';
@@ -382,81 +461,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.runAfter.addEventListener('value-changed', this.valueUpdated);
 		this.runAfter.value = this.config.runAfter;
 		this.plexValidSection.appendChild(this.runAfter);
-
-		let hasUIConfig = true;
-		let canConvert = true;
-		if (_.isArray(this.config.entity)) {
-			// eslint-disable-next-line consistent-return
-			_.forEach(this.config.entity, entity => {
-				if (_.isObjectLike(entity)) {
-					canConvert = !_.includes(_.keys(this.config.entity), 'plexPlayer');
-					hasUIConfig = false;
-					return false;
-				}
-			});
-		} else if (_.isObjectLike(this.config.entity)) {
-			canConvert = !_.includes(_.keys(this.config.entity), 'plexPlayer');
-			hasUIConfig = false;
-			if (canConvert) {
-				const convertedEntities: Array<string> = [];
-				hasUIConfig = true;
-				if (_.isObjectLike(this.config.entity)) {
-					_.forOwn(this.config.entity, value => {
-						if (_.isString(value)) {
-							convertedEntities.push(value);
-						} else if (_.isArray(value)) {
-							_.forEach(value, valueStr => {
-								convertedEntities.push(valueStr);
-							});
-						}
-					});
-				}
-				this.config.entity = convertedEntities;
-			}
-		}
-
-		const devicesTitle = document.createElement('h2');
-		devicesTitle.innerHTML = `Devices Configuration`;
-		devicesTitle.style.lineHeight = '29px';
-		devicesTitle.style.marginBottom = '0px';
-		devicesTitle.style.marginTop = '20px';
-		if (hasUIConfig) {
-			const addDeviceButton = document.createElement('button');
-			addDeviceButton.style.float = 'right';
-			addDeviceButton.style.fontSize = '20px';
-			addDeviceButton.style.cursor = 'pointer';
-			addDeviceButton.innerHTML = '+';
-			addDeviceButton.addEventListener('click', () => {
-				const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
-				if (entitiesDropdown) {
-					this.content.appendChild(entitiesDropdown);
-				}
-			});
-			devicesTitle.appendChild(addDeviceButton);
-		}
-
-		this.plexValidSection.appendChild(devicesTitle);
-		// todo: convert entities setup to simple one if not using plexPlayer
-		if (hasUIConfig) {
-			if (_.isString(this.config.entity)) {
-				this.config.entity = [this.config.entity];
-			}
-			if (_.isArray(this.config.entity)) {
-				_.forEach(this.config.entity, entity => {
-					if (_.isString(entity)) {
-						const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
-						if (entitiesDropdown) {
-							this.plexValidSection.appendChild(entitiesDropdown);
-						}
-					}
-				});
-			}
-		} else {
-			const entitiesUINotAvailable = document.createElement('div');
-			entitiesUINotAvailable.innerHTML =
-				'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.';
-			this.plexValidSection.appendChild(entitiesUINotAvailable);
-		}
 
 		if (!_.isEmpty(this.sections)) {
 			_.forEach(this.sections, (section: Record<string, any>) => {

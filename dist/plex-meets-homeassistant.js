@@ -19461,6 +19461,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.showSearch = document.createElement('paper-dropdown-menu');
         this.runBefore = document.createElement('paper-dropdown-menu');
         this.runAfter = document.createElement('paper-dropdown-menu');
+        this.entitiesSection = document.createElement('div');
         this.devicesTabs = 0;
         this.entities = [];
         this.scriptEntities = [];
@@ -19633,6 +19634,83 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.sections = await this.plex.getSections();
             this.plexValidSection.style.display = 'none';
             this.plexValidSection.innerHTML = '';
+            let hasUIConfig = true;
+            let canConvert = true;
+            if (lodash.isArray(this.config.entity)) {
+                // eslint-disable-next-line consistent-return
+                lodash.forEach(this.config.entity, entity => {
+                    if (lodash.isObjectLike(entity)) {
+                        canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
+                        hasUIConfig = false;
+                        return false;
+                    }
+                });
+            }
+            else if (lodash.isObjectLike(this.config.entity)) {
+                canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
+                hasUIConfig = false;
+                if (canConvert) {
+                    const convertedEntities = [];
+                    hasUIConfig = true;
+                    if (lodash.isObjectLike(this.config.entity)) {
+                        lodash.forOwn(this.config.entity, value => {
+                            if (lodash.isString(value)) {
+                                convertedEntities.push(value);
+                            }
+                            else if (lodash.isArray(value)) {
+                                lodash.forEach(value, valueStr => {
+                                    convertedEntities.push(valueStr);
+                                });
+                            }
+                        });
+                    }
+                    this.config.entity = convertedEntities;
+                }
+            }
+            const devicesTitle = document.createElement('h2');
+            devicesTitle.innerHTML = `Devices Configuration`;
+            devicesTitle.style.lineHeight = '29px';
+            devicesTitle.style.marginBottom = '0px';
+            devicesTitle.style.marginTop = '20px';
+            if (hasUIConfig) {
+                const addDeviceButton = document.createElement('button');
+                addDeviceButton.style.float = 'right';
+                addDeviceButton.style.fontSize = '20px';
+                addDeviceButton.style.cursor = 'pointer';
+                addDeviceButton.innerHTML = '+';
+                addDeviceButton.addEventListener('click', () => {
+                    const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
+                    if (entitiesDropdown) {
+                        this.entitiesSection.appendChild(entitiesDropdown);
+                    }
+                });
+                devicesTitle.appendChild(addDeviceButton);
+            }
+            this.plexValidSection.appendChild(devicesTitle);
+            this.entitiesSection.innerHTML = '';
+            this.plexValidSection.appendChild(this.entitiesSection);
+            // todo: convert entities setup to simple one if not using plexPlayer
+            if (hasUIConfig) {
+                if (lodash.isString(this.config.entity)) {
+                    this.config.entity = [this.config.entity];
+                }
+                if (lodash.isArray(this.config.entity)) {
+                    lodash.forEach(this.config.entity, entity => {
+                        if (lodash.isString(entity)) {
+                            const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
+                            if (entitiesDropdown) {
+                                this.entitiesSection.appendChild(entitiesDropdown);
+                            }
+                        }
+                    });
+                }
+            }
+            else {
+                const entitiesUINotAvailable = document.createElement('div');
+                entitiesUINotAvailable.innerHTML =
+                    'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.';
+                this.plexValidSection.appendChild(entitiesUINotAvailable);
+            }
             const viewTitle = document.createElement('h2');
             viewTitle.innerHTML = `View Configuration`;
             viewTitle.style.lineHeight = '29px';
@@ -19771,81 +19849,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.runAfter.addEventListener('value-changed', this.valueUpdated);
             this.runAfter.value = this.config.runAfter;
             this.plexValidSection.appendChild(this.runAfter);
-            let hasUIConfig = true;
-            let canConvert = true;
-            if (lodash.isArray(this.config.entity)) {
-                // eslint-disable-next-line consistent-return
-                lodash.forEach(this.config.entity, entity => {
-                    if (lodash.isObjectLike(entity)) {
-                        canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
-                        hasUIConfig = false;
-                        return false;
-                    }
-                });
-            }
-            else if (lodash.isObjectLike(this.config.entity)) {
-                canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
-                hasUIConfig = false;
-                if (canConvert) {
-                    const convertedEntities = [];
-                    hasUIConfig = true;
-                    if (lodash.isObjectLike(this.config.entity)) {
-                        lodash.forOwn(this.config.entity, value => {
-                            if (lodash.isString(value)) {
-                                convertedEntities.push(value);
-                            }
-                            else if (lodash.isArray(value)) {
-                                lodash.forEach(value, valueStr => {
-                                    convertedEntities.push(valueStr);
-                                });
-                            }
-                        });
-                    }
-                    this.config.entity = convertedEntities;
-                }
-            }
-            const devicesTitle = document.createElement('h2');
-            devicesTitle.innerHTML = `Devices Configuration`;
-            devicesTitle.style.lineHeight = '29px';
-            devicesTitle.style.marginBottom = '0px';
-            devicesTitle.style.marginTop = '20px';
-            if (hasUIConfig) {
-                const addDeviceButton = document.createElement('button');
-                addDeviceButton.style.float = 'right';
-                addDeviceButton.style.fontSize = '20px';
-                addDeviceButton.style.cursor = 'pointer';
-                addDeviceButton.innerHTML = '+';
-                addDeviceButton.addEventListener('click', () => {
-                    const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
-                    if (entitiesDropdown) {
-                        this.content.appendChild(entitiesDropdown);
-                    }
-                });
-                devicesTitle.appendChild(addDeviceButton);
-            }
-            this.plexValidSection.appendChild(devicesTitle);
-            // todo: convert entities setup to simple one if not using plexPlayer
-            if (hasUIConfig) {
-                if (lodash.isString(this.config.entity)) {
-                    this.config.entity = [this.config.entity];
-                }
-                if (lodash.isArray(this.config.entity)) {
-                    lodash.forEach(this.config.entity, entity => {
-                        if (lodash.isString(entity)) {
-                            const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
-                            if (entitiesDropdown) {
-                                this.plexValidSection.appendChild(entitiesDropdown);
-                            }
-                        }
-                    });
-                }
-            }
-            else {
-                const entitiesUINotAvailable = document.createElement('div');
-                entitiesUINotAvailable.innerHTML =
-                    'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.';
-                this.plexValidSection.appendChild(entitiesUINotAvailable);
-            }
             if (!lodash.isEmpty(this.sections)) {
                 lodash.forEach(this.sections, (section) => {
                     libraryItems.appendChild(addDropdownItem(section.title));
