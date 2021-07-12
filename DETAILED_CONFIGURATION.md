@@ -125,6 +125,8 @@ Finally, it tries to cast into media_player.bedroom_tv.
 
 ## Detailed configuration instructions for end devices
 
+**Unless you have a specific need to configure this part manually, such as remote plex server for plexPlayer, it is strongly advised to use UI to configure entities.**
+
 _You can combine multiple supported entities_, in that case, entity for supported content will be chosen in order how you entered them.
 
 As an example, if content can be played / shown both by kodi and androidtv, and you entered kodi first, it will be shown by kodi. If it cannot be played by kodi but can be played by androidtv, androidtv will be used.
