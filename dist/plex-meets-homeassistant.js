@@ -20734,6 +20734,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.runBefore = '';
         this.playTrailer = true;
         this.showExtras = true;
+        this.isVisible = true;
         this.showSearch = true;
         this.previousPageWidth = 0;
         this.runAfter = '';
@@ -20768,6 +20769,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.loadInitialData = async () => {
+            this.initialDataLoaded = true;
+            setInterval(() => {
+                const isVisibleNow = !lodash.isNull(this.offsetParent);
+                if (isVisibleNow && !this.isVisible) {
+                    this.renderPage();
+                }
+                this.isVisible = isVisibleNow;
+            }, 100);
             if (this.hassObj) {
                 this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
@@ -20834,7 +20843,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.previousPageWidth = this.card.offsetWidth;
             }
             this.resizeBackground();
-            this.initialDataLoaded = true;
         };
         this.renderInitialData = async () => {
             let { entity } = JSON.parse(JSON.stringify(this.config));

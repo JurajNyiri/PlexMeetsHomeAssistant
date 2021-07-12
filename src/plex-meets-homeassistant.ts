@@ -45,6 +45,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	showExtras = true;
 
+	isVisible = true;
+
 	showSearch = true;
 
 	previousPageWidth = 0;
@@ -159,6 +161,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	loadInitialData = async (): Promise<void> => {
+		this.initialDataLoaded = true;
+		setInterval(() => {
+			const isVisibleNow = !_.isNull(this.offsetParent);
+			if (isVisibleNow && !this.isVisible) {
+				this.renderPage();
+			}
+			this.isVisible = isVisibleNow;
+		}, 100);
 		if (this.hassObj) {
 			this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
@@ -228,7 +238,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.previousPageWidth = this.card.offsetWidth;
 		}
 		this.resizeBackground();
-		this.initialDataLoaded = true;
 	};
 
 	renderInitialData = async (): Promise<void> => {
