@@ -19489,12 +19489,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             return event;
         };
         this.valueUpdated = () => {
+            const originalConfig = lodash.clone(this.config);
+            this.config.protocol = this.protocol.value;
+            this.config.ip = this.ip.value;
+            this.config.token = this.token.value;
+            this.config.port = this.port.value;
             if (this.loaded) {
-                const originalConfig = lodash.clone(this.config);
-                this.config.protocol = this.protocol.value;
-                this.config.ip = this.ip.value;
-                this.config.token = this.token.value;
-                this.config.port = this.port.value;
                 if (!this.config.entity) {
                     this.config.entity = [];
                 }
@@ -19551,9 +19551,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     this.config.runBefore = this.runBefore.value;
                     this.config.runAfter = this.runAfter.value;
                 }
-                if (!lodash.isEqual(this.config, originalConfig)) {
-                    this.fireEvent(this, 'config-changed', { config: this.config });
-                }
+            }
+            if (!lodash.isEqual(this.config, originalConfig)) {
+                this.fireEvent(this, 'config-changed', { config: this.config });
             }
         };
         this.render = async () => {
