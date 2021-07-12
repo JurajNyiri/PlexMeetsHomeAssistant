@@ -19468,6 +19468,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.sections = [];
         this.entitiesRegistry = false;
         this.plexValidSection = document.createElement('div');
+        this.loaded = false;
         this.fireEvent = (node, type, detail, options = {}) => {
             // eslint-disable-next-line no-param-reassign
             detail = detail === null || detail === undefined ? {} : detail;
@@ -19481,69 +19482,71 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             return event;
         };
         this.valueUpdated = () => {
-            const originalConfig = lodash.clone(this.config);
-            this.config.protocol = this.protocol.value;
-            this.config.ip = this.ip.value;
-            this.config.token = this.token.value;
-            this.config.port = this.port.value;
-            if (!this.config.entity) {
-                this.config.entity = [];
-            }
-            if (!lodash.isEmpty(this.libraryName.value)) {
-                this.config.libraryName = this.libraryName.value;
-                let sortOrderValue = '';
-                if (lodash.isEqual(this.sortOrder.value, 'Ascending')) {
-                    sortOrderValue = 'asc';
-                }
-                else if (lodash.isEqual(this.sortOrder.value, 'Descending')) {
-                    sortOrderValue = 'desc';
-                }
-                if (!lodash.isEmpty(sortOrderValue) && !lodash.isEmpty(this.sort.value)) {
-                    this.config.sort = `${this.sort.value}:${sortOrderValue}`;
-                }
-                else {
-                    this.config.sort = ``;
-                }
-                if (lodash.isEmpty(this.maxCount.value)) {
-                    this.config.maxCount = '';
-                }
-                else {
-                    this.config.maxCount = this.maxCount.value;
-                }
-                if (!lodash.isEmpty(this.entities)) {
+            if (this.loaded) {
+                const originalConfig = lodash.clone(this.config);
+                this.config.protocol = this.protocol.value;
+                this.config.ip = this.ip.value;
+                this.config.token = this.token.value;
+                this.config.port = this.port.value;
+                if (!this.config.entity) {
                     this.config.entity = [];
-                    lodash.forEach(this.entities, entity => {
-                        if (!lodash.isEmpty(entity.value) && !lodash.includes(this.config.entity, entity.value)) {
-                            this.config.entity.push(entity.value);
-                        }
-                    });
                 }
-                if (lodash.isEqual(this.playTrailer.value, 'Yes')) {
-                    this.config.playTrailer = true;
+                if (!lodash.isEmpty(this.libraryName.value)) {
+                    this.config.libraryName = this.libraryName.value;
+                    let sortOrderValue = '';
+                    if (lodash.isEqual(this.sortOrder.value, 'Ascending')) {
+                        sortOrderValue = 'asc';
+                    }
+                    else if (lodash.isEqual(this.sortOrder.value, 'Descending')) {
+                        sortOrderValue = 'desc';
+                    }
+                    if (!lodash.isEmpty(sortOrderValue) && !lodash.isEmpty(this.sort.value)) {
+                        this.config.sort = `${this.sort.value}:${sortOrderValue}`;
+                    }
+                    else {
+                        this.config.sort = ``;
+                    }
+                    if (lodash.isEmpty(this.maxCount.value)) {
+                        this.config.maxCount = '';
+                    }
+                    else {
+                        this.config.maxCount = this.maxCount.value;
+                    }
+                    if (!lodash.isEmpty(this.entities)) {
+                        this.config.entity = [];
+                        lodash.forEach(this.entities, entity => {
+                            if (!lodash.isEmpty(entity.value) && !lodash.includes(this.config.entity, entity.value)) {
+                                this.config.entity.push(entity.value);
+                            }
+                        });
+                    }
+                    if (lodash.isEqual(this.playTrailer.value, 'Yes')) {
+                        this.config.playTrailer = true;
+                    }
+                    else if (lodash.isEqual(this.playTrailer.value, 'No')) {
+                        this.config.playTrailer = false;
+                    }
+                    else if (lodash.isEqual(this.playTrailer.value, 'Muted')) {
+                        this.config.playTrailer = 'muted';
+                    }
+                    if (lodash.isEqual(this.showExtras.value, 'Yes')) {
+                        this.config.showExtras = true;
+                    }
+                    else if (lodash.isEqual(this.showExtras.value, 'No')) {
+                        this.config.showExtras = false;
+                    }
+                    if (lodash.isEqual(this.showSearch.value, 'Yes')) {
+                        this.config.showSearch = true;
+                    }
+                    else if (lodash.isEqual(this.showSearch.value, 'No')) {
+                        this.config.showSearch = false;
+                    }
+                    this.config.runBefore = this.runBefore.value;
+                    this.config.runAfter = this.runAfter.value;
                 }
-                else if (lodash.isEqual(this.playTrailer.value, 'No')) {
-                    this.config.playTrailer = false;
+                if (!lodash.isEqual(this.config, originalConfig)) {
+                    this.fireEvent(this, 'config-changed', { config: this.config });
                 }
-                else if (lodash.isEqual(this.playTrailer.value, 'Muted')) {
-                    this.config.playTrailer = 'muted';
-                }
-                if (lodash.isEqual(this.showExtras.value, 'Yes')) {
-                    this.config.showExtras = true;
-                }
-                else if (lodash.isEqual(this.showExtras.value, 'No')) {
-                    this.config.showExtras = false;
-                }
-                if (lodash.isEqual(this.showSearch.value, 'Yes')) {
-                    this.config.showSearch = true;
-                }
-                else if (lodash.isEqual(this.showSearch.value, 'No')) {
-                    this.config.showSearch = false;
-                }
-                this.config.runBefore = this.runBefore.value;
-                this.config.runAfter = this.runAfter.value;
-            }
-            if (!lodash.isEqual(this.config, originalConfig)) {
-                this.fireEvent(this, 'config-changed', { config: this.config });
             }
         };
         this.render = async () => {
@@ -19910,6 +19913,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 }
                 this.plexValidSection.style.display = 'block';
             }
+            this.loaded = true;
             this.content.appendChild(this.plexValidSection);
         };
         this.setConfig = (config) => {
