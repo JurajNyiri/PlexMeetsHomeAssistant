@@ -19667,7 +19667,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.clients = await this.plex.getClients();
             this.plexValidSection.style.display = 'none';
             this.plexValidSection.innerHTML = '';
-            // todo: modify this to work with plexPlayer
             let hasUIConfig = true;
             let canConvert = true;
             if (lodash.isArray(this.config.entity)) {
@@ -19723,7 +19722,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.plexValidSection.appendChild(devicesTitle);
             this.entitiesSection.innerHTML = '';
             this.plexValidSection.appendChild(this.entitiesSection);
-            // todo: convert entities setup to simple one if not using plexPlayer
             if (hasUIConfig) {
                 if (lodash.isString(this.config.entity)) {
                     this.config.entity = [this.config.entity];
@@ -19742,7 +19740,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             else {
                 const entitiesUINotAvailable = document.createElement('div');
                 entitiesUINotAvailable.innerHTML =
-                    'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.';
+                    'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.<br/><br/>If you are not using server settings for plexPlayer with <b>identifier</b> and <b>server</b> key, you can migrate your settings to UI by removing plexPlayer section and readd through UI.';
                 this.plexValidSection.appendChild(entitiesUINotAvailable);
             }
             const viewTitle = document.createElement('h2');
