@@ -19456,6 +19456,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.tabs = document.createElement('paper-tabs');
         this.sort = document.createElement('paper-dropdown-menu');
         this.sortOrder = document.createElement('paper-dropdown-menu');
+        this.playTrailer = document.createElement('paper-dropdown-menu');
         this.devicesTabs = 0;
         this.entities = [];
         this.sections = [];
@@ -19499,6 +19500,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                             this.config.entity.push(entity.value);
                         }
                     });
+                }
+                if (lodash.isEqual(this.playTrailer.value, 'Yes')) {
+                    this.config.playTrailer = true;
+                }
+                else if (lodash.isEqual(this.playTrailer.value, 'No')) {
+                    this.config.playTrailer = false;
+                }
+                else if (lodash.isEqual(this.playTrailer.value, 'Muted')) {
+                    this.config.playTrailer = 'muted';
                 }
             }
             if (!lodash.isEqual(this.config, originalConfig)) {
@@ -19659,6 +19669,25 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 }
             }
             this.plexValidSection.appendChild(this.sortOrder);
+            this.playTrailer.innerHTML = '';
+            const playTrailerItems = document.createElement('paper-listbox');
+            playTrailerItems.appendChild(addDropdownItem('Yes'));
+            playTrailerItems.appendChild(addDropdownItem('Muted'));
+            playTrailerItems.appendChild(addDropdownItem('No'));
+            playTrailerItems.slot = 'dropdown-content';
+            this.playTrailer.label = 'Play Trailer';
+            this.playTrailer.appendChild(playTrailerItems);
+            this.playTrailer.style.width = '100%';
+            this.playTrailer.addEventListener('value-changed', this.valueUpdated);
+            let playTrailerValue = 'Yes';
+            if (lodash.isEqual(this.config.playTrailer, 'muted')) {
+                playTrailerValue = 'Muted';
+            }
+            else if (!this.config.playTrailer) {
+                playTrailerValue = 'No';
+            }
+            this.playTrailer.value = playTrailerValue;
+            this.plexValidSection.appendChild(this.playTrailer);
             let hasUIConfig = true;
             if (lodash.isArray(this.config.entity)) {
                 // eslint-disable-next-line consistent-return
@@ -19731,6 +19760,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (!config.sort) {
                 this.config.sort = 'titleSort:asc';
+            }
+            if (!lodash.isNil(config.playTrailer)) {
+                this.config.playTrailer = config.playTrailer;
+            }
+            else {
+                this.config.playTrailer = true;
             }
             this.render();
         };
