@@ -35,7 +35,7 @@ Supported are also any other devices, available to be cast into from Plex web in
 
 - [Guide How to get Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 - Play icon will only show up when playing is possible.
-- Kodi entities will only work if you are using [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect#download-and-installation) and [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) is installed. See [detailed instructions](https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/DETAILED_CONFIGURATION.md#kodi)
+- Kodi entities will only work if you are using [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect#download-and-installation) and [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) is installed. See [detailed instructions](DETAILED_CONFIGURATION.md#kodi)
 - If you have Plex integration set up, Plex player is used for cast entities. Otherwise media is casted as a file.
 
 ## Ask for help or help development
