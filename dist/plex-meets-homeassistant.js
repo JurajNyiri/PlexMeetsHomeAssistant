@@ -19594,14 +19594,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.appendChild(this.content);
             // todo: do verify better, do not query plex every time
             this.sections = [];
-            if (this.plex) {
-                try {
-                    this.sections = await this.plex.getSections();
-                }
-                catch (err) {
-                    // pass
-                }
-            }
+            console.log(this.plexPort);
+            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+            this.sections = await this.plex.getSections();
             this.plexValidSection.style.display = 'none';
             this.plexValidSection.innerHTML = '';
             const viewTitle = document.createElement('h2');
@@ -19707,8 +19702,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.config = JSON.parse(JSON.stringify(config));
-            if (config.port) {
+            if (config.port && !lodash.isEqual(config.port, '')) {
                 this.plexPort = config.port;
+            }
+            else {
+                this.plexPort = false;
             }
             if (config.protocol) {
                 this.plexProtocol = config.protocol;
@@ -19719,7 +19717,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             if (!config.sort) {
                 this.config.sort = 'titleSort:asc';
             }
-            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.render();
         };
         this.configChanged = (newConfig) => {
@@ -21746,8 +21743,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (config.protocol) {
                 this.plexProtocol = config.protocol;
             }
-            if (config.port) {
+            if (config.port && !lodash.isEqual(config.port, '')) {
                 this.plexPort = config.port;
+            }
+            else {
+                this.plexPort = false;
             }
             if (config.maxCount && config.maxCount !== '') {
                 this.maxCount = config.maxCount;

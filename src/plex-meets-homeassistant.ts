@@ -1526,8 +1526,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
 		}
-		if (config.port) {
+		if (config.port && !_.isEqual(config.port, '')) {
 			this.plexPort = config.port;
+		} else {
+			this.plexPort = false;
 		}
 		if (config.maxCount && config.maxCount !== '') {
 			this.maxCount = config.maxCount;
