@@ -19659,36 +19659,51 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 }
             }
             this.plexValidSection.appendChild(this.sortOrder);
-            const devicesTitle = document.createElement('h2');
-            devicesTitle.innerHTML = `Devices Configuration`;
-            devicesTitle.style.lineHeight = '29px';
-            devicesTitle.style.marginBottom = '0px';
-            devicesTitle.style.marginTop = '20px';
-            const addDeviceButton = document.createElement('button');
-            addDeviceButton.style.float = 'right';
-            addDeviceButton.style.fontSize = '20px';
-            addDeviceButton.style.cursor = 'pointer';
-            addDeviceButton.innerHTML = '+';
-            addDeviceButton.addEventListener('click', () => {
-                const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
-                if (entitiesDropdown) {
-                    this.content.appendChild(entitiesDropdown);
-                }
-            });
-            devicesTitle.appendChild(addDeviceButton);
-            this.plexValidSection.appendChild(devicesTitle);
-            if (lodash.isString(this.config.entity)) {
-                this.config.entity = [this.config.entity];
-            }
+            let hasUIConfig = true;
             if (lodash.isArray(this.config.entity)) {
+                // eslint-disable-next-line consistent-return
                 lodash.forEach(this.config.entity, entity => {
-                    if (lodash.isString(entity)) {
-                        const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
-                        if (entitiesDropdown) {
-                            this.plexValidSection.appendChild(entitiesDropdown);
-                        }
+                    if (lodash.isObjectLike(entity)) {
+                        hasUIConfig = false;
+                        return false;
                     }
                 });
+            }
+            else if (lodash.isObjectLike(this.config.entity)) {
+                hasUIConfig = false;
+            }
+            if (hasUIConfig) {
+                const devicesTitle = document.createElement('h2');
+                devicesTitle.innerHTML = `Devices Configuration`;
+                devicesTitle.style.lineHeight = '29px';
+                devicesTitle.style.marginBottom = '0px';
+                devicesTitle.style.marginTop = '20px';
+                const addDeviceButton = document.createElement('button');
+                addDeviceButton.style.float = 'right';
+                addDeviceButton.style.fontSize = '20px';
+                addDeviceButton.style.cursor = 'pointer';
+                addDeviceButton.innerHTML = '+';
+                addDeviceButton.addEventListener('click', () => {
+                    const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
+                    if (entitiesDropdown) {
+                        this.content.appendChild(entitiesDropdown);
+                    }
+                });
+                devicesTitle.appendChild(addDeviceButton);
+                this.plexValidSection.appendChild(devicesTitle);
+                if (lodash.isString(this.config.entity)) {
+                    this.config.entity = [this.config.entity];
+                }
+                if (lodash.isArray(this.config.entity)) {
+                    lodash.forEach(this.config.entity, entity => {
+                        if (lodash.isString(entity)) {
+                            const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
+                            if (entitiesDropdown) {
+                                this.plexValidSection.appendChild(entitiesDropdown);
+                            }
+                        }
+                    });
+                }
             }
             if (!lodash.isEmpty(this.sections)) {
                 lodash.forEach(this.sections, (section) => {
