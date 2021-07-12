@@ -19845,13 +19845,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 this.libraryName.disabled = false;
                 this.libraryName.value = this.config.libraryName;
                 let libraryType = '';
+                // eslint-disable-next-line consistent-return
                 lodash.forEach(this.sections, section => {
                     if (lodash.isEqual(section.title, this.libraryName.value)) {
                         libraryType = section.type;
                         return false;
                     }
                 });
-                console.log(libraryType);
                 if (lodash.isEqual(libraryType, 'show')) {
                     sortItems.appendChild(addDropdownItem('titleSort'));
                     sortItems.appendChild(addDropdownItem('title'));
