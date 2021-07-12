@@ -38,6 +38,8 @@ _Available special libraries:_
 
 **showExtras**: _Optional_ Specify whether to show extras if any available on movie / episode. Possible values: true, false. Default: true
 
+**showSearch**: _Optional_ Specify whether to show search field on top. Possible values: true, false. Default: true
+
 **playTrailer**: _Optional_ Specify whether to play trailer if available. Possible values: true, false, muted. Default: true
 
 Example of the simplest possible configuration:
