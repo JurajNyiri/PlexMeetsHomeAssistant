@@ -36,6 +36,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	playTrailer: any = document.createElement('paper-dropdown-menu');
 
+	showExtras: any = document.createElement('paper-dropdown-menu');
+
 	devicesTabs = 0;
 
 	hassObj: HomeAssistant | undefined;
@@ -67,7 +69,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	};
 
 	valueUpdated = (): void => {
-		console.log('valueUpdated');
 		const originalConfig = _.clone(this.config);
 		this.config.protocol = this.protocol.value;
 		this.config.ip = this.ip.value;
@@ -105,10 +106,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			} else if (_.isEqual(this.playTrailer.value, 'Muted')) {
 				this.config.playTrailer = 'muted';
 			}
+			if (_.isEqual(this.showExtras.value, 'Yes')) {
+				this.config.showExtras = true;
+			} else if (_.isEqual(this.showExtras.value, 'No')) {
+				this.config.showExtras = false;
+			}
 		}
 		if (!_.isEqual(this.config, originalConfig)) {
-			console.log(this.config);
-			console.log(originalConfig);
 			this.fireEvent(this, 'config-changed', { config: this.config });
 		}
 	};
@@ -211,7 +215,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		// todo: do verify better, do not query plex every time
 		this.sections = [];
 
-		console.log(this.plexPort);
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 		this.sections = await this.plex.getSections();
 
@@ -300,6 +303,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.playTrailer.value = playTrailerValue;
 		this.plexValidSection.appendChild(this.playTrailer);
 
+		this.showExtras.innerHTML = '';
+		const showExtrasItems: any = document.createElement('paper-listbox');
+		showExtrasItems.appendChild(addDropdownItem('Yes'));
+		showExtrasItems.appendChild(addDropdownItem('No'));
+		showExtrasItems.slot = 'dropdown-content';
+		this.showExtras.label = 'Show Extras';
+		this.showExtras.appendChild(showExtrasItems);
+		this.showExtras.style.width = '100%';
+		this.showExtras.addEventListener('value-changed', this.valueUpdated);
+		let showExtrasValue = 'Yes';
+		if (!this.config.showExtras) {
+			showExtrasValue = 'No';
+		}
+		this.showExtras.value = showExtrasValue;
+		this.plexValidSection.appendChild(this.showExtras);
+
 		let hasUIConfig = true;
 		if (_.isArray(this.config.entity)) {
 			// eslint-disable-next-line consistent-return
@@ -383,6 +402,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.playTrailer = config.playTrailer;
 		} else {
 			this.config.playTrailer = true;
+		}
+
+		if (!_.isNil(config.showExtras)) {
+			console.log('A');
+			this.config.showExtras = config.showExtras;
+		} else {
+			console.log('B');
+			this.config.showExtras = true;
 		}
 
 		this.render();

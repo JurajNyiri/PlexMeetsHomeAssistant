@@ -19457,6 +19457,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.sort = document.createElement('paper-dropdown-menu');
         this.sortOrder = document.createElement('paper-dropdown-menu');
         this.playTrailer = document.createElement('paper-dropdown-menu');
+        this.showExtras = document.createElement('paper-dropdown-menu');
         this.devicesTabs = 0;
         this.entities = [];
         this.sections = [];
@@ -19475,7 +19476,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             return event;
         };
         this.valueUpdated = () => {
-            console.log('valueUpdated');
             const originalConfig = lodash.clone(this.config);
             this.config.protocol = this.protocol.value;
             this.config.ip = this.ip.value;
@@ -19514,10 +19514,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 else if (lodash.isEqual(this.playTrailer.value, 'Muted')) {
                     this.config.playTrailer = 'muted';
                 }
+                if (lodash.isEqual(this.showExtras.value, 'Yes')) {
+                    this.config.showExtras = true;
+                }
+                else if (lodash.isEqual(this.showExtras.value, 'No')) {
+                    this.config.showExtras = false;
+                }
             }
             if (!lodash.isEqual(this.config, originalConfig)) {
-                console.log(this.config);
-                console.log(originalConfig);
                 this.fireEvent(this, 'config-changed', { config: this.config });
             }
         };
@@ -19608,7 +19612,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.appendChild(this.content);
             // todo: do verify better, do not query plex every time
             this.sections = [];
-            console.log(this.plexPort);
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.sections = await this.plex.getSections();
             this.plexValidSection.style.display = 'none';
@@ -19695,6 +19698,21 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             this.playTrailer.value = playTrailerValue;
             this.plexValidSection.appendChild(this.playTrailer);
+            this.showExtras.innerHTML = '';
+            const showExtrasItems = document.createElement('paper-listbox');
+            showExtrasItems.appendChild(addDropdownItem('Yes'));
+            showExtrasItems.appendChild(addDropdownItem('No'));
+            showExtrasItems.slot = 'dropdown-content';
+            this.showExtras.label = 'Show Extras';
+            this.showExtras.appendChild(showExtrasItems);
+            this.showExtras.style.width = '100%';
+            this.showExtras.addEventListener('value-changed', this.valueUpdated);
+            let showExtrasValue = 'Yes';
+            if (!this.config.showExtras) {
+                showExtrasValue = 'No';
+            }
+            this.showExtras.value = showExtrasValue;
+            this.plexValidSection.appendChild(this.showExtras);
             let hasUIConfig = true;
             if (lodash.isArray(this.config.entity)) {
                 // eslint-disable-next-line consistent-return
@@ -19773,6 +19791,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             else {
                 this.config.playTrailer = true;
+            }
+            if (!lodash.isNil(config.showExtras)) {
+                console.log('A');
+                this.config.showExtras = config.showExtras;
+            }
+            else {
+                console.log('B');
+                this.config.showExtras = true;
             }
             this.render();
         };
