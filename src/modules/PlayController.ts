@@ -112,36 +112,41 @@ class PlayController {
 				break;
 			case 'cast':
 				if (this.hass.services.plex) {
-					switch (data.type) {
-						case 'movie':
-							this.playViaCastPlex(
-								entity.value,
-								'movie',
-								`plex://${JSON.stringify({
-									// eslint-disable-next-line @typescript-eslint/camelcase
-									library_name: data.librarySectionTitle,
-									title: data.title
-								})}`
-							);
-							break;
-						case 'episode':
-							this.playViaCastPlex(
-								entity.value,
-								'EPISODE',
-								`plex://${JSON.stringify({
-									// eslint-disable-next-line @typescript-eslint/camelcase
-									library_name: data.librarySectionTitle,
-									// eslint-disable-next-line @typescript-eslint/camelcase
-									show_name: data.grandparentTitle,
-									// eslint-disable-next-line @typescript-eslint/camelcase
-									season_number: data.parentIndex,
-									// eslint-disable-next-line @typescript-eslint/camelcase
-									episode_number: data.index
-								})}`
-							);
-							break;
-						default:
-							this.playViaCast(entity.value, data.Media[0].Part[0].key);
+					try {
+						switch (data.type) {
+							case 'movie':
+								await this.playViaCastPlex(
+									entity.value,
+									'movie',
+									`plex://${JSON.stringify({
+										// eslint-disable-next-line @typescript-eslint/camelcase
+										library_name: data.librarySectionTitle,
+										title: data.title
+									})}`
+								);
+								break;
+							case 'episode':
+								await this.playViaCastPlex(
+									entity.value,
+									'EPISODE',
+									`plex://${JSON.stringify({
+										// eslint-disable-next-line @typescript-eslint/camelcase
+										library_name: data.librarySectionTitle,
+										// eslint-disable-next-line @typescript-eslint/camelcase
+										show_name: data.grandparentTitle,
+										// eslint-disable-next-line @typescript-eslint/camelcase
+										season_number: data.parentIndex,
+										// eslint-disable-next-line @typescript-eslint/camelcase
+										episode_number: data.index
+									})}`
+								);
+								break;
+							default:
+								this.playViaCast(entity.value, data.Media[0].Part[0].key);
+						}
+					} catch (err) {
+						console.log(err);
+						this.playViaCast(entity.value, data.Media[0].Part[0].key);
 					}
 				} else {
 					this.playViaCast(entity.value, data.Media[0].Part[0].key);
@@ -287,8 +292,8 @@ class PlayController {
 		});
 	};
 
-	private playViaCastPlex = (entityName: string, contentType: string, mediaLink: string): void => {
-		this.hass.callService('media_player', 'play_media', {
+	private playViaCastPlex = (entityName: string, contentType: string, mediaLink: string): Promise<void> => {
+		return this.hass.callService('media_player', 'play_media', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			entity_id: entityName,
 			// eslint-disable-next-line @typescript-eslint/camelcase

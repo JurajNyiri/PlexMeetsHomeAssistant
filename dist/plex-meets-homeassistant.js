@@ -18909,28 +18909,34 @@ class PlayController {
                     break;
                 case 'cast':
                     if (this.hass.services.plex) {
-                        switch (data.type) {
-                            case 'movie':
-                                this.playViaCastPlex(entity.value, 'movie', `plex://${JSON.stringify({
-                                    // eslint-disable-next-line @typescript-eslint/camelcase
-                                    library_name: data.librarySectionTitle,
-                                    title: data.title
-                                })}`);
-                                break;
-                            case 'episode':
-                                this.playViaCastPlex(entity.value, 'EPISODE', `plex://${JSON.stringify({
-                                    // eslint-disable-next-line @typescript-eslint/camelcase
-                                    library_name: data.librarySectionTitle,
-                                    // eslint-disable-next-line @typescript-eslint/camelcase
-                                    show_name: data.grandparentTitle,
-                                    // eslint-disable-next-line @typescript-eslint/camelcase
-                                    season_number: data.parentIndex,
-                                    // eslint-disable-next-line @typescript-eslint/camelcase
-                                    episode_number: data.index
-                                })}`);
-                                break;
-                            default:
-                                this.playViaCast(entity.value, data.Media[0].Part[0].key);
+                        try {
+                            switch (data.type) {
+                                case 'movie':
+                                    await this.playViaCastPlex(entity.value, 'movie', `plex://${JSON.stringify({
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        library_name: data.librarySectionTitle,
+                                        title: data.title
+                                    })}`);
+                                    break;
+                                case 'episode':
+                                    await this.playViaCastPlex(entity.value, 'EPISODE', `plex://${JSON.stringify({
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        library_name: data.librarySectionTitle,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        show_name: data.grandparentTitle,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        season_number: data.parentIndex,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        episode_number: data.index
+                                    })}`);
+                                    break;
+                                default:
+                                    this.playViaCast(entity.value, data.Media[0].Part[0].key);
+                            }
+                        }
+                        catch (err) {
+                            console.log(err);
+                            this.playViaCast(entity.value, data.Media[0].Part[0].key);
                         }
                     }
                     else {
@@ -19070,7 +19076,7 @@ class PlayController {
             });
         };
         this.playViaCastPlex = (entityName, contentType, mediaLink) => {
-            this.hass.callService('media_player', 'play_media', {
+            return this.hass.callService('media_player', 'play_media', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: entityName,
                 // eslint-disable-next-line @typescript-eslint/camelcase
@@ -19238,7 +19244,6 @@ class PlayController {
     }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe) => {
     if (unsafe) {
@@ -19252,6 +19257,9 @@ const escapeHtml = (unsafe) => {
     }
     return '';
 };
+const fetchEntityRegistry = (conn) => conn.sendMessagePromise({
+    type: 'config/entity_registry/list'
+});
 const getHeight = (el) => {
     const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
     return height;
@@ -19437,6 +19445,554 @@ const isScrolledIntoView = (elem) => {
     // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
     return isVisible;
 };
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+class PlexMeetsHomeAssistantEditor extends HTMLElement {
+    constructor() {
+        super(...arguments);
+        this.plexPort = false;
+        this.plexProtocol = 'http';
+        this.config = {};
+        this.ip = document.createElement('paper-input');
+        this.token = document.createElement('paper-input');
+        this.port = document.createElement('paper-input');
+        this.maxCount = document.createElement('paper-input');
+        this.libraryName = document.createElement('paper-dropdown-menu');
+        this.protocol = document.createElement('paper-dropdown-menu');
+        this.tabs = document.createElement('paper-tabs');
+        this.sort = document.createElement('paper-dropdown-menu');
+        this.sortOrder = document.createElement('paper-dropdown-menu');
+        this.playTrailer = document.createElement('paper-dropdown-menu');
+        this.showExtras = document.createElement('paper-dropdown-menu');
+        this.showSearch = document.createElement('paper-dropdown-menu');
+        this.runBefore = document.createElement('paper-dropdown-menu');
+        this.runAfter = document.createElement('paper-dropdown-menu');
+        this.entitiesSection = document.createElement('div');
+        this.devicesTabs = 0;
+        this.entities = [];
+        this.scriptEntities = [];
+        this.sections = [];
+        this.clients = {};
+        this.entitiesRegistry = false;
+        this.plexValidSection = document.createElement('div');
+        this.loaded = false;
+        this.fireEvent = (node, type, detail, options = {}) => {
+            // eslint-disable-next-line no-param-reassign
+            detail = detail === null || detail === undefined ? {} : detail;
+            const event = new Event(type, {
+                bubbles: options.bubbles === undefined ? true : options.bubbles,
+                cancelable: Boolean(options.cancelable),
+                composed: options.composed === undefined ? true : options.composed
+            });
+            event.detail = detail;
+            node.dispatchEvent(event);
+            return event;
+        };
+        this.valueUpdated = () => {
+            if (this.loaded) {
+                const originalConfig = lodash.clone(this.config);
+                this.config.protocol = this.protocol.value;
+                this.config.ip = this.ip.value;
+                this.config.token = this.token.value;
+                this.config.port = this.port.value;
+                if (!this.config.entity) {
+                    this.config.entity = [];
+                }
+                if (!lodash.isEmpty(this.libraryName.value)) {
+                    this.config.libraryName = this.libraryName.value;
+                    let sortOrderValue = '';
+                    if (lodash.isEqual(this.sortOrder.value, 'Ascending')) {
+                        sortOrderValue = 'asc';
+                    }
+                    else if (lodash.isEqual(this.sortOrder.value, 'Descending')) {
+                        sortOrderValue = 'desc';
+                    }
+                    if (!lodash.isEmpty(sortOrderValue) && !lodash.isEmpty(this.sort.value)) {
+                        this.config.sort = `${this.sort.value}:${sortOrderValue}`;
+                    }
+                    else {
+                        this.config.sort = ``;
+                    }
+                    if (lodash.isEmpty(this.maxCount.value)) {
+                        this.config.maxCount = '';
+                    }
+                    else {
+                        this.config.maxCount = this.maxCount.value;
+                    }
+                    if (!lodash.isEmpty(this.entities)) {
+                        this.config.entity = [];
+                        lodash.forEach(this.entities, entity => {
+                            if (!lodash.isEmpty(entity.value) && !lodash.includes(this.config.entity, entity.value)) {
+                                this.config.entity.push(entity.value);
+                            }
+                        });
+                    }
+                    if (lodash.isEqual(this.playTrailer.value, 'Yes')) {
+                        this.config.playTrailer = true;
+                    }
+                    else if (lodash.isEqual(this.playTrailer.value, 'No')) {
+                        this.config.playTrailer = false;
+                    }
+                    else if (lodash.isEqual(this.playTrailer.value, 'Muted')) {
+                        this.config.playTrailer = 'muted';
+                    }
+                    if (lodash.isEqual(this.showExtras.value, 'Yes')) {
+                        this.config.showExtras = true;
+                    }
+                    else if (lodash.isEqual(this.showExtras.value, 'No')) {
+                        this.config.showExtras = false;
+                    }
+                    if (lodash.isEqual(this.showSearch.value, 'Yes')) {
+                        this.config.showSearch = true;
+                    }
+                    else if (lodash.isEqual(this.showSearch.value, 'No')) {
+                        this.config.showSearch = false;
+                    }
+                    this.config.runBefore = this.runBefore.value;
+                    this.config.runAfter = this.runAfter.value;
+                }
+                if (!lodash.isEqual(this.config, originalConfig)) {
+                    this.fireEvent(this, 'config-changed', { config: this.config });
+                }
+            }
+        };
+        this.render = async () => {
+            const addDropdownItem = (text) => {
+                const libraryItem = document.createElement('paper-item');
+                libraryItem.innerHTML = text;
+                return libraryItem;
+            };
+            const createEntitiesDropdown = (selected, changeHandler) => {
+                if (this.entitiesRegistry) {
+                    const entitiesDropDown = document.createElement('paper-dropdown-menu');
+                    const entities = document.createElement('paper-listbox');
+                    entities.appendChild(addDropdownItem(''));
+                    const addedEntityStrings = [];
+                    lodash.forEach(this.entitiesRegistry, entityRegistry => {
+                        if (lodash.isEqual(entityRegistry.platform, 'cast') ||
+                            lodash.isEqual(entityRegistry.platform, 'kodi') ||
+                            lodash.isEqual(entityRegistry.platform, 'androidtv')) {
+                            const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
+                            entities.appendChild(addDropdownItem(entityName));
+                            addedEntityStrings.push(entityName);
+                        }
+                    });
+                    lodash.forEach(this.clients, value => {
+                        const entityName = `plexPlayer | ${value.name} | ${value.address} | ${value.machineIdentifier}`;
+                        entities.appendChild(addDropdownItem(entityName));
+                        addedEntityStrings.push(entityName);
+                    });
+                    if (lodash.isArray(this.config.entity)) {
+                        lodash.forEach(this.config.entity, value => {
+                            if (!lodash.includes(addedEntityStrings, value)) {
+                                entities.appendChild(addDropdownItem(value));
+                                addedEntityStrings.push(value);
+                            }
+                        });
+                    }
+                    entities.slot = 'dropdown-content';
+                    entitiesDropDown.label = 'Entity';
+                    entitiesDropDown.value = selected;
+                    entitiesDropDown.appendChild(entities);
+                    entitiesDropDown.style.width = '100%';
+                    entitiesDropDown.className = 'entitiesDropDown';
+                    entitiesDropDown.addEventListener('value-changed', changeHandler);
+                    this.entities.push(entitiesDropDown);
+                    return entitiesDropDown;
+                }
+                return false;
+            };
+            if (this.content)
+                this.content.remove();
+            if (this.hassObj && !this.entitiesRegistry) {
+                lodash.forOwn(this.hassObj.states, (value, key) => {
+                    if (lodash.startsWith(key, 'script.')) {
+                        this.scriptEntities.push(key);
+                    }
+                });
+                this.entitiesRegistry = await fetchEntityRegistry(this.hassObj.connection);
+            }
+            this.entities = [];
+            this.content = document.createElement('div');
+            const plexTitle = document.createElement('h2');
+            plexTitle.innerHTML = 'Plex Configuration';
+            plexTitle.style.margin = '0px';
+            plexTitle.style.padding = '0px';
+            this.content.appendChild(plexTitle);
+            this.protocol.innerHTML = '';
+            const protocolItems = document.createElement('paper-listbox');
+            protocolItems.appendChild(addDropdownItem('http'));
+            protocolItems.appendChild(addDropdownItem('https'));
+            protocolItems.slot = 'dropdown-content';
+            this.protocol.label = 'Plex Protocol';
+            this.protocol.appendChild(protocolItems);
+            this.protocol.style.width = '100%';
+            this.protocol.addEventListener('value-changed', this.valueUpdated);
+            if (lodash.isEmpty(this.config.protocol)) {
+                this.protocol.value = 'http';
+            }
+            else {
+                this.protocol.value = this.config.protocol;
+            }
+            this.content.appendChild(this.protocol);
+            this.ip.label = 'Plex IP Address';
+            this.ip.value = this.config.ip;
+            this.ip.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.ip);
+            this.port.label = 'Plex Port';
+            this.port.value = this.config.port;
+            this.port.type = 'number';
+            this.port.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.port);
+            this.token.label = 'Plex Token';
+            this.token.value = this.config.token;
+            this.token.addEventListener('change', this.valueUpdated);
+            this.content.appendChild(this.token);
+            this.libraryName.innerHTML = '';
+            const libraryItems = document.createElement('paper-listbox');
+            libraryItems.appendChild(addDropdownItem('Continue Watching'));
+            libraryItems.appendChild(addDropdownItem('Deck'));
+            libraryItems.appendChild(addDropdownItem('Recently Added'));
+            libraryItems.appendChild(addDropdownItem('Watch Next'));
+            libraryItems.slot = 'dropdown-content';
+            this.libraryName.label = 'Plex Library';
+            this.libraryName.disabled = true;
+            this.libraryName.appendChild(libraryItems);
+            this.libraryName.style.width = '100%';
+            this.libraryName.addEventListener('value-changed', this.valueUpdated);
+            this.content.appendChild(this.libraryName);
+            this.appendChild(this.content);
+            this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+            this.sections = await this.plex.getSections();
+            this.clients = await this.plex.getClients();
+            this.plexValidSection.style.display = 'none';
+            this.plexValidSection.innerHTML = '';
+            let hasUIConfig = true;
+            let canConvert = true;
+            if (lodash.isArray(this.config.entity)) {
+                // eslint-disable-next-line consistent-return
+                lodash.forEach(this.config.entity, entity => {
+                    if (lodash.isObjectLike(entity)) {
+                        canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
+                        hasUIConfig = false;
+                        return false;
+                    }
+                });
+            }
+            else if (lodash.isObjectLike(this.config.entity)) {
+                canConvert = !lodash.includes(lodash.keys(this.config.entity), 'plexPlayer');
+                hasUIConfig = false;
+                if (canConvert) {
+                    const convertedEntities = [];
+                    hasUIConfig = true;
+                    if (lodash.isObjectLike(this.config.entity)) {
+                        lodash.forOwn(this.config.entity, value => {
+                            if (lodash.isString(value)) {
+                                convertedEntities.push(value);
+                            }
+                            else if (lodash.isArray(value)) {
+                                lodash.forEach(value, valueStr => {
+                                    convertedEntities.push(valueStr);
+                                });
+                            }
+                        });
+                    }
+                    this.config.entity = convertedEntities;
+                }
+            }
+            const devicesTitle = document.createElement('h2');
+            devicesTitle.innerHTML = `Devices Configuration`;
+            devicesTitle.style.lineHeight = '29px';
+            devicesTitle.style.marginBottom = '0px';
+            devicesTitle.style.marginTop = '20px';
+            if (hasUIConfig) {
+                const addDeviceButton = document.createElement('button');
+                addDeviceButton.style.float = 'right';
+                addDeviceButton.style.fontSize = '20px';
+                addDeviceButton.style.cursor = 'pointer';
+                addDeviceButton.innerHTML = '+';
+                addDeviceButton.addEventListener('click', () => {
+                    const entitiesDropdown = createEntitiesDropdown('', this.valueUpdated);
+                    if (entitiesDropdown) {
+                        this.entitiesSection.appendChild(entitiesDropdown);
+                    }
+                });
+                devicesTitle.appendChild(addDeviceButton);
+            }
+            this.plexValidSection.appendChild(devicesTitle);
+            this.entitiesSection.innerHTML = '';
+            this.plexValidSection.appendChild(this.entitiesSection);
+            if (hasUIConfig) {
+                if (lodash.isString(this.config.entity)) {
+                    this.config.entity = [this.config.entity];
+                }
+                if (lodash.isArray(this.config.entity)) {
+                    lodash.forEach(this.config.entity, entity => {
+                        if (lodash.isString(entity)) {
+                            const entitiesDropdown = createEntitiesDropdown(entity, this.valueUpdated);
+                            if (entitiesDropdown) {
+                                this.entitiesSection.appendChild(entitiesDropdown);
+                            }
+                        }
+                    });
+                }
+            }
+            else {
+                const entitiesUINotAvailable = document.createElement('div');
+                entitiesUINotAvailable.innerHTML =
+                    'Devices configuration is not available when using plexPlayer client device.<br/>You can edit any other settings through UI and use <b>Show code editor</b> to edit entities.<br/><br/>If you are not using server settings for plexPlayer with <b>identifier</b> and <b>server</b> key, you can migrate your settings to UI by removing plexPlayer section and readd through UI.';
+                this.plexValidSection.appendChild(entitiesUINotAvailable);
+            }
+            const viewTitle = document.createElement('h2');
+            viewTitle.innerHTML = `View Configuration`;
+            viewTitle.style.lineHeight = '29px';
+            viewTitle.style.marginBottom = '0px';
+            viewTitle.style.marginTop = '20px';
+            this.plexValidSection.appendChild(viewTitle);
+            this.maxCount.label = 'Maximum number of items to display';
+            this.maxCount.value = this.config.maxCount;
+            this.maxCount.type = 'number';
+            this.maxCount.addEventListener('change', this.valueUpdated);
+            this.plexValidSection.appendChild(this.maxCount);
+            this.sort.innerHTML = '';
+            const sortItems = document.createElement('paper-listbox');
+            sortItems.slot = 'dropdown-content';
+            this.sort.label = 'Sort';
+            this.sort.appendChild(sortItems);
+            this.sort.style.width = '100%';
+            this.sort.addEventListener('value-changed', this.valueUpdated);
+            this.plexValidSection.appendChild(this.sort);
+            this.sortOrder.innerHTML = '';
+            const sortOrderItems = document.createElement('paper-listbox');
+            sortOrderItems.appendChild(addDropdownItem('Ascending'));
+            sortOrderItems.appendChild(addDropdownItem('Descending'));
+            sortOrderItems.slot = 'dropdown-content';
+            this.sortOrder.label = 'Sort Order';
+            this.sortOrder.appendChild(sortOrderItems);
+            this.sortOrder.style.width = '100%';
+            this.sortOrder.addEventListener('value-changed', this.valueUpdated);
+            if (lodash.isEmpty(this.config.sort)) {
+                this.sortOrder.value = 'Ascending';
+            }
+            else {
+                const sortOrder = this.config.sort.split(':')[1];
+                if (lodash.isEmpty(sortOrder)) {
+                    this.sortOrder.value = 'Ascending';
+                }
+                else if (lodash.isEqual(sortOrder, 'asc')) {
+                    this.sortOrder.value = 'Ascending';
+                }
+                else if (lodash.isEqual(sortOrder, 'desc')) {
+                    this.sortOrder.value = 'Descending';
+                }
+            }
+            this.plexValidSection.appendChild(this.sortOrder);
+            this.playTrailer.innerHTML = '';
+            const playTrailerItems = document.createElement('paper-listbox');
+            playTrailerItems.appendChild(addDropdownItem('Yes'));
+            playTrailerItems.appendChild(addDropdownItem('Muted'));
+            playTrailerItems.appendChild(addDropdownItem('No'));
+            playTrailerItems.slot = 'dropdown-content';
+            this.playTrailer.label = 'Play Trailer';
+            this.playTrailer.appendChild(playTrailerItems);
+            this.playTrailer.style.width = '100%';
+            this.playTrailer.addEventListener('value-changed', this.valueUpdated);
+            let playTrailerValue = 'Yes';
+            if (lodash.isEqual(this.config.playTrailer, 'muted')) {
+                playTrailerValue = 'Muted';
+            }
+            else if (!this.config.playTrailer) {
+                playTrailerValue = 'No';
+            }
+            this.playTrailer.value = playTrailerValue;
+            this.plexValidSection.appendChild(this.playTrailer);
+            this.showExtras.innerHTML = '';
+            const showExtrasItems = document.createElement('paper-listbox');
+            showExtrasItems.appendChild(addDropdownItem('Yes'));
+            showExtrasItems.appendChild(addDropdownItem('No'));
+            showExtrasItems.slot = 'dropdown-content';
+            this.showExtras.label = 'Show Extras';
+            this.showExtras.appendChild(showExtrasItems);
+            this.showExtras.style.width = '100%';
+            this.showExtras.addEventListener('value-changed', this.valueUpdated);
+            let showExtrasValue = 'Yes';
+            if (!this.config.showExtras) {
+                showExtrasValue = 'No';
+            }
+            this.showExtras.value = showExtrasValue;
+            this.plexValidSection.appendChild(this.showExtras);
+            this.showSearch.innerHTML = '';
+            const showSearchItems = document.createElement('paper-listbox');
+            showSearchItems.appendChild(addDropdownItem('Yes'));
+            showSearchItems.appendChild(addDropdownItem('No'));
+            showSearchItems.slot = 'dropdown-content';
+            this.showSearch.label = 'Show Search';
+            this.showSearch.appendChild(showSearchItems);
+            this.showSearch.style.width = '100%';
+            this.showSearch.addEventListener('value-changed', this.valueUpdated);
+            let showSearchValue = 'Yes';
+            if (!this.config.showSearch) {
+                showSearchValue = 'No';
+            }
+            this.showSearch.value = showSearchValue;
+            this.plexValidSection.appendChild(this.showSearch);
+            this.runBefore.innerHTML = '';
+            const runBeforeItems = document.createElement('paper-listbox');
+            runBeforeItems.appendChild(addDropdownItem(''));
+            lodash.forEach(this.scriptEntities, entity => {
+                runBeforeItems.appendChild(addDropdownItem(entity));
+            });
+            runBeforeItems.slot = 'dropdown-content';
+            this.runBefore.label = 'Script to execute before starting the media';
+            this.runBefore.appendChild(runBeforeItems);
+            this.runBefore.style.width = '100%';
+            this.runBefore.addEventListener('value-changed', this.valueUpdated);
+            this.runBefore.value = this.config.runBefore;
+            this.plexValidSection.appendChild(this.runBefore);
+            this.runAfter.innerHTML = '';
+            const runAfterItems = document.createElement('paper-listbox');
+            runAfterItems.appendChild(addDropdownItem(''));
+            lodash.forEach(this.scriptEntities, entity => {
+                runAfterItems.appendChild(addDropdownItem(entity));
+            });
+            runAfterItems.slot = 'dropdown-content';
+            this.runAfter.label = 'Script to execute after starting the media';
+            this.runAfter.appendChild(runAfterItems);
+            this.runAfter.style.width = '100%';
+            this.runAfter.addEventListener('value-changed', this.valueUpdated);
+            this.runAfter.value = this.config.runAfter;
+            this.plexValidSection.appendChild(this.runAfter);
+            if (!lodash.isEmpty(this.sections)) {
+                lodash.forEach(this.sections, (section) => {
+                    libraryItems.appendChild(addDropdownItem(section.title));
+                });
+                this.libraryName.disabled = false;
+                this.libraryName.value = this.config.libraryName;
+                let libraryType = '';
+                // eslint-disable-next-line consistent-return
+                lodash.forEach(this.sections, section => {
+                    if (lodash.isEqual(section.title, this.libraryName.value)) {
+                        libraryType = section.type;
+                        return false;
+                    }
+                });
+                if (lodash.isEqual(libraryType, 'show')) {
+                    sortItems.appendChild(addDropdownItem('titleSort'));
+                    sortItems.appendChild(addDropdownItem('title'));
+                    sortItems.appendChild(addDropdownItem('year'));
+                    sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
+                    sortItems.appendChild(addDropdownItem('rating'));
+                    sortItems.appendChild(addDropdownItem('audienceRating'));
+                    sortItems.appendChild(addDropdownItem('userRating'));
+                    sortItems.appendChild(addDropdownItem('contentRating'));
+                    sortItems.appendChild(addDropdownItem('unviewedLeafCount'));
+                    sortItems.appendChild(addDropdownItem('episode.addedAt'));
+                    sortItems.appendChild(addDropdownItem('addedAt'));
+                    sortItems.appendChild(addDropdownItem('lastViewedAt'));
+                    this.sort.style.display = 'block';
+                    this.sortOrder.style.display = 'block';
+                }
+                else if (lodash.isEqual(libraryType, 'movie')) {
+                    sortItems.appendChild(addDropdownItem('titleSort'));
+                    sortItems.appendChild(addDropdownItem('title'));
+                    sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
+                    sortItems.appendChild(addDropdownItem('rating'));
+                    sortItems.appendChild(addDropdownItem('audienceRating'));
+                    sortItems.appendChild(addDropdownItem('userRating'));
+                    sortItems.appendChild(addDropdownItem('duration'));
+                    sortItems.appendChild(addDropdownItem('viewOffset'));
+                    sortItems.appendChild(addDropdownItem('viewCount'));
+                    sortItems.appendChild(addDropdownItem('addedAt'));
+                    sortItems.appendChild(addDropdownItem('lastViewedAt'));
+                    sortItems.appendChild(addDropdownItem('mediaHeight'));
+                    sortItems.appendChild(addDropdownItem('mediaBitrate'));
+                    this.sort.style.display = 'block';
+                    this.sortOrder.style.display = 'block';
+                }
+                else {
+                    this.sort.style.display = 'none';
+                    this.sortOrder.style.display = 'none';
+                    this.config.sort = '';
+                }
+                if (lodash.isEmpty(this.config.sort)) {
+                    this.sort.value = '';
+                    this.sortOrder.value = '';
+                }
+                else {
+                    // eslint-disable-next-line prefer-destructuring
+                    this.sort.value = this.config.sort.split(':')[0];
+                    const sortOrder = this.config.sort.split(':')[1];
+                    if (lodash.isEmpty(sortOrder)) {
+                        this.sortOrder.value = 'Ascending';
+                    }
+                    else if (lodash.isEqual(sortOrder, 'asc')) {
+                        this.sortOrder.value = 'Ascending';
+                    }
+                    else if (lodash.isEqual(sortOrder, 'desc')) {
+                        this.sortOrder.value = 'Descending';
+                    }
+                }
+                this.plexValidSection.style.display = 'block';
+            }
+            this.loaded = true;
+            this.content.appendChild(this.plexValidSection);
+        };
+        this.setConfig = (config) => {
+            this.config = JSON.parse(JSON.stringify(config));
+            if (config.port && !lodash.isEqual(config.port, '')) {
+                this.plexPort = config.port;
+            }
+            else {
+                this.plexPort = false;
+            }
+            if (config.protocol) {
+                this.plexProtocol = config.protocol;
+            }
+            else {
+                this.config.protocol = 'http';
+            }
+            if (!config.sort) {
+                this.config.sort = 'titleSort:asc';
+            }
+            if (!lodash.isNil(config.playTrailer)) {
+                this.config.playTrailer = config.playTrailer;
+            }
+            else {
+                this.config.playTrailer = true;
+            }
+            if (!lodash.isNil(config.showExtras)) {
+                this.config.showExtras = config.showExtras;
+            }
+            else {
+                this.config.showExtras = true;
+            }
+            if (!lodash.isNil(config.showSearch)) {
+                this.config.showSearch = config.showSearch;
+            }
+            else {
+                this.config.showSearch = true;
+            }
+            if (!lodash.isNil(config.runBefore)) {
+                this.config.runBefore = config.runBefore;
+            }
+            if (!lodash.isNil(config.runAfter)) {
+                this.config.runAfter = config.runAfter;
+            }
+            this.render();
+        };
+        this.configChanged = (newConfig) => {
+            const event = new Event('config-changed', {
+                bubbles: true,
+                composed: true
+            });
+            event.detail = { config: newConfig };
+            this.dispatchEvent(event);
+        };
+    }
+    set hass(hass) {
+        this.hassObj = hass;
+    }
+}
 
 /**
  * @license
@@ -20153,6 +20709,7 @@ style.textContent = css `
 class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
+        this.searchInputElem = document.createElement('input');
         this.plexProtocol = 'http';
         this.plexPort = false;
         this.detailsShown = false;
@@ -20160,6 +20717,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.runBefore = '';
         this.playTrailer = true;
         this.showExtras = true;
+        this.showSearch = true;
         this.previousPageWidth = 0;
         this.runAfter = '';
         this.columnsCount = 0;
@@ -20180,6 +20738,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.maxCount = false;
         this.error = '';
         this.contentBGHeight = 0;
+        this.initialDataLoaded = false;
         this.renderNewElementsIfNeeded = () => {
             const loadAdditionalRowsCount = 2; // todo: make this configurable
             const height = getHeight(this.content);
@@ -20191,54 +20750,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.calculatePositions();
             }
         };
-        this.fetchEntityRegistry = (conn) => conn.sendMessagePromise({
-            type: 'config/entity_registry/list'
-        });
         this.loadInitialData = async () => {
             if (this.hassObj) {
-                this.entityRegistry = await this.fetchEntityRegistry(this.hassObj.connection);
-            }
-            let { entity } = JSON.parse(JSON.stringify(this.config));
-            const processEntity = (entityObj, entityString) => {
-                lodash.forEach(this.entityRegistry, entityInRegister => {
-                    if (lodash.isEqual(entityInRegister.entity_id, entityString)) {
-                        switch (entityInRegister.platform) {
-                            case 'cast':
-                                if (lodash.isNil(entityObj.cast)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.cast = [];
-                                }
-                                entityObj.cast.push(entityInRegister.entity_id);
-                                break;
-                            case 'androidtv':
-                                if (lodash.isNil(entityObj.androidtv)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.androidtv = [];
-                                }
-                                entityObj.androidtv.push(entityInRegister.entity_id);
-                                break;
-                            case 'kodi':
-                                if (lodash.isNil(entityObj.kodi)) {
-                                    // eslint-disable-next-line no-param-reassign
-                                    entityObj.kodi = [];
-                                }
-                                entityObj.kodi.push(entityInRegister.entity_id);
-                                break;
-                            // pass
-                        }
-                    }
-                });
-            };
-            const entityOrig = entity;
-            if (lodash.isString(entityOrig)) {
-                entity = {};
-                processEntity(entity, entityOrig);
-            }
-            else if (lodash.isArray(entityOrig)) {
-                entity = {};
-                lodash.forEach(entityOrig, entityStr => {
-                    processEntity(entity, entityStr);
-                });
+                this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
             window.addEventListener('scroll', () => {
                 // todo: improve performance by calculating this when needed only
@@ -20302,15 +20816,84 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.card) {
                 this.previousPageWidth = this.card.offsetWidth;
             }
+            this.resizeBackground();
+            this.initialDataLoaded = true;
+        };
+        this.renderInitialData = async () => {
+            let { entity } = JSON.parse(JSON.stringify(this.config));
+            const processEntity = (entityObj, entityString) => {
+                let realEntityString = entityString;
+                let isPlexPlayer = false;
+                if (lodash.startsWith(entityString, 'plexPlayer | ')) {
+                    // eslint-disable-next-line prefer-destructuring
+                    realEntityString = entityString.split(' | ')[3];
+                    isPlexPlayer = true;
+                }
+                else if (lodash.startsWith(entityString, 'androidtv | ') ||
+                    lodash.startsWith(entityString, 'kodi | ') ||
+                    lodash.startsWith(entityString, 'cast | ')) {
+                    // eslint-disable-next-line prefer-destructuring
+                    realEntityString = entityString.split(' | ')[1];
+                    isPlexPlayer = false;
+                }
+                if (isPlexPlayer) {
+                    if (lodash.isNil(entityObj.plexPlayer)) {
+                        // eslint-disable-next-line no-param-reassign
+                        entityObj.plexPlayer = [];
+                    }
+                    entityObj.plexPlayer.push(realEntityString);
+                }
+                else {
+                    lodash.forEach(this.entityRegistry, entityInRegister => {
+                        if (lodash.isEqual(entityInRegister.entity_id, realEntityString)) {
+                            switch (entityInRegister.platform) {
+                                case 'cast':
+                                    if (lodash.isNil(entityObj.cast)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.cast = [];
+                                    }
+                                    entityObj.cast.push(entityInRegister.entity_id);
+                                    break;
+                                case 'androidtv':
+                                    if (lodash.isNil(entityObj.androidtv)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.androidtv = [];
+                                    }
+                                    entityObj.androidtv.push(entityInRegister.entity_id);
+                                    break;
+                                case 'kodi':
+                                    if (lodash.isNil(entityObj.kodi)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.kodi = [];
+                                    }
+                                    entityObj.kodi.push(entityInRegister.entity_id);
+                                    break;
+                                // pass
+                            }
+                        }
+                    });
+                }
+                console.log(realEntityString);
+            };
+            const entityOrig = entity;
+            if (lodash.isString(entityOrig)) {
+                entity = {};
+                processEntity(entity, entityOrig);
+            }
+            else if (lodash.isArray(entityOrig)) {
+                entity = {};
+                lodash.forEach(entityOrig, entityStr => {
+                    processEntity(entity, entityStr);
+                });
+            }
+            console.log(entity);
             this.loading = true;
             this.renderPage();
             try {
-                if (this.plex) {
-                    if (this.hassObj) {
-                        this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
-                        if (this.playController) {
-                            await this.playController.init();
-                        }
+                if (this.plex && this.hassObj) {
+                    this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
+                    if (this.playController) {
+                        await this.playController.init();
                     }
                     await this.plex.init();
                     try {
@@ -20387,14 +20970,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.render();
                 }
                 else {
-                    throw Error('Plex not initialized.');
+                    setTimeout(() => {
+                        this.renderInitialData();
+                    }, 250);
                 }
             }
             catch (err) {
                 this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
                 this.renderPage();
             }
-            this.resizeBackground();
         };
         this.render = () => {
             this.renderPage();
@@ -20402,17 +20986,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.searchInput = () => {
             const searchContainer = document.createElement('div');
             searchContainer.className = 'searchContainer';
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.value = this.searchValue;
-            searchInput.placeholder = `Search ${this.config.libraryName}...`;
-            searchInput.addEventListener('keyup', () => {
-                this.searchValue = searchInput.value;
+            this.searchInputElem = document.createElement('input');
+            this.searchInputElem.type = 'text';
+            this.searchInputElem.value = this.searchValue;
+            this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
+            this.searchInputElem.addEventListener('keyup', () => {
+                this.searchValue = this.searchInputElem.value;
                 this.renderPage();
                 this.focus();
                 this.renderNewElementsIfNeeded();
             });
-            searchContainer.appendChild(searchInput);
+            searchContainer.appendChild(this.searchInputElem);
             return searchContainer;
         };
         this.renderMovieElems = () => {
@@ -20476,6 +21060,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.contentBGHeight = getHeight(contentbg);
         };
         this.renderPage = () => {
+            this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
+            if (this.showSearch) {
+                this.searchInputElem.style.display = 'block';
+            }
+            else {
+                this.searchInputElem.style.display = 'none';
+            }
             if (this.card) {
                 const marginRight = 10; // needs to be equal to .container margin right
                 const areaSize = this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);
@@ -20503,6 +21094,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.card.style.padding = '16px';
                 this.card.style.paddingRight = '6px';
                 this.card.appendChild(this.searchInput());
+                if (this.showSearch) {
+                    this.searchInputElem.style.display = 'block';
+                }
+                else {
+                    this.searchInputElem.style.display = 'none';
+                }
                 this.appendChild(this.card);
             }
             this.content = document.createElement('div');
@@ -21414,6 +22011,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         };
         this.setConfig = (config) => {
             this.plexProtocol = 'http';
+            if (!config.ip) {
+                throw new Error('You need to define a Plex IP Address');
+            }
+            if (!config.token) {
+                throw new Error('You need to define a Plex Token');
+            }
+            if (!config.libraryName) {
+                throw new Error('You need to define a libraryName');
+            }
             if (!config.entity || config.entity.length === 0) {
                 throw new Error('You need to define at least one entity');
             }
@@ -21433,29 +22039,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             else if (!lodash.isString(config.entity) && !lodash.isArray(config.entity)) {
                 throw new Error('You need to define at least one supported entity');
             }
-            if (!config.token) {
-                throw new Error('You need to define a token');
-            }
-            if (!config.ip) {
-                throw new Error('You need to define a ip');
-            }
-            if (!config.libraryName) {
-                throw new Error('You need to define a libraryName');
-            }
             this.config = config;
             if (config.protocol) {
                 this.plexProtocol = config.protocol;
             }
-            if (config.port) {
+            if (config.port && !lodash.isEqual(config.port, '')) {
                 this.plexPort = config.port;
             }
-            if (config.maxCount) {
+            else {
+                this.plexPort = false;
+            }
+            if (config.maxCount && config.maxCount !== '') {
                 this.maxCount = config.maxCount;
             }
-            if (config.runBefore) {
+            if (config.runBefore && !lodash.isEqual(config.runBefore, '')) {
                 this.runBefore = config.runBefore;
             }
-            if (config.runAfter) {
+            if (config.runAfter && !lodash.isEqual(config.runAfter, '')) {
                 this.runAfter = config.runAfter;
             }
             if (!lodash.isNil(config.playTrailer)) {
@@ -21464,7 +22064,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (!lodash.isNil(config.showExtras)) {
                 this.showExtras = config.showExtras;
             }
+            if (!lodash.isNil(config.showSearch)) {
+                this.showSearch = config.showSearch;
+            }
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+            this.data = {};
+            this.error = '';
+            this.renderInitialData();
         };
         this.getCardSize = () => {
             return 3;
@@ -21472,12 +22078,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
     }
     set hass(hass) {
         this.hassObj = hass;
-        if (!this.content) {
-            this.error = '';
-            if (!this.loading) {
-                this.loadInitialData();
-            }
+        if (!this.initialDataLoaded) {
+            this.loadInitialData();
         }
     }
+    static getConfigElement() {
+        return document.createElement('plex-meets-homeassistant-editor');
+    }
 }
+customElements.define('plex-meets-homeassistant-editor', PlexMeetsHomeAssistantEditor);
 customElements.define('plex-meets-homeassistant', PlexMeetsHomeAssistant);
+window.customCards = window.customCards || [];
+window.customCards.push({
+    type: 'plex-meets-homeassistant',
+    name: 'Plex meets Home Assistant',
+    preview: false,
+    description: 'Integrates Plex into Home Assistant. Browse and launch media with a simple click.' // Optional
+});

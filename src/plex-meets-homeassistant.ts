@@ -2,10 +2,10 @@
 /* eslint-env browser */
 import { HomeAssistant } from 'custom-card-helpers';
 import _ from 'lodash';
-import { Connection } from 'home-assistant-js-websocket';
 import { supported, CSS_STYLE } from './const';
 import Plex from './modules/Plex';
 import PlayController from './modules/PlayController';
+import PlexMeetsHomeAssistantEditor from './editor';
 import {
 	escapeHtml,
 	getOffset,
@@ -17,11 +17,20 @@ import {
 	hasEpisodes,
 	getOldPlexServerErrorMessage,
 	getDetailsBottom,
-	clickHandler
+	clickHandler,
+	fetchEntityRegistry
 } from './modules/utils';
 import style from './modules/style';
 
+declare global {
+	interface Window {
+		customCards: any;
+	}
+}
+
 class PlexMeetsHomeAssistant extends HTMLElement {
+	searchInputElem = document.createElement('input');
+
 	plexProtocol: 'http' | 'https' = 'http';
 
 	plexPort: number | false = false;
@@ -35,6 +44,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	playTrailer: string | boolean = true;
 
 	showExtras = true;
+
+	showSearch = true;
 
 	previousPageWidth = 0;
 
@@ -118,15 +129,18 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	card: HTMLElement | undefined;
 
+	initialDataLoaded = false;
+
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
 
-		if (!this.content) {
-			this.error = '';
-			if (!this.loading) {
-				this.loadInitialData();
-			}
+		if (!this.initialDataLoaded) {
+			this.loadInitialData();
 		}
+	}
+
+	static getConfigElement(): HTMLElement {
+		return document.createElement('plex-meets-homeassistant-editor');
 	}
 
 	renderNewElementsIfNeeded = (): void => {
@@ -144,59 +158,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
-	fetchEntityRegistry = (conn: Connection): Promise<Array<Record<string, any>>> =>
-		conn.sendMessagePromise({
-			type: 'config/entity_registry/list'
-		});
-
 	loadInitialData = async (): Promise<void> => {
 		if (this.hassObj) {
-			this.entityRegistry = await this.fetchEntityRegistry(this.hassObj.connection);
-		}
-
-		let { entity } = JSON.parse(JSON.stringify(this.config));
-
-		const processEntity = (entityObj: Record<string, any>, entityString: string): void => {
-			_.forEach(this.entityRegistry, entityInRegister => {
-				if (_.isEqual(entityInRegister.entity_id, entityString)) {
-					switch (entityInRegister.platform) {
-						case 'cast':
-							if (_.isNil(entityObj.cast)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.cast = [];
-							}
-							entityObj.cast.push(entityInRegister.entity_id);
-							break;
-						case 'androidtv':
-							if (_.isNil(entityObj.androidtv)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.androidtv = [];
-							}
-							entityObj.androidtv.push(entityInRegister.entity_id);
-							break;
-						case 'kodi':
-							if (_.isNil(entityObj.kodi)) {
-								// eslint-disable-next-line no-param-reassign
-								entityObj.kodi = [];
-							}
-							entityObj.kodi.push(entityInRegister.entity_id);
-							break;
-						default:
-						// pass
-					}
-				}
-			});
-		};
-
-		const entityOrig = entity;
-		if (_.isString(entityOrig)) {
-			entity = {};
-			processEntity(entity, entityOrig);
-		} else if (_.isArray(entityOrig)) {
-			entity = {};
-			_.forEach(entityOrig, entityStr => {
-				processEntity(entity, entityStr);
-			});
+			this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
 		window.addEventListener('scroll', () => {
@@ -263,16 +227,87 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (this.card) {
 			this.previousPageWidth = this.card.offsetWidth;
 		}
+		this.resizeBackground();
+		this.initialDataLoaded = true;
+	};
 
+	renderInitialData = async (): Promise<void> => {
+		let { entity } = JSON.parse(JSON.stringify(this.config));
+
+		const processEntity = (entityObj: Record<string, any>, entityString: string): void => {
+			let realEntityString = entityString;
+			let isPlexPlayer = false;
+			if (_.startsWith(entityString, 'plexPlayer | ')) {
+				// eslint-disable-next-line prefer-destructuring
+				realEntityString = entityString.split(' | ')[3];
+				isPlexPlayer = true;
+			} else if (
+				_.startsWith(entityString, 'androidtv | ') ||
+				_.startsWith(entityString, 'kodi | ') ||
+				_.startsWith(entityString, 'cast | ')
+			) {
+				// eslint-disable-next-line prefer-destructuring
+				realEntityString = entityString.split(' | ')[1];
+				isPlexPlayer = false;
+			}
+			if (isPlexPlayer) {
+				if (_.isNil(entityObj.plexPlayer)) {
+					// eslint-disable-next-line no-param-reassign
+					entityObj.plexPlayer = [];
+				}
+				entityObj.plexPlayer.push(realEntityString);
+			} else {
+				_.forEach(this.entityRegistry, entityInRegister => {
+					if (_.isEqual(entityInRegister.entity_id, realEntityString)) {
+						switch (entityInRegister.platform) {
+							case 'cast':
+								if (_.isNil(entityObj.cast)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.cast = [];
+								}
+								entityObj.cast.push(entityInRegister.entity_id);
+								break;
+							case 'androidtv':
+								if (_.isNil(entityObj.androidtv)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.androidtv = [];
+								}
+								entityObj.androidtv.push(entityInRegister.entity_id);
+								break;
+							case 'kodi':
+								if (_.isNil(entityObj.kodi)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.kodi = [];
+								}
+								entityObj.kodi.push(entityInRegister.entity_id);
+								break;
+							default:
+							// pass
+						}
+					}
+				});
+			}
+			console.log(realEntityString);
+		};
+
+		const entityOrig = entity;
+		if (_.isString(entityOrig)) {
+			entity = {};
+			processEntity(entity, entityOrig);
+		} else if (_.isArray(entityOrig)) {
+			entity = {};
+			_.forEach(entityOrig, entityStr => {
+				processEntity(entity, entityStr);
+			});
+		}
+		console.log(entity);
 		this.loading = true;
 		this.renderPage();
 		try {
-			if (this.plex) {
-				if (this.hassObj) {
-					this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
-					if (this.playController) {
-						await this.playController.init();
-					}
+			if (this.plex && this.hassObj) {
+				this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter);
+				if (this.playController) {
+					await this.playController.init();
 				}
 				await this.plex.init();
 
@@ -347,14 +382,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.loading = false;
 				this.render();
 			} else {
-				throw Error('Plex not initialized.');
+				setTimeout(() => {
+					this.renderInitialData();
+				}, 250);
 			}
 		} catch (err) {
 			this.error = `Plex server did not respond.<br/>Details of the error: ${escapeHtml(err.message)}`;
 			this.renderPage();
 		}
-
-		this.resizeBackground();
 	};
 
 	render = (): void => {
@@ -365,19 +400,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const searchContainer = document.createElement('div');
 		searchContainer.className = 'searchContainer';
 
-		const searchInput = document.createElement('input');
-		searchInput.type = 'text';
-		searchInput.value = this.searchValue;
-		searchInput.placeholder = `Search ${this.config.libraryName}...`;
+		this.searchInputElem = document.createElement('input');
+		this.searchInputElem.type = 'text';
+		this.searchInputElem.value = this.searchValue;
+		this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
 
-		searchInput.addEventListener('keyup', () => {
-			this.searchValue = searchInput.value;
+		this.searchInputElem.addEventListener('keyup', () => {
+			this.searchValue = this.searchInputElem.value;
 			this.renderPage();
 			this.focus();
 			this.renderNewElementsIfNeeded();
 		});
 
-		searchContainer.appendChild(searchInput);
+		searchContainer.appendChild(this.searchInputElem);
 		return searchContainer;
 	};
 
@@ -449,6 +484,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderPage = (): void => {
+		this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
+		if (this.showSearch) {
+			this.searchInputElem.style.display = 'block';
+		} else {
+			this.searchInputElem.style.display = 'none';
+		}
+
 		if (this.card) {
 			const marginRight = 10; // needs to be equal to .container margin right
 			const areaSize =
@@ -480,7 +522,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.card.style.overflow = 'hidden';
 			this.card.style.padding = '16px';
 			this.card.style.paddingRight = '6px';
+
 			this.card.appendChild(this.searchInput());
+			if (this.showSearch) {
+				this.searchInputElem.style.display = 'block';
+			} else {
+				this.searchInputElem.style.display = 'none';
+			}
+
 			this.appendChild(this.card);
 		}
 
@@ -1488,6 +1537,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	setConfig = (config: any): void => {
 		this.plexProtocol = 'http';
+		if (!config.ip) {
+			throw new Error('You need to define a Plex IP Address');
+		}
+		if (!config.token) {
+			throw new Error('You need to define a Plex Token');
+		}
+		if (!config.libraryName) {
+			throw new Error('You need to define a libraryName');
+		}
 		if (!config.entity || config.entity.length === 0) {
 			throw new Error('You need to define at least one entity');
 		}
@@ -1506,29 +1564,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		} else if (!_.isString(config.entity) && !_.isArray(config.entity)) {
 			throw new Error('You need to define at least one supported entity');
 		}
-		if (!config.token) {
-			throw new Error('You need to define a token');
-		}
-		if (!config.ip) {
-			throw new Error('You need to define a ip');
-		}
-		if (!config.libraryName) {
-			throw new Error('You need to define a libraryName');
-		}
 		this.config = config;
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
 		}
-		if (config.port) {
+		if (config.port && !_.isEqual(config.port, '')) {
 			this.plexPort = config.port;
+		} else {
+			this.plexPort = false;
 		}
-		if (config.maxCount) {
+		if (config.maxCount && config.maxCount !== '') {
 			this.maxCount = config.maxCount;
 		}
-		if (config.runBefore) {
+		if (config.runBefore && !_.isEqual(config.runBefore, '')) {
 			this.runBefore = config.runBefore;
 		}
-		if (config.runAfter) {
+		if (config.runAfter && !_.isEqual(config.runAfter, '')) {
 			this.runAfter = config.runAfter;
 		}
 		if (!_.isNil(config.playTrailer)) {
@@ -1537,8 +1588,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (!_.isNil(config.showExtras)) {
 			this.showExtras = config.showExtras;
 		}
+		if (!_.isNil(config.showSearch)) {
+			this.showSearch = config.showSearch;
+		}
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+		this.data = {};
+		this.error = '';
+		this.renderInitialData();
 	};
 
 	getCardSize = (): number => {
@@ -1546,4 +1603,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 }
 
+customElements.define('plex-meets-homeassistant-editor', PlexMeetsHomeAssistantEditor);
 customElements.define('plex-meets-homeassistant', PlexMeetsHomeAssistant);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+	type: 'plex-meets-homeassistant',
+	name: 'Plex meets Home Assistant',
+	preview: false,
+	description: 'Integrates Plex into Home Assistant. Browse and launch media with a simple click.' // Optional
+});
