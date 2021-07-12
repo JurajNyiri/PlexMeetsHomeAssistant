@@ -20448,6 +20448,7 @@ style.textContent = css `
 class PlexMeetsHomeAssistant extends HTMLElement {
     constructor() {
         super(...arguments);
+        this.searchInputElem = document.createElement('input');
         this.plexProtocol = 'http';
         this.plexPort = false;
         this.detailsShown = false;
@@ -20699,17 +20700,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.searchInput = () => {
             const searchContainer = document.createElement('div');
             searchContainer.className = 'searchContainer';
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.value = this.searchValue;
-            searchInput.placeholder = `Search ${this.config.libraryName}...`;
-            searchInput.addEventListener('keyup', () => {
-                this.searchValue = searchInput.value;
+            this.searchInputElem = document.createElement('input');
+            this.searchInputElem.type = 'text';
+            this.searchInputElem.value = this.searchValue;
+            this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
+            this.searchInputElem.addEventListener('keyup', () => {
+                this.searchValue = this.searchInputElem.value;
                 this.renderPage();
                 this.focus();
                 this.renderNewElementsIfNeeded();
             });
-            searchContainer.appendChild(searchInput);
+            searchContainer.appendChild(this.searchInputElem);
             return searchContainer;
         };
         this.renderMovieElems = () => {
@@ -20773,6 +20774,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.contentBGHeight = getHeight(contentbg);
         };
         this.renderPage = () => {
+            this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
             if (this.card) {
                 const marginRight = 10; // needs to be equal to .container margin right
                 const areaSize = this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);

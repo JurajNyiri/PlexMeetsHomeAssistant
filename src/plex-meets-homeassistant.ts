@@ -29,6 +29,8 @@ declare global {
 }
 
 class PlexMeetsHomeAssistant extends HTMLElement {
+	searchInputElem = document.createElement('input');
+
 	plexProtocol: 'http' | 'https' = 'http';
 
 	plexPort: number | false = false;
@@ -372,19 +374,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const searchContainer = document.createElement('div');
 		searchContainer.className = 'searchContainer';
 
-		const searchInput = document.createElement('input');
-		searchInput.type = 'text';
-		searchInput.value = this.searchValue;
-		searchInput.placeholder = `Search ${this.config.libraryName}...`;
+		this.searchInputElem = document.createElement('input');
+		this.searchInputElem.type = 'text';
+		this.searchInputElem.value = this.searchValue;
+		this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
 
-		searchInput.addEventListener('keyup', () => {
-			this.searchValue = searchInput.value;
+		this.searchInputElem.addEventListener('keyup', () => {
+			this.searchValue = this.searchInputElem.value;
 			this.renderPage();
 			this.focus();
 			this.renderNewElementsIfNeeded();
 		});
 
-		searchContainer.appendChild(searchInput);
+		searchContainer.appendChild(this.searchInputElem);
 		return searchContainer;
 	};
 
@@ -456,6 +458,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderPage = (): void => {
+		this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
 		if (this.card) {
 			const marginRight = 10; // needs to be equal to .container margin right
 			const areaSize =
