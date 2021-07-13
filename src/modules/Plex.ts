@@ -36,12 +36,7 @@ class Plex {
 	}
 
 	init = async (): Promise<void> => {
-		await this.getClients();
-		/*
-		setInterval(() => {
-			this.getClients();
-		}, 30000);
-		*/
+		await Promise.all([this.getSections(), this.getClients(), this.getServerID()]);
 	};
 
 	getClients = async (): Promise<Record<string, any>> => {
@@ -74,7 +69,7 @@ class Plex {
 		return this.serverInfo;
 	};
 
-	getSections = async (): Promise<any> => {
+	getSections = async (): Promise<Array<Record<string, any>>> => {
 		if (_.isEmpty(this.sections)) {
 			const url = this.authorizeURL(`${this.getBasicURL()}/library/sections`);
 			const sectionsData = await axios.get(url, {
@@ -86,6 +81,10 @@ class Plex {
 	};
 
 	getSectionData = async (sectionID: number): Promise<any> => {
+		return this.exportSectionsData([await this.getSectionDataWithoutProcessing(sectionID)]);
+	};
+
+	private getSectionDataWithoutProcessing = async (sectionID: number): Promise<any> => {
 		const bulkItems = 50;
 		let url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/all`);
 		url += `&sort=${this.sort}`;
@@ -137,7 +136,7 @@ class Plex {
 		const sections = await this.getSections();
 		const sectionsRequests: Array<Promise<any>> = [];
 		_.forEach(sections, section => {
-			sectionsRequests.push(this.getSectionData(section.key));
+			sectionsRequests.push(this.getSectionDataWithoutProcessing(section.key));
 		});
 		return this.exportSectionsData(await Promise.all(sectionsRequests));
 	};

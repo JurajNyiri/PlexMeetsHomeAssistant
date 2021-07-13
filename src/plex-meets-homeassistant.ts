@@ -319,70 +319,107 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					await this.playController.init();
 				}
 				await this.plex.init();
+				const plexAllSections = await this.plex.getSections();
 
-				try {
-					const onDeck = await this.plex.getOnDeck();
-					this.data.Deck = onDeck.Metadata;
-				} catch (err) {
-					if (_.includes(err.message, 'Request failed with status code 404')) {
-						console.warn(getOldPlexServerErrorMessage('Deck'));
-					} else {
-						throw err;
-					}
-				}
-
-				try {
-					const continueWatching = await this.plex.getContinueWatching();
-					this.data['Continue Watching'] = continueWatching.Metadata;
-				} catch (err) {
-					if (_.includes(err.message, 'Request failed with status code 404')) {
-						console.warn(getOldPlexServerErrorMessage('Continue Watching'));
-					} else {
-						throw err;
-					}
-				}
-
-				try {
-					const watchNext = await this.plex.getWatchNext();
-					this.data['Watch Next'] = watchNext.Metadata;
-				} catch (err) {
-					if (_.includes(err.message, 'Request failed with status code 404')) {
-						console.warn(getOldPlexServerErrorMessage('Watch Next'));
-					} else {
-						throw err;
-					}
-				}
-
-				try {
-					const recentlyAdded = await this.plex.getRecentyAdded();
-					this.data['Recently Added'] = recentlyAdded.Metadata;
-				} catch (err) {
-					if (_.includes(err.message, 'Request failed with status code 404')) {
+				const getOnDeck = async (): Promise<void> => {
+					if (this.plex) {
 						try {
-							console.warn(
-								'PlexMeetsHomeAssistant: Using old endpoint for recently added tv shows. Consider updating your Plex server.'
-							);
-							const recentlyAdded = await this.plex.getRecentyAdded(true);
-							this.data['Recently Added'] = recentlyAdded.Metadata;
-							// eslint-disable-next-line no-shadow
+							const onDeck = await this.plex.getOnDeck();
+							this.data.Deck = onDeck.Metadata;
 						} catch (err) {
 							if (_.includes(err.message, 'Request failed with status code 404')) {
-								console.warn(getOldPlexServerErrorMessage('Recently Added'));
+								console.warn(getOldPlexServerErrorMessage('Deck'));
 							} else {
 								throw err;
 							}
 						}
-					} else {
-						throw err;
 					}
+				};
+				const getContinueWatching = async (): Promise<void> => {
+					if (this.plex) {
+						try {
+							const continueWatching = await this.plex.getContinueWatching();
+							this.data['Continue Watching'] = continueWatching.Metadata;
+						} catch (err) {
+							if (_.includes(err.message, 'Request failed with status code 404')) {
+								console.warn(getOldPlexServerErrorMessage('Continue Watching'));
+							} else {
+								throw err;
+							}
+						}
+					}
+				};
+				const getWatchNext = async (): Promise<void> => {
+					if (this.plex) {
+						try {
+							const watchNext = await this.plex.getWatchNext();
+							this.data['Watch Next'] = watchNext.Metadata;
+						} catch (err) {
+							if (_.includes(err.message, 'Request failed with status code 404')) {
+								console.warn(getOldPlexServerErrorMessage('Watch Next'));
+							} else {
+								throw err;
+							}
+						}
+					}
+				};
+				const getRecentyAdded = async (): Promise<void> => {
+					if (this.plex) {
+						try {
+							const recentlyAdded = await this.plex.getRecentyAdded();
+							this.data['Recently Added'] = recentlyAdded.Metadata;
+						} catch (err) {
+							if (_.includes(err.message, 'Request failed with status code 404')) {
+								try {
+									console.warn(
+										'PlexMeetsHomeAssistant: Using old endpoint for recently added tv shows. Consider updating your Plex server.'
+									);
+									const recentlyAdded = await this.plex.getRecentyAdded(true);
+									this.data['Recently Added'] = recentlyAdded.Metadata;
+									// eslint-disable-next-line no-shadow
+								} catch (err) {
+									if (_.includes(err.message, 'Request failed with status code 404')) {
+										console.warn(getOldPlexServerErrorMessage('Recently Added'));
+									} else {
+										throw err;
+									}
+								}
+							} else {
+								throw err;
+							}
+						}
+					}
+				};
+
+				let sectionKey: number | false = 0;
+				_.forEach(plexAllSections, (section: Record<string, any>) => {
+					if (_.isEqual(section.title, this.config.libraryName)) {
+						sectionKey = section.key;
+						return false;
+					}
+					return true;
+				});
+				const loadDataRequests = [];
+				if (sectionKey) {
+					loadDataRequests.push(this.plex.getSectionData(sectionKey));
+				}
+				if (_.isEqual(this.config.libraryName, 'Deck')) {
+					loadDataRequests.push(getOnDeck());
+				} else if (_.isEqual(this.config.libraryName, 'Continue Watching')) {
+					loadDataRequests.push(getContinueWatching());
+				} else if (_.isEqual(this.config.libraryName, 'Watch Next')) {
+					loadDataRequests.push(getWatchNext());
+				} else if (_.isEqual(this.config.libraryName, 'Recently Added')) {
+					loadDataRequests.push(getRecentyAdded());
 				}
 
-				const [serverID, plexSections] = await Promise.all([this.plex.getServerID(), this.plex.getSectionsData()]);
-				// eslint-disable-next-line @typescript-eslint/camelcase
-				this.data.serverID = serverID;
-				_.forEach(plexSections, section => {
-					this.data[section.title1] = section.Metadata;
-				});
+				const [plexSections] = await Promise.all(loadDataRequests);
+
+				if (plexSections && sectionKey) {
+					_.forEach(plexSections, section => {
+						this.data[section.title1] = section.Metadata;
+					});
+				}
 
 				if (this.data[this.config.libraryName] === undefined) {
 					this.error = `Library name ${this.config.libraryName} does not exist.`;
