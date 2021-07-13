@@ -21088,10 +21088,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.searchInputElem.value = this.searchValue;
             this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
             this.searchInputElem.addEventListener('keyup', () => {
-                this.searchValue = this.searchInputElem.value;
-                this.renderPage();
-                this.focus();
-                this.renderNewElementsIfNeeded();
+                if (!lodash.isEqual(this.searchInputElem.value, this.searchValue)) {
+                    this.searchValue = this.searchInputElem.value;
+                    this.renderPage();
+                    this.focus();
+                    this.renderNewElementsIfNeeded();
+                }
             });
             searchContainer.appendChild(this.searchInputElem);
             return searchContainer;
@@ -21182,7 +21184,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
             }
             this.renderedItems = 0;
-            this.columnsCount = 0;
+            // this.columnsCount = 0;
             const spinner = document.createElement('div');
             spinner.style.display = 'flex';
             spinner.style.alignItems = 'center';

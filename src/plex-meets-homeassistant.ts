@@ -154,7 +154,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.renderedItems > 0
 		) {
 			this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
-
 			this.renderMovieElems();
 			this.calculatePositions();
 		}
@@ -452,10 +451,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.searchInputElem.placeholder = `Search ${this.config.libraryName}...`;
 
 		this.searchInputElem.addEventListener('keyup', () => {
-			this.searchValue = this.searchInputElem.value;
-			this.renderPage();
-			this.focus();
-			this.renderNewElementsIfNeeded();
+			if (!_.isEqual(this.searchInputElem.value, this.searchValue)) {
+				this.searchValue = this.searchInputElem.value;
+				this.renderPage();
+				this.focus();
+				this.renderNewElementsIfNeeded();
+			}
 		});
 
 		searchContainer.appendChild(this.searchInputElem);
@@ -557,7 +558,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		this.renderedItems = 0;
-		this.columnsCount = 0;
+		// this.columnsCount = 0;
+
 		const spinner = document.createElement('div');
 		spinner.style.display = 'flex';
 		spinner.style.alignItems = 'center';
