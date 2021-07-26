@@ -22,6 +22,7 @@ A clear and concise description of what you expected to happen.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
+If this is a network error, please open network tab in your browser developer tools and paste in as much information as possible about the failing request. This will make it a lot easier to help you as soon as possible.
 
 **Checks**
 Please check below if true:
