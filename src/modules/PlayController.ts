@@ -22,10 +22,20 @@ class PlayController {
 
 	supported: any = supported;
 
-	constructor(hass: HomeAssistant, plex: Plex, entity: Record<string, any>, runBefore: string, runAfter: string) {
+	libraryName: string;
+
+	constructor(
+		hass: HomeAssistant,
+		plex: Plex,
+		entity: Record<string, any>,
+		runBefore: string,
+		runAfter: string,
+		libraryName: string
+	) {
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
+		this.libraryName = libraryName;
 		if (!_.isEmpty(runBefore) && this.hass.states[runBefore]) {
 			this.runBefore = runBefore.split('.');
 		}
@@ -112,6 +122,7 @@ class PlayController {
 				break;
 			case 'cast':
 				if (this.hass.services.plex) {
+					const libraryName = _.isNil(data.librarySectionTitle) ? this.libraryName : data.librarySectionTitle;
 					try {
 						switch (data.type) {
 							case 'movie':
@@ -120,7 +131,7 @@ class PlayController {
 									'movie',
 									`plex://${JSON.stringify({
 										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: data.librarySectionTitle,
+										library_name: libraryName,
 										title: data.title
 									})}`
 								);
@@ -131,7 +142,7 @@ class PlayController {
 									'EPISODE',
 									`plex://${JSON.stringify({
 										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: data.librarySectionTitle,
+										library_name: libraryName,
 										// eslint-disable-next-line @typescript-eslint/camelcase
 										show_name: data.grandparentTitle,
 										// eslint-disable-next-line @typescript-eslint/camelcase
