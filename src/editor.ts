@@ -497,14 +497,19 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			_.forEach(this.sections, (section: Record<string, any>) => {
 				libraryItems.appendChild(addDropdownItem(section.title));
 			});
-			libraryItems.appendChild(addDropdownItem('Collections', true));
-			_.forEach(this.collections, (collection: Record<string, any>) => {
-				libraryItems.appendChild(addDropdownItem(collection.title));
-			});
-			libraryItems.appendChild(addDropdownItem('Playlists', true));
-			_.forEach(this.playlists, (playlist: Record<string, any>) => {
-				libraryItems.appendChild(addDropdownItem(playlist.title));
-			});
+			if (!_.isEmpty(this.collections)) {
+				libraryItems.appendChild(addDropdownItem('Collections', true));
+				_.forEach(this.collections, (collection: Record<string, any>) => {
+					libraryItems.appendChild(addDropdownItem(collection.title));
+				});
+			}
+			if (!_.isEmpty(this.playlists)) {
+				libraryItems.appendChild(addDropdownItem('Playlists', true));
+				_.forEach(this.playlists, (playlist: Record<string, any>) => {
+					libraryItems.appendChild(addDropdownItem(playlist.title));
+				});
+			}
+
 			this.libraryName.disabled = false;
 			this.libraryName.value = this.config.libraryName;
 

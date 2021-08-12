@@ -19998,14 +19998,18 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 lodash.forEach(this.sections, (section) => {
                     libraryItems.appendChild(addDropdownItem(section.title));
                 });
-                libraryItems.appendChild(addDropdownItem('Collections', true));
-                lodash.forEach(this.collections, (collection) => {
-                    libraryItems.appendChild(addDropdownItem(collection.title));
-                });
-                libraryItems.appendChild(addDropdownItem('Playlists', true));
-                lodash.forEach(this.playlists, (playlist) => {
-                    libraryItems.appendChild(addDropdownItem(playlist.title));
-                });
+                if (!lodash.isEmpty(this.collections)) {
+                    libraryItems.appendChild(addDropdownItem('Collections', true));
+                    lodash.forEach(this.collections, (collection) => {
+                        libraryItems.appendChild(addDropdownItem(collection.title));
+                    });
+                }
+                if (!lodash.isEmpty(this.playlists)) {
+                    libraryItems.appendChild(addDropdownItem('Playlists', true));
+                    lodash.forEach(this.playlists, (playlist) => {
+                        libraryItems.appendChild(addDropdownItem(playlist.title));
+                    });
+                }
                 this.libraryName.disabled = false;
                 this.libraryName.value = this.config.libraryName;
                 let libraryType = '';
