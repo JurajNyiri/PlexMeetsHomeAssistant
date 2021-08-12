@@ -18674,6 +18674,7 @@ class Plex {
         this.clients = [];
         this.requestTimeout = 10000;
         this.sections = [];
+        this.collections = false;
         this.init = async () => {
             await Promise.all([this.getSections(), this.getClients(), this.getServerID()]);
         };
@@ -18712,6 +18713,31 @@ class Plex {
                 this.sections = sectionsData.data.MediaContainer.Directory;
             }
             return this.sections;
+        };
+        this.getCollections = async () => {
+            if (!lodash.isArray(this.collections)) {
+                const sections = await this.getSections();
+                const collectionRequests = [];
+                lodash.forEach(sections, section => {
+                    collectionRequests.push(this.getCollection(section.key));
+                });
+                const allResults = await Promise.all(collectionRequests);
+                const collections = [];
+                lodash.forEach(allResults, result => {
+                    lodash.forEach(result, collection => {
+                        collections.push(collection);
+                    });
+                });
+                this.collections = collections;
+            }
+            return this.collections;
+        };
+        this.getCollection = async (sectionID) => {
+            const url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/collections`);
+            const collectionsData = await axios.get(url, {
+                timeout: this.requestTimeout
+            });
+            return lodash.isNil(collectionsData.data.MediaContainer.Metadata) ? [] : collectionsData.data.MediaContainer.Metadata;
         };
         this.getSectionData = async (sectionID) => {
             return this.exportSectionsData([await this.getSectionDataWithoutProcessing(sectionID)]);
@@ -19505,6 +19531,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.entities = [];
         this.scriptEntities = [];
         this.sections = [];
+        this.collections = [];
         this.clients = {};
         this.entitiesRegistry = false;
         this.plexValidSection = document.createElement('div');
@@ -19590,9 +19617,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
         };
         this.render = async () => {
-            const addDropdownItem = (text) => {
+            const addDropdownItem = (text, disabled = false) => {
                 const libraryItem = document.createElement('paper-item');
                 libraryItem.innerHTML = text;
+                if (disabled) {
+                    libraryItem.disabled = true;
+                }
                 return libraryItem;
             };
             const createEntitiesDropdown = (selected, changeHandler) => {
@@ -19692,6 +19722,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.content.appendChild(this.token);
             this.libraryName.innerHTML = '';
             const libraryItems = document.createElement('paper-listbox');
+            libraryItems.appendChild(addDropdownItem('Smart Libraries', true));
             libraryItems.appendChild(addDropdownItem('Continue Watching'));
             libraryItems.appendChild(addDropdownItem('Deck'));
             libraryItems.appendChild(addDropdownItem('Recently Added'));
@@ -19706,6 +19737,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.appendChild(this.content);
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.sections = await this.plex.getSections();
+            this.collections = await this.plex.getCollections();
             this.clients = await this.plex.getClients();
             this.plexValidSection.style.display = 'none';
             this.plexValidSection.innerHTML = '';
@@ -19905,8 +19937,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.runAfter.value = this.config.runAfter;
             this.plexValidSection.appendChild(this.runAfter);
             if (!lodash.isEmpty(this.sections)) {
+                libraryItems.appendChild(addDropdownItem('Libraries', true));
                 lodash.forEach(this.sections, (section) => {
                     libraryItems.appendChild(addDropdownItem(section.title));
+                });
+                libraryItems.appendChild(addDropdownItem('Collections', true));
+                lodash.forEach(this.collections, (collection) => {
+                    libraryItems.appendChild(addDropdownItem(collection.title));
                 });
                 this.libraryName.disabled = false;
                 this.libraryName.value = this.config.libraryName;

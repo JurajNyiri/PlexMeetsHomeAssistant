@@ -56,6 +56,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	sections: Array<Record<string, any>> = [];
 
+	collections: Array<Record<string, any>> = [];
+
 	clients: Record<string, any> = {};
 
 	entitiesRegistry: false | Array<Record<string, any>> = false;
@@ -148,9 +150,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	};
 
 	render = async (): Promise<void> => {
-		const addDropdownItem = (text: string): HTMLElement => {
+		const addDropdownItem = (text: string, disabled = false): HTMLElement => {
 			const libraryItem: any = document.createElement('paper-item');
 			libraryItem.innerHTML = text;
+			if (disabled) {
+				libraryItem.disabled = true;
+			}
 			return libraryItem;
 		};
 		const createEntitiesDropdown = (selected: string, changeHandler: Function): HTMLElement | false => {
@@ -259,6 +264,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.libraryName.innerHTML = '';
 		const libraryItems: any = document.createElement('paper-listbox');
+
+		libraryItems.appendChild(addDropdownItem('Smart Libraries', true));
 		libraryItems.appendChild(addDropdownItem('Continue Watching'));
 		libraryItems.appendChild(addDropdownItem('Deck'));
 		libraryItems.appendChild(addDropdownItem('Recently Added'));
@@ -275,6 +282,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 		this.sections = await this.plex.getSections();
+		this.collections = await this.plex.getCollections();
 		this.clients = await this.plex.getClients();
 
 		this.plexValidSection.style.display = 'none';
@@ -482,8 +490,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.runAfter);
 
 		if (!_.isEmpty(this.sections)) {
+			libraryItems.appendChild(addDropdownItem('Libraries', true));
 			_.forEach(this.sections, (section: Record<string, any>) => {
 				libraryItems.appendChild(addDropdownItem(section.title));
+			});
+			libraryItems.appendChild(addDropdownItem('Collections', true));
+			_.forEach(this.collections, (collection: Record<string, any>) => {
+				libraryItems.appendChild(addDropdownItem(collection.title));
 			});
 			this.libraryName.disabled = false;
 			this.libraryName.value = this.config.libraryName;

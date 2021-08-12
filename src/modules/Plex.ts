@@ -21,6 +21,8 @@ class Plex {
 
 	sections: Array<Record<string, any>> = [];
 
+	collections: Array<Record<string, any>> | false = false;
+
 	constructor(
 		ip: string,
 		port: number | false = false,
@@ -78,6 +80,33 @@ class Plex {
 			this.sections = sectionsData.data.MediaContainer.Directory;
 		}
 		return this.sections;
+	};
+
+	getCollections = async (): Promise<Array<Record<string, any>>> => {
+		if (!_.isArray(this.collections)) {
+			const sections = await this.getSections();
+			const collectionRequests: Array<Promise<any>> = [];
+			_.forEach(sections, section => {
+				collectionRequests.push(this.getCollection(section.key));
+			});
+			const allResults = await Promise.all(collectionRequests);
+			const collections: Array<Record<string, any>> = [];
+			_.forEach(allResults, result => {
+				_.forEach(result, collection => {
+					collections.push(collection);
+				});
+			});
+			this.collections = collections;
+		}
+		return this.collections;
+	};
+
+	getCollection = async (sectionID: number): Promise<Array<Record<string, any>>> => {
+		const url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/collections`);
+		const collectionsData = await axios.get(url, {
+			timeout: this.requestTimeout
+		});
+		return _.isNil(collectionsData.data.MediaContainer.Metadata) ? [] : collectionsData.data.MediaContainer.Metadata;
 	};
 
 	getSectionData = async (sectionID: number): Promise<any> => {
