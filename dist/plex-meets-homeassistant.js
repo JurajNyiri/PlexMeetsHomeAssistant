@@ -18742,6 +18742,46 @@ class Plex {
         this.getSectionData = async (sectionID) => {
             return this.exportSectionsData([await this.getSectionDataWithoutProcessing(sectionID)]);
         };
+        this.getChildren = async (childrenURL) => {
+            const bulkItems = 50;
+            let url = this.authorizeURL(`${this.getBasicURL()}${childrenURL}`);
+            url += `&sort=${this.sort}`;
+            let result = {};
+            try {
+                result = await axios.get(url, {
+                    timeout: this.requestTimeout
+                });
+            }
+            catch (err) {
+                // probably hitting limit of items to return, we need to request in parts
+                if (lodash.includes(err.message, 'Request failed with status code 500')) {
+                    url += `&X-Plex-Container-Start=0&X-Plex-Container-Size=${bulkItems}`;
+                    result = await axios.get(url, {
+                        timeout: this.requestTimeout
+                    });
+                    const { totalSize } = result.data.MediaContainer;
+                    let startOfItems = bulkItems;
+                    const sectionsRequests = [];
+                    while (startOfItems < totalSize) {
+                        sectionsRequests.push(axios.get(this.authorizeURL(`${this.getBasicURL()}${childrenURL}?sort=${this.sort}&X-Plex-Container-Start=${startOfItems}&X-Plex-Container-Size=${bulkItems}`), {
+                            timeout: this.requestTimeout
+                        }));
+                        startOfItems += bulkItems;
+                    }
+                    const allResults = await Promise.all(sectionsRequests);
+                    lodash.forEach(allResults, multiResult => {
+                        result.data.MediaContainer.Metadata = lodash.concat(result.data.MediaContainer.Metadata, multiResult.data.MediaContainer.Metadata);
+                    });
+                }
+                else {
+                    throw err;
+                }
+            }
+            return result.data.MediaContainer.Metadata;
+        };
+        this.getCollectionData = async (collectionKey) => {
+            return this.getChildren(collectionKey);
+        };
         this.getSectionDataWithoutProcessing = async (sectionID) => {
             const bulkItems = 50;
             let url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/all`);
@@ -21099,6 +21139,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             this.data[section.title1] = section.Metadata;
                         });
                     }
+                    const collections = await this.plex.getCollections();
+                    let collectionToGet = {};
+                    lodash.forEach(collections, collection => {
+                        if (this.plex && lodash.isEqual(collection.title, this.config.libraryName)) {
+                            collectionToGet = collection;
+                        }
+                    });
+                    this.data[collectionToGet.title] = await this.plex.getCollectionData(collectionToGet.key);
                     if (this.data[this.config.libraryName] === undefined) {
                         this.error = `Library name ${this.config.libraryName} does not exist.`;
                     }
