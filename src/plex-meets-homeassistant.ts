@@ -433,7 +433,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						collectionToGet = collection;
 					}
 				});
-				this.data[collectionToGet.title] = await this.plex.getCollectionData(collectionToGet.key);
+				if (!_.isNil(collectionToGet.key)) {
+					this.data[collectionToGet.title] = await this.plex.getCollectionData(collectionToGet.key);
+				}
 
 				if (this.data[this.config.libraryName] === undefined) {
 					this.error = `Library name ${this.config.libraryName} does not exist.`;
