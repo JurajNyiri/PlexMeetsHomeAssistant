@@ -18675,6 +18675,7 @@ class Plex {
         this.requestTimeout = 10000;
         this.sections = [];
         this.collections = false;
+        this.playlists = [];
         this.init = async () => {
             await Promise.all([this.getSections(), this.getClients(), this.getServerID()]);
         };
@@ -18732,6 +18733,17 @@ class Plex {
             }
             return this.collections;
         };
+        this.getPlaylists = async () => {
+            if (lodash.isEmpty(this.playlists)) {
+                this.playlists = [];
+                const url = this.authorizeURL(`${this.getBasicURL()}/playlists`);
+                const playlistsData = await axios.get(url, {
+                    timeout: this.requestTimeout
+                });
+                this.playlists = playlistsData.data.MediaContainer.Metadata;
+            }
+            return this.playlists;
+        };
         this.getCollection = async (sectionID) => {
             const url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/collections`);
             const collectionsData = await axios.get(url, {
@@ -18781,6 +18793,9 @@ class Plex {
         };
         this.getCollectionData = async (collectionKey) => {
             return this.getChildren(collectionKey);
+        };
+        this.getPlaylistData = async (playlistKey) => {
+            return this.getChildren(playlistKey);
         };
         this.getSectionDataWithoutProcessing = async (sectionID) => {
             const bulkItems = 50;
@@ -19572,6 +19587,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.scriptEntities = [];
         this.sections = [];
         this.collections = [];
+        this.playlists = [];
         this.clients = {};
         this.entitiesRegistry = false;
         this.plexValidSection = document.createElement('div');
@@ -19778,6 +19794,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.sections = await this.plex.getSections();
             this.collections = await this.plex.getCollections();
+            this.playlists = await this.plex.getPlaylists();
             this.clients = await this.plex.getClients();
             this.plexValidSection.style.display = 'none';
             this.plexValidSection.innerHTML = '';
@@ -19984,6 +20001,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 libraryItems.appendChild(addDropdownItem('Collections', true));
                 lodash.forEach(this.collections, (collection) => {
                     libraryItems.appendChild(addDropdownItem(collection.title));
+                });
+                libraryItems.appendChild(addDropdownItem('Playlists', true));
+                lodash.forEach(this.playlists, (playlist) => {
+                    libraryItems.appendChild(addDropdownItem(playlist.title));
                 });
                 this.libraryName.disabled = false;
                 this.libraryName.value = this.config.libraryName;
@@ -21148,6 +21169,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     });
                     if (!lodash.isNil(collectionToGet.key)) {
                         this.data[collectionToGet.title] = await this.plex.getCollectionData(collectionToGet.key);
+                    }
+                    const playlists = await this.plex.getPlaylists();
+                    let playlistToGet = {};
+                    lodash.forEach(playlists, playlist => {
+                        if (this.plex && lodash.isEqual(playlist.title, this.config.libraryName)) {
+                            playlistToGet = playlist;
+                        }
+                    });
+                    if (!lodash.isNil(playlistToGet.key)) {
+                        this.data[playlistToGet.title] = await this.plex.getPlaylistData(playlistToGet.key);
                     }
                     if (this.data[this.config.libraryName] === undefined) {
                         this.error = `Library name ${this.config.libraryName} does not exist.`;

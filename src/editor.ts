@@ -58,6 +58,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	collections: Array<Record<string, any>> = [];
 
+	playlists: Array<Record<string, any>> = [];
+
 	clients: Record<string, any> = {};
 
 	entitiesRegistry: false | Array<Record<string, any>> = false;
@@ -283,6 +285,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 		this.sections = await this.plex.getSections();
 		this.collections = await this.plex.getCollections();
+		this.playlists = await this.plex.getPlaylists();
 		this.clients = await this.plex.getClients();
 
 		this.plexValidSection.style.display = 'none';
@@ -497,6 +500,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			libraryItems.appendChild(addDropdownItem('Collections', true));
 			_.forEach(this.collections, (collection: Record<string, any>) => {
 				libraryItems.appendChild(addDropdownItem(collection.title));
+			});
+			libraryItems.appendChild(addDropdownItem('Playlists', true));
+			_.forEach(this.playlists, (playlist: Record<string, any>) => {
+				libraryItems.appendChild(addDropdownItem(playlist.title));
 			});
 			this.libraryName.disabled = false;
 			this.libraryName.value = this.config.libraryName;

@@ -23,6 +23,8 @@ class Plex {
 
 	collections: Array<Record<string, any>> | false = false;
 
+	playlists: Array<Record<string, any>> = [];
+
 	constructor(
 		ip: string,
 		port: number | false = false,
@@ -101,6 +103,18 @@ class Plex {
 		return this.collections;
 	};
 
+	getPlaylists = async (): Promise<Array<Record<string, any>>> => {
+		if (_.isEmpty(this.playlists)) {
+			this.playlists = [];
+			const url = this.authorizeURL(`${this.getBasicURL()}/playlists`);
+			const playlistsData = await axios.get(url, {
+				timeout: this.requestTimeout
+			});
+			this.playlists = playlistsData.data.MediaContainer.Metadata;
+		}
+		return this.playlists;
+	};
+
 	getCollection = async (sectionID: number): Promise<Array<Record<string, any>>> => {
 		const url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/collections`);
 		const collectionsData = await axios.get(url, {
@@ -163,6 +177,10 @@ class Plex {
 
 	getCollectionData = async (collectionKey: string): Promise<any> => {
 		return this.getChildren(collectionKey);
+	};
+
+	getPlaylistData = async (playlistKey: string): Promise<any> => {
+		return this.getChildren(playlistKey);
 	};
 
 	private getSectionDataWithoutProcessing = async (sectionID: number): Promise<any> => {

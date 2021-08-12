@@ -437,6 +437,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.data[collectionToGet.title] = await this.plex.getCollectionData(collectionToGet.key);
 				}
 
+				const playlists = await this.plex.getPlaylists();
+				let playlistToGet: Record<string, any> = {};
+				_.forEach(playlists, playlist => {
+					if (this.plex && _.isEqual(playlist.title, this.config.libraryName)) {
+						playlistToGet = playlist;
+					}
+				});
+				if (!_.isNil(playlistToGet.key)) {
+					this.data[playlistToGet.title] = await this.plex.getPlaylistData(playlistToGet.key);
+				}
+
 				if (this.data[this.config.libraryName] === undefined) {
 					this.error = `Library name ${this.config.libraryName} does not exist.`;
 				}
