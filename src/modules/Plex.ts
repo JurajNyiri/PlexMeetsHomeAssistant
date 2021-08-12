@@ -21,6 +21,10 @@ class Plex {
 
 	sections: Array<Record<string, any>> = [];
 
+	collections: Array<Record<string, any>> | false = false;
+
+	playlists: Array<Record<string, any>> = [];
+
 	constructor(
 		ip: string,
 		port: number | false = false,
@@ -80,8 +84,103 @@ class Plex {
 		return this.sections;
 	};
 
+	getCollections = async (): Promise<Array<Record<string, any>>> => {
+		if (!_.isArray(this.collections)) {
+			const sections = await this.getSections();
+			const collectionRequests: Array<Promise<any>> = [];
+			_.forEach(sections, section => {
+				collectionRequests.push(this.getCollection(section.key));
+			});
+			const allResults = await Promise.all(collectionRequests);
+			const collections: Array<Record<string, any>> = [];
+			_.forEach(allResults, result => {
+				_.forEach(result, collection => {
+					collections.push(collection);
+				});
+			});
+			this.collections = collections;
+		}
+		return this.collections;
+	};
+
+	getPlaylists = async (): Promise<Array<Record<string, any>>> => {
+		if (_.isEmpty(this.playlists)) {
+			this.playlists = [];
+			const url = this.authorizeURL(`${this.getBasicURL()}/playlists`);
+			const playlistsData = await axios.get(url, {
+				timeout: this.requestTimeout
+			});
+			this.playlists = playlistsData.data.MediaContainer.Metadata;
+		}
+		return this.playlists;
+	};
+
+	getCollection = async (sectionID: number): Promise<Array<Record<string, any>>> => {
+		const url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/collections`);
+		const collectionsData = await axios.get(url, {
+			timeout: this.requestTimeout
+		});
+		return _.isNil(collectionsData.data.MediaContainer.Metadata) ? [] : collectionsData.data.MediaContainer.Metadata;
+	};
+
 	getSectionData = async (sectionID: number): Promise<any> => {
 		return this.exportSectionsData([await this.getSectionDataWithoutProcessing(sectionID)]);
+	};
+
+	private getChildren = async (childrenURL: string): Promise<any> => {
+		const bulkItems = 50;
+		let url = this.authorizeURL(`${this.getBasicURL()}${childrenURL}`);
+		url += `&sort=${this.sort}`;
+		let result: Record<string, any> = {};
+		try {
+			result = await axios.get(url, {
+				timeout: this.requestTimeout
+			});
+		} catch (err) {
+			// probably hitting limit of items to return, we need to request in parts
+			if (_.includes(err.message, 'Request failed with status code 500')) {
+				url += `&X-Plex-Container-Start=0&X-Plex-Container-Size=${bulkItems}`;
+				result = await axios.get(url, {
+					timeout: this.requestTimeout
+				});
+				const { totalSize } = result.data.MediaContainer;
+				let startOfItems = bulkItems;
+				const sectionsRequests: Array<Promise<any>> = [];
+				while (startOfItems < totalSize) {
+					sectionsRequests.push(
+						axios.get(
+							this.authorizeURL(
+								`${this.getBasicURL()}${childrenURL}?sort=${
+									this.sort
+								}&X-Plex-Container-Start=${startOfItems}&X-Plex-Container-Size=${bulkItems}`
+							),
+							{
+								timeout: this.requestTimeout
+							}
+						)
+					);
+					startOfItems += bulkItems;
+				}
+				const allResults = await Promise.all(sectionsRequests);
+				_.forEach(allResults, multiResult => {
+					result.data.MediaContainer.Metadata = _.concat(
+						result.data.MediaContainer.Metadata,
+						multiResult.data.MediaContainer.Metadata
+					);
+				});
+			} else {
+				throw err;
+			}
+		}
+		return result.data.MediaContainer.Metadata;
+	};
+
+	getCollectionData = async (collectionKey: string): Promise<any> => {
+		return this.getChildren(collectionKey);
+	};
+
+	getPlaylistData = async (playlistKey: string): Promise<any> => {
+		return this.getChildren(playlistKey);
 	};
 
 	private getSectionDataWithoutProcessing = async (sectionID: number): Promise<any> => {
