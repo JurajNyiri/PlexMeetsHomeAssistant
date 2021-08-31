@@ -19571,6 +19571,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.token = document.createElement('paper-input');
         this.port = document.createElement('paper-input');
         this.maxCount = document.createElement('paper-input');
+        this.cardTitle = document.createElement('paper-input');
         this.libraryName = document.createElement('paper-dropdown-menu');
         this.protocol = document.createElement('paper-dropdown-menu');
         this.tabs = document.createElement('paper-tabs');
@@ -19634,6 +19635,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     }
                     else {
                         this.config.maxCount = this.maxCount.value;
+                    }
+                    if (lodash.isEmpty(this.cardTitle.value)) {
+                        this.config.title = '';
+                    }
+                    else {
+                        this.config.title = this.cardTitle.value;
                     }
                     if (!lodash.isEmpty(this.entities)) {
                         this.config.entity = [];
@@ -19880,6 +19887,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             viewTitle.style.marginBottom = '0px';
             viewTitle.style.marginTop = '20px';
             this.plexValidSection.appendChild(viewTitle);
+            this.cardTitle.label = 'Card title';
+            this.cardTitle.value = this.config.title;
+            this.cardTitle.addEventListener('change', this.valueUpdated);
+            this.plexValidSection.appendChild(this.cardTitle);
             this.maxCount.label = 'Maximum number of items to display';
             this.maxCount.value = this.config.maxCount;
             this.maxCount.type = 'number';
@@ -20126,6 +20137,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (!lodash.isNil(config.runAfter)) {
                 this.config.runAfter = config.runAfter;
+            }
+            if (!lodash.isNil(config.title)) {
+                this.config.title = config.title;
             }
             if (lodash.isNumber(this.config.maxCount)) {
                 this.config.maxCount = `${this.config.maxCount}`;

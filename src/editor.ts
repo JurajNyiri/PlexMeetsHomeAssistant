@@ -24,6 +24,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	maxCount: any = document.createElement('paper-input');
 
+	cardTitle: any = document.createElement('paper-input');
+
 	libraryName: any = document.createElement('paper-dropdown-menu');
 
 	protocol: any = document.createElement('paper-dropdown-menu');
@@ -115,6 +117,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.maxCount = '';
 				} else {
 					this.config.maxCount = this.maxCount.value;
+				}
+
+				if (_.isEmpty(this.cardTitle.value)) {
+					this.config.title = '';
+				} else {
+					this.config.title = this.cardTitle.value;
 				}
 
 				if (!_.isEmpty(this.entities)) {
@@ -374,6 +382,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		viewTitle.style.marginTop = '20px';
 		this.plexValidSection.appendChild(viewTitle);
 
+		this.cardTitle.label = 'Card title';
+		this.cardTitle.value = this.config.title;
+		this.cardTitle.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.cardTitle);
+
 		this.maxCount.label = 'Maximum number of items to display';
 		this.maxCount.value = this.config.maxCount;
 		this.maxCount.type = 'number';
@@ -627,6 +640,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (!_.isNil(config.runAfter)) {
 			this.config.runAfter = config.runAfter;
+		}
+
+		if (!_.isNil(config.title)) {
+			this.config.title = config.title;
 		}
 
 		if (_.isNumber(this.config.maxCount)) {
