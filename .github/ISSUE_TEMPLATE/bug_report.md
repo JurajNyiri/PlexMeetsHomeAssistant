@@ -30,6 +30,7 @@ Please check below if true:
 [ ] I am running Home Assistant on HTTP protocol
 [ ] I am running BOTH Home Assistant AND Plex on HTTPS protocol
 [ ] My Plex server is accessible through protocol, port and ip/hostname I have specified for the card.
+[ ] My Plex server is running on HTTPS and has a valid certificate.
 
 **Version**
 Replace this text with version of card you are using.
