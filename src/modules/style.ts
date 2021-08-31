@@ -321,6 +321,7 @@ style.textContent = css`
 		white-space: nowrap;
 		overflow: hidden;
 		position: relative;
+		min-width: 100% !important;
 	}
 	.seasonContainer {
 		position: relative;
@@ -369,7 +370,7 @@ style.textContent = css`
 		position: absolute;
 		z-index: 1;
 	}
-	.container {
+	.plexMeetsContainer {
 		z-index: 1;
 		float: left;
 		margin-bottom: 20px;

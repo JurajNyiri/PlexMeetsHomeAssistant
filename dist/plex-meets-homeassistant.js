@@ -20701,6 +20701,7 @@ style.textContent = css `
 		white-space: nowrap;
 		overflow: hidden;
 		position: relative;
+		min-width: 100% !important;
 	}
 	.seasonContainer {
 		position: relative;
@@ -20749,7 +20750,7 @@ style.textContent = css `
 		position: absolute;
 		z-index: 1;
 	}
-	.container {
+	.plexMeetsContainer {
 		z-index: 1;
 		float: left;
 		margin-bottom: 20px;
@@ -22149,7 +22150,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
             }
             const container = document.createElement('div');
-            container.className = 'container';
+            container.className = 'plexMeetsContainer';
             container.style.width = `${CSS_STYLE.width}px`;
             if (hasAdditionalData) {
                 container.style.height = `${CSS_STYLE.height + 50}px`;
