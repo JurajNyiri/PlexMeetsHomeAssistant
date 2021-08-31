@@ -160,7 +160,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			(!this.maxRows || this.renderedRows < this.config.maxRows)
 		) {
 			this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
-			this.renderPage();
+			this.renderMovieElems();
 			this.calculatePositions();
 		}
 	};
