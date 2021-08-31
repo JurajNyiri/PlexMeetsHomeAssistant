@@ -24,6 +24,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	maxCount: any = document.createElement('paper-input');
 
+	maxRows: any = document.createElement('paper-input');
+
 	cardTitle: any = document.createElement('paper-input');
 
 	libraryName: any = document.createElement('paper-dropdown-menu');
@@ -117,6 +119,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.maxCount = '';
 				} else {
 					this.config.maxCount = this.maxCount.value;
+				}
+
+				if (_.isEmpty(this.maxRows.value)) {
+					this.config.maxRows = '';
+				} else {
+					this.config.maxRows = this.maxRows.value;
 				}
 
 				if (_.isEmpty(this.cardTitle.value)) {
@@ -393,6 +401,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.maxCount.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.maxCount);
 
+		this.maxRows.label = 'Maximum number of rows to display (Optional)';
+		this.maxRows.value = this.config.maxRows;
+		this.maxRows.type = 'number';
+		this.maxRows.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.maxRows);
+
 		this.sort.innerHTML = '';
 
 		const sortItems: any = document.createElement('paper-listbox');
@@ -648,6 +662,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (_.isNumber(this.config.maxCount)) {
 			this.config.maxCount = `${this.config.maxCount}`;
+		}
+
+		if (_.isNumber(this.config.maxRows)) {
+			this.config.maxRows = `${this.config.maxRows}`;
 		}
 
 		this.render();

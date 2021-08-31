@@ -19588,6 +19588,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.token = document.createElement('paper-input');
         this.port = document.createElement('paper-input');
         this.maxCount = document.createElement('paper-input');
+        this.maxRows = document.createElement('paper-input');
         this.cardTitle = document.createElement('paper-input');
         this.libraryName = document.createElement('paper-dropdown-menu');
         this.protocol = document.createElement('paper-dropdown-menu');
@@ -19652,6 +19653,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     }
                     else {
                         this.config.maxCount = this.maxCount.value;
+                    }
+                    if (lodash.isEmpty(this.maxRows.value)) {
+                        this.config.maxRows = '';
+                    }
+                    else {
+                        this.config.maxRows = this.maxRows.value;
                     }
                     if (lodash.isEmpty(this.cardTitle.value)) {
                         this.config.title = '';
@@ -19913,6 +19920,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.maxCount.type = 'number';
             this.maxCount.addEventListener('change', this.valueUpdated);
             this.plexValidSection.appendChild(this.maxCount);
+            this.maxRows.label = 'Maximum number of rows to display (Optional)';
+            this.maxRows.value = this.config.maxRows;
+            this.maxRows.type = 'number';
+            this.maxRows.addEventListener('change', this.valueUpdated);
+            this.plexValidSection.appendChild(this.maxRows);
             this.sort.innerHTML = '';
             const sortItems = document.createElement('paper-listbox');
             sortItems.slot = 'dropdown-content';
@@ -20160,6 +20172,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (lodash.isNumber(this.config.maxCount)) {
                 this.config.maxCount = `${this.config.maxCount}`;
+            }
+            if (lodash.isNumber(this.config.maxRows)) {
+                this.config.maxRows = `${this.config.maxRows}`;
             }
             this.render();
         };
@@ -20906,6 +20921,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.previousPageWidth = 0;
         this.runAfter = '';
         this.columnsCount = 0;
+        this.renderedRows = 0;
         this.renderedItems = 0;
         this.maxRenderCount = false;
         this.seasonContainerClickEnabled = true;
@@ -20921,6 +20937,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.config = {};
         this.loading = false;
         this.maxCount = false;
+        this.maxRows = false;
         this.error = '';
         this.contentBGHeight = 0;
         this.initialDataLoaded = false;
@@ -20929,9 +20946,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const height = getHeight(this.content);
             if (!this.detailsShown &&
                 window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
-                this.renderedItems > 0) {
+                this.renderedItems > 0 &&
+                this.renderedItems < this.data[this.config.libraryName].length &&
+                (!this.maxRows || this.renderedRows < this.config.maxRows)) {
                 this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
-                this.renderMovieElems();
+                this.renderPage();
                 this.calculatePositions();
             }
         };
@@ -21248,7 +21267,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     this.searchValue = this.searchInputElem.value;
                     this.renderPage();
                     this.focus();
-                    this.renderNewElementsIfNeeded();
                 }
             });
             searchContainer.appendChild(this.searchInputElem);
@@ -21262,11 +21280,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 // eslint-disable-next-line consistent-return
                 let lastRowTop = 0;
                 const loadAdditionalRowsCount = 2; // todo: make this configurable
+                this.renderedRows = 0;
+                this.columnsCount = 0;
                 const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
-                // eslint-disable-next-line consistent-return
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     if ((!this.maxCount || this.renderedItems < this.maxCount) &&
-                        (!this.maxRenderCount || this.renderedItems < this.maxRenderCount)) {
+                        (!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+                        (!this.maxRows || this.renderedRows <= this.maxRows)) {
                         const movieElem = this.getMovieElement(movieData, hasEpisodesResult);
                         let shouldRender = false;
                         if (this.looseSearch) {
@@ -21296,7 +21316,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 this.renderedItems += 1;
                             }
                         }
-                        if (lastRowTop !== movieElem.getBoundingClientRect().top) {
+                        if (shouldRender && lastRowTop !== movieElem.getBoundingClientRect().top) {
+                            this.renderedRows += 1;
                             if (lastRowTop !== 0 && this.columnsCount === 0) {
                                 this.columnsCount = this.renderedItems - 1;
                             }
@@ -21305,10 +21326,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
                             }
                         }
-                    }
-                    else {
+                        if (this.maxRows && this.renderedRows > this.maxRows) {
+                            movieElem.remove();
+                        }
                         return true;
                     }
+                    return false;
                 });
             }
             const contentbg = this.getElementsByClassName('contentbg')[0];
@@ -22330,6 +22353,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             if (config.maxCount && config.maxCount !== '') {
                 this.maxCount = config.maxCount;
+            }
+            if (config.maxRows && config.maxRows !== '' && config.maxRows !== '0' && config.maxRows !== 0) {
+                this.maxRows = config.maxRows;
+            }
+            else {
+                this.maxRows = false;
             }
             if (config.runBefore && !lodash.isEqual(config.runBefore, '')) {
                 this.runBefore = config.runBefore;
