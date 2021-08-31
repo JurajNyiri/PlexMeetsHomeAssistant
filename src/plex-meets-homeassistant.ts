@@ -333,6 +333,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				await this.plex.init();
 				const plexAllSections = await this.plex.getSections();
 
+				console.log(await this.plex.getLiveTV());
+
 				const getOnDeck = async (): Promise<void> => {
 					if (this.plex) {
 						try {

@@ -18674,6 +18674,8 @@ class Plex {
         this.clients = [];
         this.requestTimeout = 10000;
         this.sections = [];
+        this.providers = [];
+        this.livetv = {};
         this.collections = false;
         this.playlists = [];
         this.init = async () => {
@@ -18691,6 +18693,39 @@ class Plex {
                 throw Error(`${err.message} while requesting URL "${url}".`);
             }
             return this.clients;
+        };
+        this.getProviders = async () => {
+            if (lodash.isEmpty(this.providers)) {
+                const url = this.authorizeURL(`${this.getBasicURL()}/media/providers`);
+                const providersData = await axios.get(url, {
+                    timeout: this.requestTimeout
+                });
+                this.providers = providersData.data.MediaContainer.MediaProvider;
+            }
+            return this.providers;
+        };
+        this.getLiveTV = async () => {
+            if (lodash.isEmpty(this.livetv)) {
+                const returnData = {};
+                const providers = await this.getProviders();
+                const liveTVRequests = [];
+                const liveTVRequestsNames = [];
+                lodash.forEach(providers, provider => {
+                    if (lodash.isEqual(provider.protocols, 'livetv')) {
+                        const url = this.authorizeURL(`${this.getBasicURL()}/${provider.identifier}/tags?type=310`);
+                        liveTVRequests.push(axios.get(url, {
+                            timeout: this.requestTimeout
+                        }));
+                        liveTVRequestsNames.push(provider.title);
+                    }
+                });
+                const allResults = await Promise.all(liveTVRequests);
+                lodash.forEach(allResults, (result, key) => {
+                    returnData[liveTVRequestsNames[key]] = result.data.MediaContainer.Directory;
+                });
+                this.livetv = returnData;
+            }
+            return this.livetv;
         };
         this.getServerID = async () => {
             if (lodash.isEmpty(this.serverInfo)) {
@@ -21108,6 +21143,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                     await this.plex.init();
                     const plexAllSections = await this.plex.getSections();
+                    console.log(await this.plex.getLiveTV());
                     const getOnDeck = async () => {
                         if (this.plex) {
                             try {
