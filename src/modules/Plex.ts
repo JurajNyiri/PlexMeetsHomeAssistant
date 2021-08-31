@@ -25,6 +25,8 @@ class Plex {
 
 	livetv: Record<string, any> = {};
 
+	livetvepg: Record<string, any> = {};
+
 	collections: Array<Record<string, any>> | false = false;
 
 	playlists: Array<Record<string, any>> = [];
@@ -95,6 +97,37 @@ class Plex {
 			this.livetv = returnData;
 		}
 		return this.livetv;
+	};
+
+	getEPG = async (): Promise<Record<string, any>> => {
+		if (_.isEmpty(this.livetvepg)) {
+			const returnData: Record<string, any> = {};
+			const providers = await this.getProviders();
+			const liveTVRequests: Array<Promise<any>> = [];
+			const liveTVRequestsNames: Array<string> = [];
+			_.forEach(providers, provider => {
+				if (_.isEqual(provider.protocols, 'livetv')) {
+					let url = this.authorizeURL(`${this.getBasicURL()}/${provider.identifier}/grid?type=1&sort=beginsAt`);
+					url += `&endsAt>=${Math.floor(Date.now() / 1000)}`;
+					url += `&beginsAt<=${Math.floor(Date.now() / 1000)}`;
+					liveTVRequests.push(
+						axios.get(url, {
+							timeout: this.requestTimeout
+						})
+					);
+					liveTVRequestsNames.push(provider.title);
+				}
+			});
+			const allResults = await Promise.all(liveTVRequests);
+			_.forEach(allResults, (result, key) => {
+				returnData[liveTVRequestsNames[key]] = {};
+				_.forEach(result.data.MediaContainer.Metadata, data => {
+					returnData[liveTVRequestsNames[key]][data.Media[0].channelCallSign] = data;
+				});
+			});
+			this.livetvepg = returnData;
+		}
+		return this.livetvepg;
 	};
 
 	getServerID = async (): Promise<any> => {

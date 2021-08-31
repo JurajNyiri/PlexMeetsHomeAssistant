@@ -18676,6 +18676,7 @@ class Plex {
         this.sections = [];
         this.providers = [];
         this.livetv = {};
+        this.livetvepg = {};
         this.collections = false;
         this.playlists = [];
         this.init = async () => {
@@ -18726,6 +18727,34 @@ class Plex {
                 this.livetv = returnData;
             }
             return this.livetv;
+        };
+        this.getEPG = async () => {
+            if (lodash.isEmpty(this.livetvepg)) {
+                const returnData = {};
+                const providers = await this.getProviders();
+                const liveTVRequests = [];
+                const liveTVRequestsNames = [];
+                lodash.forEach(providers, provider => {
+                    if (lodash.isEqual(provider.protocols, 'livetv')) {
+                        let url = this.authorizeURL(`${this.getBasicURL()}/${provider.identifier}/grid?type=1&sort=beginsAt`);
+                        url += `&endsAt>=${Math.floor(Date.now() / 1000)}`;
+                        url += `&beginsAt<=${Math.floor(Date.now() / 1000)}`;
+                        liveTVRequests.push(axios.get(url, {
+                            timeout: this.requestTimeout
+                        }));
+                        liveTVRequestsNames.push(provider.title);
+                    }
+                });
+                const allResults = await Promise.all(liveTVRequests);
+                lodash.forEach(allResults, (result, key) => {
+                    returnData[liveTVRequestsNames[key]] = {};
+                    lodash.forEach(result.data.MediaContainer.Metadata, data => {
+                        returnData[liveTVRequestsNames[key]][data.Media[0].channelCallSign] = data;
+                    });
+                });
+                this.livetvepg = returnData;
+            }
+            return this.livetvepg;
         };
         this.getServerID = async () => {
             if (lodash.isEmpty(this.serverInfo)) {
@@ -21231,6 +21260,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     const getLiveTV = async () => {
                         if (this.plex) {
                             const liveTV = await this.plex.getLiveTV();
+                            console.log(await this.plex.getEPG());
                             lodash.forEach(liveTV, (data, key) => {
                                 this.data[key] = data;
                             });

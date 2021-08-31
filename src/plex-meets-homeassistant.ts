@@ -406,6 +406,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				const getLiveTV = async (): Promise<void> => {
 					if (this.plex) {
 						const liveTV = await this.plex.getLiveTV();
+						console.log(await this.plex.getEPG());
 						_.forEach(liveTV, (data, key) => {
 							this.data[key] = data;
 						});
