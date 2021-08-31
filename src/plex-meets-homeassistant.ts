@@ -1506,7 +1506,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		const container = document.createElement('div');
-		container.className = 'container';
+		container.className = 'plexMeetsContainer';
 		container.style.width = `${CSS_STYLE.width}px`;
 		if (hasAdditionalData) {
 			container.style.height = `${CSS_STYLE.height + 50}px`;
