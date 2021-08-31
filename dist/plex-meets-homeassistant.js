@@ -19646,6 +19646,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.entitiesRegistry = false;
         this.plexValidSection = document.createElement('div');
         this.loaded = false;
+        this.livetv = {};
         this.fireEvent = (node, type, detail, options = {}) => {
             // eslint-disable-next-line no-param-reassign
             detail = detail === null || detail === undefined ? {} : detail;
@@ -19859,6 +19860,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.appendChild(this.content);
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.sections = await this.plex.getSections();
+            this.livetv = await this.plex.getLiveTV();
             this.collections = await this.plex.getCollections();
             this.playlists = await this.plex.getPlaylists();
             this.clients = await this.plex.getClients();
@@ -20068,6 +20070,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.runAfter.addEventListener('value-changed', this.valueUpdated);
             this.runAfter.value = this.config.runAfter;
             this.plexValidSection.appendChild(this.runAfter);
+            if (!lodash.isEmpty(this.livetv)) {
+                libraryItems.appendChild(addDropdownItem('Live TV', true));
+                lodash.forEach(lodash.keys(this.livetv), (livetv) => {
+                    libraryItems.appendChild(addDropdownItem(livetv));
+                });
+            }
             if (!lodash.isEmpty(this.sections)) {
                 libraryItems.appendChild(addDropdownItem('Libraries', true));
                 lodash.forEach(this.sections, (section) => {
