@@ -333,8 +333,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				await this.plex.init();
 				const plexAllSections = await this.plex.getSections();
 
-				console.log(await this.plex.getLiveTV());
-
 				const getOnDeck = async (): Promise<void> => {
 					if (this.plex) {
 						try {
@@ -405,6 +403,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				};
 
+				const getLiveTV = async (): Promise<void> => {
+					if (this.plex) {
+						const liveTV = await this.plex.getLiveTV();
+						_.forEach(liveTV, (data, key) => {
+							this.data[key] = data;
+						});
+					}
+				};
+
 				let sectionKey: number | false = 0;
 				_.forEach(plexAllSections, (section: Record<string, any>) => {
 					if (_.isEqual(section.title, this.config.libraryName)) {
@@ -426,6 +433,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				} else if (_.isEqual(this.config.libraryName, 'Recently Added')) {
 					loadDataRequests.push(getRecentyAdded());
 				}
+
+				loadDataRequests.push(getLiveTV());
 
 				const [plexSections] = await Promise.all(loadDataRequests);
 
