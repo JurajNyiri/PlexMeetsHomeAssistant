@@ -19774,7 +19774,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.ip.value = this.config.ip;
             this.ip.addEventListener('change', this.valueUpdated);
             this.content.appendChild(this.ip);
-            this.port.label = 'Plex Port';
+            this.port.label = 'Plex Port (Optional)';
             this.port.value = this.config.port;
             this.port.type = 'number';
             this.port.addEventListener('change', this.valueUpdated);
@@ -19887,11 +19887,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             viewTitle.style.marginBottom = '0px';
             viewTitle.style.marginTop = '20px';
             this.plexValidSection.appendChild(viewTitle);
-            this.cardTitle.label = 'Card title';
+            this.cardTitle.label = 'Card title (Optional)';
             this.cardTitle.value = this.config.title;
             this.cardTitle.addEventListener('change', this.valueUpdated);
             this.plexValidSection.appendChild(this.cardTitle);
-            this.maxCount.label = 'Maximum number of items to display';
+            this.maxCount.label = 'Maximum number of items to display (Optional)';
             this.maxCount.value = this.config.maxCount;
             this.maxCount.type = 'number';
             this.maxCount.addEventListener('change', this.valueUpdated);
@@ -19985,7 +19985,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 runBeforeItems.appendChild(addDropdownItem(entity));
             });
             runBeforeItems.slot = 'dropdown-content';
-            this.runBefore.label = 'Script to execute before starting the media';
+            this.runBefore.label = 'Script to execute before starting the media (Optional)';
             this.runBefore.appendChild(runBeforeItems);
             this.runBefore.style.width = '100%';
             this.runBefore.addEventListener('value-changed', this.valueUpdated);
@@ -19998,7 +19998,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 runAfterItems.appendChild(addDropdownItem(entity));
             });
             runAfterItems.slot = 'dropdown-content';
-            this.runAfter.label = 'Script to execute after starting the media';
+            this.runAfter.label = 'Script to execute after starting the media (Optional)';
             this.runAfter.appendChild(runAfterItems);
             this.runAfter.style.width = '100%';
             this.runAfter.addEventListener('value-changed', this.valueUpdated);
