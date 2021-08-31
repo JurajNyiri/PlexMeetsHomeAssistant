@@ -940,8 +940,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.activeMovieElem = undefined;
 		for (let i = 0; i < this.movieElems.length; i += 1) {
 			if (parseInt(this.movieElems[i].style.width, 10) > CSS_STYLE.width) {
-				this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
-				this.movieElems[i].style.height = `${CSS_STYLE.height}px`;
+				if (_.isEqual(this.movieElems[i].style.width, this.movieElems[i].style.height)) {
+					this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
+					this.movieElems[i].style.height = `${CSS_STYLE.width}px`;
+				} else {
+					this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
+					this.movieElems[i].style.height = `${CSS_STYLE.height}px`;
+				}
+
 				this.movieElems[i].style['z-index'] = 1;
 				this.movieElems[i].style.position = 'absolute';
 				this.movieElems[i].style.left = `${this.movieElems[i].dataset.left}px`;
@@ -1032,6 +1038,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	showDetails = async (data: any): Promise<void> => {
+		console.log(data);
 		this.detailsShown = true;
 		const top = this.getTop();
 		if (this.detailElem) {
@@ -1091,7 +1098,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							genreElem.parentElement.style.display = 'none';
 						}
 					}
-					(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(mainData.title);
+					if (!_.isNil(mainData.channelCallSign)) {
+						(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(
+							mainData.channelCallSign
+						);
+					} else {
+						(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(mainData.title);
+					}
+
 					(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.year);
 					(this.getElementsByClassName('metaInfo')[0] as HTMLElement).innerHTML = `${(mainData.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
@@ -1129,105 +1143,108 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			} else if (data.childCount > 0) {
 				seasonsData = await this.plex.getLibraryData(data.key.split('/')[3]);
 			}
-			const dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
-			if (this.videoElem) {
-				const art = this.plex.authorizeURL(this.plex.getBasicURL() + data.art);
-				const trailerURL = findTrailerURL(dataDetails);
-				if (trailerURL !== '' && !_.isEqual(this.playTrailer, false)) {
-					const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-					const video = document.createElement('video');
-					video.style.height = '100%';
-					video.style.width = '100%';
-					video.controls = false;
-					if (_.isEqual(this.playTrailer, 'muted')) {
-						video.muted = true;
-					}
-					const source = document.createElement('source');
-					source.type = 'video/mp4';
-					source.src = this.plex.authorizeURL(
-						`${this.plex.getBasicURL()}${dataDetails.Extras.Metadata[0].Media[0].Part[0].key}`
-					);
-					video.appendChild(source);
-					videoPlayer.appendChild(video);
-
-					video.load();
-					video.play();
-					let playingFired = false;
-
-					const videobgs1 = this.getElementsByClassName('videobg1');
-					const videobgs2 = this.getElementsByClassName('videobg2');
-					video.addEventListener('click', event => {
-						if (isVideoFullScreen(this)) {
-							event.stopPropagation();
+			let dataDetails: Record<string, any> = {};
+			if (!_.isNil(data.key)) {
+				dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+				if (this.videoElem) {
+					const art = this.plex.authorizeURL(this.plex.getBasicURL() + data.art);
+					const trailerURL = findTrailerURL(dataDetails);
+					if (trailerURL !== '' && !_.isEqual(this.playTrailer, false)) {
+						const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+						const video = document.createElement('video');
+						video.style.height = '100%';
+						video.style.width = '100%';
+						video.controls = false;
+						if (_.isEqual(this.playTrailer, 'muted')) {
+							video.muted = true;
 						}
-					});
-					const fullScreenChangeAction = (): void => {
-						if (this.videoElem) {
+						const source = document.createElement('source');
+						source.type = 'video/mp4';
+						source.src = this.plex.authorizeURL(
+							`${this.plex.getBasicURL()}${dataDetails.Extras.Metadata[0].Media[0].Part[0].key}`
+						);
+						video.appendChild(source);
+						videoPlayer.appendChild(video);
+
+						video.load();
+						video.play();
+						let playingFired = false;
+
+						const videobgs1 = this.getElementsByClassName('videobg1');
+						const videobgs2 = this.getElementsByClassName('videobg2');
+						video.addEventListener('click', event => {
 							if (isVideoFullScreen(this)) {
-								// eslint-disable-next-line no-restricted-syntax
-								for (const videobg1 of videobgs1) {
-									videobg1.classList.add('transparent');
-								}
-								// eslint-disable-next-line no-restricted-syntax
-								for (const videobg2 of videobgs2) {
-									videobg2.classList.add('transparent');
-								}
+								event.stopPropagation();
+							}
+						});
+						const fullScreenChangeAction = (): void => {
+							if (this.videoElem) {
+								if (isVideoFullScreen(this)) {
+									// eslint-disable-next-line no-restricted-syntax
+									for (const videobg1 of videobgs1) {
+										videobg1.classList.add('transparent');
+									}
+									// eslint-disable-next-line no-restricted-syntax
+									for (const videobg2 of videobgs2) {
+										videobg2.classList.add('transparent');
+									}
 
-								this.videoElem.classList.add('maxZIndex');
-								video.controls = true;
-								video.muted = false;
-							} else {
-								// eslint-disable-next-line no-restricted-syntax
-								for (const videobg1 of videobgs1) {
-									videobg1.classList.remove('transparent');
-								}
-								// eslint-disable-next-line no-restricted-syntax
-								for (const videobg2 of videobgs2) {
-									videobg2.classList.remove('transparent');
-								}
+									this.videoElem.classList.add('maxZIndex');
+									video.controls = true;
+									video.muted = false;
+								} else {
+									// eslint-disable-next-line no-restricted-syntax
+									for (const videobg1 of videobgs1) {
+										videobg1.classList.remove('transparent');
+									}
+									// eslint-disable-next-line no-restricted-syntax
+									for (const videobg2 of videobgs2) {
+										videobg2.classList.remove('transparent');
+									}
 
-								this.videoElem.classList.remove('maxZIndex');
-								video.controls = false;
-								window.scroll({
-									top: getOffset(this.activeMovieElem as Element).top - 70,
-									behavior: 'smooth'
-								});
-								if (_.isEqual(this.playTrailer, 'muted')) {
-									video.muted = true;
+									this.videoElem.classList.remove('maxZIndex');
+									video.controls = false;
+									window.scroll({
+										top: getOffset(this.activeMovieElem as Element).top - 70,
+										behavior: 'smooth'
+									});
+									if (_.isEqual(this.playTrailer, 'muted')) {
+										video.muted = true;
+									}
 								}
 							}
-						}
-					};
-					video.addEventListener('fullscreenchange', fullScreenChangeAction);
-					video.addEventListener('mozfullscreenchange', fullScreenChangeAction);
-					video.addEventListener('webkitfullscreenchange', fullScreenChangeAction);
-					video.addEventListener('msfullscreenchange', fullScreenChangeAction);
+						};
+						video.addEventListener('fullscreenchange', fullScreenChangeAction);
+						video.addEventListener('mozfullscreenchange', fullScreenChangeAction);
+						video.addEventListener('webkitfullscreenchange', fullScreenChangeAction);
+						video.addEventListener('msfullscreenchange', fullScreenChangeAction);
 
-					video.addEventListener('playing', () => {
-						if (this.videoElem && !playingFired) {
-							const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
-							const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
-							fullscreenTrailer.style.visibility = 'visible';
-							contentbg.classList.add('no-transparency');
-							playingFired = true;
-							this.videoElem.style.width = `${
-								(this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth
-							}px`;
-							this.videoElem.style.visibility = 'visible';
-							this.videoElem.style.top = `${top}px`;
-						}
-					});
-				} else if (!_.isEmpty(art)) {
-					const contentArt = this.getElementsByClassName('contentArt')[0] as HTMLElement;
-					const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
-					contentArt.style.width = `${window.innerWidth}px`;
-					contentArt.style.height = `${window.innerHeight}px`;
-					contentArt.style.backgroundImage = `url('${art}')`;
-					contentArt.style.top = `${top - 8}px`;
-					contentArt.style.transition = '0.5s';
+						video.addEventListener('playing', () => {
+							if (this.videoElem && !playingFired) {
+								const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
+								const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
+								fullscreenTrailer.style.visibility = 'visible';
+								contentbg.classList.add('no-transparency');
+								playingFired = true;
+								this.videoElem.style.width = `${
+									(this.getElementsByClassName('searchContainer')[0] as HTMLElement).offsetWidth
+								}px`;
+								this.videoElem.style.visibility = 'visible';
+								this.videoElem.style.top = `${top}px`;
+							}
+						});
+					} else if (!_.isEmpty(art)) {
+						const contentArt = this.getElementsByClassName('contentArt')[0] as HTMLElement;
+						const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
+						contentArt.style.width = `${window.innerWidth}px`;
+						contentArt.style.height = `${window.innerHeight}px`;
+						contentArt.style.backgroundImage = `url('${art}')`;
+						contentArt.style.top = `${top - 8}px`;
+						contentArt.style.transition = '0.5s';
 
-					contentArt.style.display = 'block';
-					contentbg.classList.add('no-transparency');
+						contentArt.style.display = 'block';
+						contentbg.classList.add('no-transparency');
+					}
 				}
 			}
 			if (!_.isEmpty(seasonsData)) {
@@ -1430,7 +1447,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData));
 							}
 						});
-					} else if (this.showExtras) {
+					} else if (this.showExtras && !_.isNil(dataDetails.Extras)) {
 						const extras = dataDetails.Extras.Metadata;
 						_.forEach(extras, extrasData => {
 							if (this.episodesElem && this.playController && this.plex) {
@@ -1496,8 +1513,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.minimizeAll();
 			this.activeMovieElem = undefined;
 			this.hideDetails();
-			movieElemLocal.style.width = `${CSS_STYLE.width}px`;
-			movieElemLocal.style.height = `${CSS_STYLE.height}px`;
+			if (_.isEqual(movieElem.style.width, movieElem.style.height)) {
+				movieElemLocal.style.width = `${CSS_STYLE.width}px`;
+				movieElemLocal.style.height = `${CSS_STYLE.width}px`;
+			} else {
+				movieElemLocal.style.width = `${CSS_STYLE.width}px`;
+				movieElemLocal.style.height = `${CSS_STYLE.height}px`;
+			}
 			movieElemLocal.style.zIndex = '1';
 			movieElemLocal.style.top = `${movieElem.dataset.top}px`;
 			movieElemLocal.style.left = `${movieElem.dataset.left}px`;
@@ -1511,8 +1533,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			const top = this.getTop();
 			this.showDetails(this.activeMovieElemData);
 			this.showBackground();
-			movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;
-			movieElemLocal.style.height = `${CSS_STYLE.expandedHeight}px`;
+			if (_.isEqual(movieElem.style.width, movieElem.style.height)) {
+				movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;
+				movieElemLocal.style.height = `${CSS_STYLE.expandedWidth}px`;
+			} else {
+				movieElemLocal.style.width = `${CSS_STYLE.expandedWidth}px`;
+				movieElemLocal.style.height = `${CSS_STYLE.expandedHeight}px`;
+			}
 			movieElemLocal.style.zIndex = '3';
 			movieElemLocal.style.left = '16px';
 			movieElemLocal.style.top = `${top + 16}px`;
@@ -1562,6 +1589,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		movieElem.style.width = `${CSS_STYLE.width}px`;
 		movieElem.style.height = `${CSS_STYLE.height}px`;
+
+		if (!_.isNil(data.channelCallSign)) {
+			movieElem.style.backgroundSize = '80%';
+			movieElem.style.backgroundColor = 'rgba(0,0,0,0.2)';
+			movieElem.style.backgroundPosition = 'center';
+			container.style.height = container.style.width;
+			movieElem.style.height = `${CSS_STYLE.width}px`;
+		}
+
 		movieElem.style.backgroundImage = `url('${thumbURL}')`;
 		if (this.playController && !this.playController.isPlaySupported(data)) {
 			movieElem.style.cursor = 'pointer';
@@ -1620,11 +1656,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const titleElem = document.createElement('div');
 		if (_.isEqual(data.type, 'episode')) {
 			titleElem.innerHTML = escapeHtml(data.grandparentTitle);
+		} else if (!_.isNil(data.channelCallSign)) {
+			titleElem.innerHTML = escapeHtml(data.channelCallSign);
 		} else {
 			titleElem.innerHTML = escapeHtml(data.title);
 		}
 		titleElem.className = 'titleElem';
-		titleElem.style.marginTop = `${CSS_STYLE.height}px`;
+		if (!_.isNil(data.channelCallSign)) {
+			titleElem.style.marginTop = `${CSS_STYLE.width}px`;
+		} else {
+			titleElem.style.marginTop = `${CSS_STYLE.height}px`;
+		}
 
 		const yearElem = document.createElement('div');
 		if (_.isEqual(data.type, 'episode')) {
