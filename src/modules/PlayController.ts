@@ -6,6 +6,7 @@ import _ from 'lodash';
 import axios from 'axios';
 import Plex from './Plex';
 import { supported } from '../const';
+import { waitUntilState, getState } from './utils';
 
 class PlayController {
 	entity: Record<string, any>;
@@ -44,12 +45,8 @@ class PlayController {
 		}
 	}
 
-	private getState = async (entityID: string): Promise<Record<string, any>> => {
-		return this.hass.callApi('GET', `states/${entityID}`);
-	};
-
 	private getKodiSearchResults = async (): Promise<Record<string, any>> => {
-		return JSON.parse((await this.getState('sensor.kodi_media_sensor_search')).attributes.data);
+		return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
 	};
 
 	private getKodiSearch = async (search: string): Promise<Record<string, any>> => {
@@ -107,7 +104,13 @@ class PlayController {
 
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
 		if (_.isArray(this.runBefore)) {
+			const entityID = `${this.runBefore[0]}.${this.runBefore[1]}`;
 			await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
+
+			const entityState = await getState(this.hass, entityID);
+			if (_.isEqual(entityState.state, 'on')) {
+				await waitUntilState(this.hass, entityID, 'off');
+			}
 		}
 		const entity = this.getPlayService(data);
 		switch (entity.key) {

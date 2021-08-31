@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-env browser */
+import { HomeAssistant } from 'custom-card-helpers';
 import { Connection } from 'home-assistant-js-websocket';
 import _ from 'lodash';
 import { CSS_STYLE } from '../const';
-import PlayController from './PlayController';
 import Plex from './Plex';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const escapeHtml = (unsafe: any): string => {
@@ -159,7 +159,26 @@ const clickHandler = (elem: HTMLButtonElement, clickFunction: Function, holdFunc
 	elem.addEventListener('touchcancel', cancel);
 };
 
-const createEpisodesView = (playController: PlayController, plex: Plex, data: Record<string, any>): HTMLElement => {
+const sleep = async (ms: number): Promise<void> => {
+	return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+const getState = async (hass: HomeAssistant, entityID: string): Promise<Record<string, any>> => {
+	return hass.callApi('GET', `states/${entityID}`);
+};
+
+const waitUntilState = async (hass: HomeAssistant, entityID: string, state: string): Promise<void> => {
+	let entityState = await getState(hass, entityID);
+
+	while (entityState.state !== state) {
+		// eslint-disable-next-line no-await-in-loop
+		entityState = await getState(hass, entityID);
+		// eslint-disable-next-line no-await-in-loop
+		await sleep(1000);
+	}
+};
+
+const createEpisodesView = (playController: any, plex: Plex, data: Record<string, any>): HTMLElement => {
 	const episodeContainer = document.createElement('div');
 	episodeContainer.className = 'episodeContainer';
 	episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
@@ -262,5 +281,7 @@ export {
 	getWidth,
 	getDetailsBottom,
 	clickHandler,
-	fetchEntityRegistry
+	fetchEntityRegistry,
+	waitUntilState,
+	getState
 };

@@ -18941,17 +18941,231 @@ class Plex {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const escapeHtml = (unsafe) => {
+    if (unsafe) {
+        return unsafe
+            .toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    return '';
+};
+const fetchEntityRegistry = (conn) => conn.sendMessagePromise({
+    type: 'config/entity_registry/list'
+});
+const getHeight = (el) => {
+    const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
+    return height;
+};
+const getOffset = (el) => {
+    let x = 0;
+    let y = 0;
+    while (el &&
+        el.offsetParent &&
+        !lodash.isNaN(el.offsetLeft) &&
+        !lodash.isNaN(el.offsetTop)) {
+        x += el.offsetLeft - el.scrollLeft;
+        y += el.offsetTop - el.scrollTop;
+        const tmp = el.offsetParent;
+        if (tmp) {
+            // eslint-disable-next-line no-param-reassign
+            el = tmp;
+        }
+    }
+    return { top: y, left: x };
+};
+const getDetailsBottom = (seasonContainers, episodeContainers, activeElem) => {
+    const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
+    const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
+    let detailBottom = false;
+    if (seasonContainers.length > 0 && parseInt(activeElem.style.top, 10) > 0) {
+        detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
+    }
+    else if (episodeContainers.length > 0) {
+        detailBottom = getHeight(lastEpisodeContainer) + parseInt(getOffset(lastEpisodeContainer).top, 10) + 10;
+    }
+    return detailBottom;
+};
+const hasEpisodes = (media) => {
+    let result = false;
+    // eslint-disable-next-line consistent-return
+    lodash.forEach(media, data => {
+        if (lodash.isEqual(data.type, 'episode')) {
+            result = true;
+            return false;
+        }
+    });
+    return result;
+};
+const isVideoFullScreen = (_this) => {
+    const videoPlayer = _this.getElementsByClassName('videoPlayer')[0];
+    const video = videoPlayer.children[0];
+    if (!video)
+        return false;
+    const body = document.getElementsByTagName('body')[0];
+    return ((video.offsetWidth === body.offsetWidth && video.offsetHeight === body.offsetHeight) ||
+        (_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen')));
+};
+const getOldPlexServerErrorMessage = (libraryName) => {
+    return `PlexMeetsHomeAssistant: 404 Error requesting library feed for ${libraryName}. Plex API might have changed or using outdated server. Library ${libraryName} will not work.`;
+};
+const findTrailerURL = (movieData) => {
+    let foundURL = '';
+    if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
+        // eslint-disable-next-line consistent-return
+        lodash.forEach(movieData.Extras.Metadata, extra => {
+            if (extra.subtype === 'trailer') {
+                foundURL = extra.Media[0].Part[0].key;
+                return false;
+            }
+        });
+    }
+    return foundURL;
+};
+const clickHandler = (elem, clickFunction, holdFunction) => {
+    let longpress = false;
+    let presstimer = null;
+    const cancel = (e) => {
+        e.stopPropagation();
+        if (presstimer !== null) {
+            clearTimeout(presstimer);
+            presstimer = null;
+        }
+    };
+    const click = (e) => {
+        e.stopPropagation();
+        if (presstimer !== null) {
+            clearTimeout(presstimer);
+            presstimer = null;
+        }
+        if (longpress) {
+            return false;
+        }
+        clickFunction(e);
+        return true;
+    };
+    const start = (e) => {
+        e.stopPropagation();
+        if (e.type === 'click' && e.button !== 0) {
+            return;
+        }
+        longpress = false;
+        presstimer = setTimeout(() => {
+            holdFunction(e);
+            longpress = true;
+        }, 1000);
+    };
+    elem.addEventListener('mousedown', start);
+    elem.addEventListener('touchstart', start);
+    elem.addEventListener('click', click);
+    elem.addEventListener('mouseout', cancel);
+    elem.addEventListener('touchend', cancel);
+    elem.addEventListener('touchleave', cancel);
+    elem.addEventListener('touchcancel', cancel);
+};
+const sleep = async (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
+const getState = async (hass, entityID) => {
+    return hass.callApi('GET', `states/${entityID}`);
+};
+const waitUntilState = async (hass, entityID, state) => {
+    let entityState = await getState(hass, entityID);
+    while (entityState.state !== state) {
+        // eslint-disable-next-line no-await-in-loop
+        entityState = await getState(hass, entityID);
+        // eslint-disable-next-line no-await-in-loop
+        await sleep(1000);
+    }
+};
+const createEpisodesView = (playController, plex, data) => {
+    const episodeContainer = document.createElement('div');
+    episodeContainer.className = 'episodeContainer';
+    episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
+    const episodeThumbURL = plex.authorizeURL(`${plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${data.thumb}`);
+    const episodeElem = document.createElement('div');
+    episodeElem.className = 'episodeElem';
+    episodeElem.style.width = `${CSS_STYLE.episodeWidth}px`;
+    episodeElem.style.height = `${CSS_STYLE.episodeHeight}px`;
+    episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
+    episodeElem.dataset.clicked = 'false';
+    if (typeof data.lastViewedAt === 'undefined') {
+        const toViewElem = document.createElement('div');
+        toViewElem.className = 'toViewEpisode';
+        episodeElem.appendChild(toViewElem);
+    }
+    if (playController.isPlaySupported(data)) {
+        const episodeInteractiveArea = document.createElement('div');
+        episodeInteractiveArea.className = 'interactiveArea';
+        const episodePlayButton = document.createElement('button');
+        episodePlayButton.name = 'playButton';
+        episodePlayButton.addEventListener('click', episodeEvent => {
+            episodeEvent.stopPropagation();
+            playController.play(data, true);
+        });
+        episodeInteractiveArea.append(episodePlayButton);
+        episodeElem.append(episodeInteractiveArea);
+    }
+    episodeContainer.append(episodeElem);
+    const episodeTitleElem = document.createElement('div');
+    episodeTitleElem.className = 'episodeTitleElem';
+    episodeTitleElem.innerHTML = escapeHtml(data.title);
+    episodeContainer.append(episodeTitleElem);
+    const episodeNumber = document.createElement('div');
+    episodeNumber.className = 'episodeNumber';
+    if (data.type === 'episode') {
+        episodeNumber.innerHTML = escapeHtml(`Episode ${escapeHtml(data.index)}`);
+    }
+    else if (data.type === 'clip') {
+        let text = '';
+        switch (data.subtype) {
+            case 'behindTheScenes':
+                text = 'Behind the Scenes';
+                break;
+            case 'trailer':
+                text = 'Trailer';
+                break;
+            case 'scene':
+                text = 'Scene';
+                break;
+            case 'sceneOrSample':
+                text = 'Scene';
+                break;
+            default:
+                text = data.subtype;
+                break;
+        }
+        episodeNumber.innerHTML = escapeHtml(text);
+    }
+    episodeContainer.append(episodeNumber);
+    episodeContainer.addEventListener('click', episodeEvent => {
+        episodeEvent.stopPropagation();
+    });
+    return episodeContainer;
+};
+const isScrolledIntoView = (elem) => {
+    const rect = elem.getBoundingClientRect();
+    const elemTop = rect.top;
+    const elemBottom = rect.bottom;
+    // Only completely visible elements return true:
+    const isVisible = elemTop >= 0 && elemBottom <= window.innerHeight;
+    // Partially visible elements return true:
+    // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
+    return isVisible;
+};
+
 class PlayController {
     constructor(hass, plex, entity, runBefore, runAfter, libraryName) {
         this.plexPlayerEntity = '';
         this.runBefore = false;
         this.runAfter = false;
         this.supported = supported;
-        this.getState = async (entityID) => {
-            return this.hass.callApi('GET', `states/${entityID}`);
-        };
         this.getKodiSearchResults = async () => {
-            return JSON.parse((await this.getState('sensor.kodi_media_sensor_search')).attributes.data);
+            return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
         };
         this.getKodiSearch = async (search) => {
             await this.hass.callService('kodi_media_sensors', 'call_method', {
@@ -19006,7 +19220,12 @@ class PlayController {
         };
         this.play = async (data, instantPlay = false) => {
             if (lodash.isArray(this.runBefore)) {
+                const entityID = `${this.runBefore[0]}.${this.runBefore[1]}`;
                 await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
+                const entityState = await getState(this.hass, entityID);
+                if (lodash.isEqual(entityState.state, 'on')) {
+                    await waitUntilState(this.hass, entityID, 'off');
+                }
             }
             const entity = this.getPlayService(data);
             switch (entity.key) {
@@ -19357,208 +19576,6 @@ class PlayController {
         }
     }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const escapeHtml = (unsafe) => {
-    if (unsafe) {
-        return unsafe
-            .toString()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-    return '';
-};
-const fetchEntityRegistry = (conn) => conn.sendMessagePromise({
-    type: 'config/entity_registry/list'
-});
-const getHeight = (el) => {
-    const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
-    return height;
-};
-const getOffset = (el) => {
-    let x = 0;
-    let y = 0;
-    while (el &&
-        el.offsetParent &&
-        !lodash.isNaN(el.offsetLeft) &&
-        !lodash.isNaN(el.offsetTop)) {
-        x += el.offsetLeft - el.scrollLeft;
-        y += el.offsetTop - el.scrollTop;
-        const tmp = el.offsetParent;
-        if (tmp) {
-            // eslint-disable-next-line no-param-reassign
-            el = tmp;
-        }
-    }
-    return { top: y, left: x };
-};
-const getDetailsBottom = (seasonContainers, episodeContainers, activeElem) => {
-    const lastSeasonContainer = seasonContainers[seasonContainers.length - 1];
-    const lastEpisodeContainer = episodeContainers[episodeContainers.length - 1];
-    let detailBottom = false;
-    if (seasonContainers.length > 0 && parseInt(activeElem.style.top, 10) > 0) {
-        detailBottom = getHeight(lastSeasonContainer) + parseInt(getOffset(lastSeasonContainer).top, 10) + 10;
-    }
-    else if (episodeContainers.length > 0) {
-        detailBottom = getHeight(lastEpisodeContainer) + parseInt(getOffset(lastEpisodeContainer).top, 10) + 10;
-    }
-    return detailBottom;
-};
-const hasEpisodes = (media) => {
-    let result = false;
-    // eslint-disable-next-line consistent-return
-    lodash.forEach(media, data => {
-        if (lodash.isEqual(data.type, 'episode')) {
-            result = true;
-            return false;
-        }
-    });
-    return result;
-};
-const isVideoFullScreen = (_this) => {
-    const videoPlayer = _this.getElementsByClassName('videoPlayer')[0];
-    const video = videoPlayer.children[0];
-    if (!video)
-        return false;
-    const body = document.getElementsByTagName('body')[0];
-    return ((video.offsetWidth === body.offsetWidth && video.offsetHeight === body.offsetHeight) ||
-        (_this.videoElem && _this.videoElem.classList.contains('simulatedFullScreen')));
-};
-const getOldPlexServerErrorMessage = (libraryName) => {
-    return `PlexMeetsHomeAssistant: 404 Error requesting library feed for ${libraryName}. Plex API might have changed or using outdated server. Library ${libraryName} will not work.`;
-};
-const findTrailerURL = (movieData) => {
-    let foundURL = '';
-    if (movieData.Extras && movieData.Extras.Metadata && movieData.Extras.Metadata.length > 0) {
-        // eslint-disable-next-line consistent-return
-        lodash.forEach(movieData.Extras.Metadata, extra => {
-            if (extra.subtype === 'trailer') {
-                foundURL = extra.Media[0].Part[0].key;
-                return false;
-            }
-        });
-    }
-    return foundURL;
-};
-const clickHandler = (elem, clickFunction, holdFunction) => {
-    let longpress = false;
-    let presstimer = null;
-    const cancel = (e) => {
-        e.stopPropagation();
-        if (presstimer !== null) {
-            clearTimeout(presstimer);
-            presstimer = null;
-        }
-    };
-    const click = (e) => {
-        e.stopPropagation();
-        if (presstimer !== null) {
-            clearTimeout(presstimer);
-            presstimer = null;
-        }
-        if (longpress) {
-            return false;
-        }
-        clickFunction(e);
-        return true;
-    };
-    const start = (e) => {
-        e.stopPropagation();
-        if (e.type === 'click' && e.button !== 0) {
-            return;
-        }
-        longpress = false;
-        presstimer = setTimeout(() => {
-            holdFunction(e);
-            longpress = true;
-        }, 1000);
-    };
-    elem.addEventListener('mousedown', start);
-    elem.addEventListener('touchstart', start);
-    elem.addEventListener('click', click);
-    elem.addEventListener('mouseout', cancel);
-    elem.addEventListener('touchend', cancel);
-    elem.addEventListener('touchleave', cancel);
-    elem.addEventListener('touchcancel', cancel);
-};
-const createEpisodesView = (playController, plex, data) => {
-    const episodeContainer = document.createElement('div');
-    episodeContainer.className = 'episodeContainer';
-    episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
-    const episodeThumbURL = plex.authorizeURL(`${plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight}&minSize=1&upscale=1&url=${data.thumb}`);
-    const episodeElem = document.createElement('div');
-    episodeElem.className = 'episodeElem';
-    episodeElem.style.width = `${CSS_STYLE.episodeWidth}px`;
-    episodeElem.style.height = `${CSS_STYLE.episodeHeight}px`;
-    episodeElem.style.backgroundImage = `url('${episodeThumbURL}')`;
-    episodeElem.dataset.clicked = 'false';
-    if (typeof data.lastViewedAt === 'undefined') {
-        const toViewElem = document.createElement('div');
-        toViewElem.className = 'toViewEpisode';
-        episodeElem.appendChild(toViewElem);
-    }
-    if (playController.isPlaySupported(data)) {
-        const episodeInteractiveArea = document.createElement('div');
-        episodeInteractiveArea.className = 'interactiveArea';
-        const episodePlayButton = document.createElement('button');
-        episodePlayButton.name = 'playButton';
-        episodePlayButton.addEventListener('click', episodeEvent => {
-            episodeEvent.stopPropagation();
-            playController.play(data, true);
-        });
-        episodeInteractiveArea.append(episodePlayButton);
-        episodeElem.append(episodeInteractiveArea);
-    }
-    episodeContainer.append(episodeElem);
-    const episodeTitleElem = document.createElement('div');
-    episodeTitleElem.className = 'episodeTitleElem';
-    episodeTitleElem.innerHTML = escapeHtml(data.title);
-    episodeContainer.append(episodeTitleElem);
-    const episodeNumber = document.createElement('div');
-    episodeNumber.className = 'episodeNumber';
-    if (data.type === 'episode') {
-        episodeNumber.innerHTML = escapeHtml(`Episode ${escapeHtml(data.index)}`);
-    }
-    else if (data.type === 'clip') {
-        let text = '';
-        switch (data.subtype) {
-            case 'behindTheScenes':
-                text = 'Behind the Scenes';
-                break;
-            case 'trailer':
-                text = 'Trailer';
-                break;
-            case 'scene':
-                text = 'Scene';
-                break;
-            case 'sceneOrSample':
-                text = 'Scene';
-                break;
-            default:
-                text = data.subtype;
-                break;
-        }
-        episodeNumber.innerHTML = escapeHtml(text);
-    }
-    episodeContainer.append(episodeNumber);
-    episodeContainer.addEventListener('click', episodeEvent => {
-        episodeEvent.stopPropagation();
-    });
-    return episodeContainer;
-};
-const isScrolledIntoView = (elem) => {
-    const rect = elem.getBoundingClientRect();
-    const elemTop = rect.top;
-    const elemBottom = rect.bottom;
-    // Only completely visible elements return true:
-    const isVisible = elemTop >= 0 && elemBottom <= window.innerHeight;
-    // Partially visible elements return true:
-    // isVisible = elemTop < window.innerHeight && elemBottom >= 0;
-    return isVisible;
-};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 class PlexMeetsHomeAssistantEditor extends HTMLElement {
