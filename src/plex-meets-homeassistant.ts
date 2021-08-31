@@ -604,6 +604,27 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.card.style.padding = '16px';
 			this.card.style.paddingRight = '6px';
 
+			const titleContainer = document.createElement('h1');
+			titleContainer.classList.add('card-header');
+			titleContainer.style.paddingRight = '0px';
+			titleContainer.style.paddingLeft = '0px';
+			titleContainer.style.paddingTop = '0px';
+			titleContainer.style.paddingBottom = '0px';
+
+			const titleElem = document.createElement('div');
+			titleElem.classList.add('name');
+			titleElem.textContent = this.config.title;
+
+			titleContainer.appendChild(titleElem);
+
+			if (!_.isNil(this.config.title) && !_.isEmpty(this.config.title)) {
+				titleContainer.style.display = 'block';
+			} else {
+				titleContainer.style.display = 'none';
+			}
+
+			this.card.appendChild(titleContainer);
+
 			this.card.appendChild(this.searchInput());
 			if (this.showSearch) {
 				this.searchInputElem.style.display = 'block';
