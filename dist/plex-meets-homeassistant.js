@@ -19893,7 +19893,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.libraryName.appendChild(libraryItems);
             this.libraryName.style.width = '100%';
             this.libraryName.addEventListener('value-changed', this.valueUpdated);
+            const warningLibrary = document.createElement('div');
+            warningLibrary.style.color = 'red';
             this.content.appendChild(this.libraryName);
+            this.content.appendChild(warningLibrary);
             this.appendChild(this.content);
             this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
             this.sections = await this.plex.getSections();
@@ -20110,6 +20113,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             if (!lodash.isEmpty(this.livetv)) {
                 libraryItems.appendChild(addDropdownItem('Live TV', true));
                 lodash.forEach(lodash.keys(this.livetv), (livetv) => {
+                    if (lodash.isEqual(this.config.libraryName, livetv)) {
+                        warningLibrary.textContent = `Warning: ${this.config.libraryName} play action currently not supported by Plex.`;
+                    }
                     libraryItems.appendChild(addDropdownItem(livetv));
                 });
             }
