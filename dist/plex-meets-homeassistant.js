@@ -19620,7 +19620,7 @@ class PlayController {
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     entity_id: entityName,
                     // eslint-disable-next-line @typescript-eslint/camelcase
-                    media_content_type: 'video',
+                    media_content_type: contentType,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
                 });
