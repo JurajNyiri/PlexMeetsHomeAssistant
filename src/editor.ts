@@ -72,6 +72,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	loaded = false;
 
+	livetv: Record<string, any> = {};
+
 	fireEvent = (
 		node: HTMLElement,
 		type: string,
@@ -294,12 +296,17 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.libraryName.appendChild(libraryItems);
 		this.libraryName.style.width = '100%';
 		this.libraryName.addEventListener('value-changed', this.valueUpdated);
+
+		const warningLibrary = document.createElement('div');
+		warningLibrary.style.color = 'red';
 		this.content.appendChild(this.libraryName);
+		this.content.appendChild(warningLibrary);
 
 		this.appendChild(this.content);
 
 		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
 		this.sections = await this.plex.getSections();
+		this.livetv = await this.plex.getLiveTV();
 		this.collections = await this.plex.getCollections();
 		this.playlists = await this.plex.getPlaylists();
 		this.clients = await this.plex.getClients();
@@ -519,6 +526,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.runAfter.value = this.config.runAfter;
 		this.plexValidSection.appendChild(this.runAfter);
 
+		if (!_.isEmpty(this.livetv)) {
+			libraryItems.appendChild(addDropdownItem('Live TV', true));
+			_.forEach(_.keys(this.livetv), (livetv: string) => {
+				if (_.isEqual(this.config.libraryName, livetv)) {
+					warningLibrary.textContent = `Warning: ${this.config.libraryName} play action currently not supported by Plex.`;
+				}
+				libraryItems.appendChild(addDropdownItem(livetv));
+			});
+		}
 		if (!_.isEmpty(this.sections)) {
 			libraryItems.appendChild(addDropdownItem('Libraries', true));
 			_.forEach(this.sections, (section: Record<string, any>) => {

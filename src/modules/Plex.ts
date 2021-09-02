@@ -21,6 +21,12 @@ class Plex {
 
 	sections: Array<Record<string, any>> = [];
 
+	providers: Array<Record<string, any>> = [];
+
+	livetv: Record<string, any> = {};
+
+	livetvepg: Record<string, any> = {};
+
 	collections: Array<Record<string, any>> | false = false;
 
 	playlists: Array<Record<string, any>> = [];
@@ -54,6 +60,74 @@ class Plex {
 			throw Error(`${err.message} while requesting URL "${url}".`);
 		}
 		return this.clients;
+	};
+
+	getProviders = async (): Promise<any> => {
+		if (_.isEmpty(this.providers)) {
+			const url = this.authorizeURL(`${this.getBasicURL()}/media/providers`);
+			const providersData = await axios.get(url, {
+				timeout: this.requestTimeout
+			});
+			this.providers = providersData.data.MediaContainer.MediaProvider;
+		}
+		return this.providers;
+	};
+
+	getLiveTV = async (): Promise<Record<string, any>> => {
+		if (_.isEmpty(this.livetv)) {
+			const returnData: Record<string, any> = {};
+			const providers = await this.getProviders();
+			const liveTVRequests: Array<Promise<any>> = [];
+			const liveTVRequestsNames: Array<string> = [];
+			_.forEach(providers, provider => {
+				if (_.isEqual(provider.protocols, 'livetv')) {
+					const url = this.authorizeURL(`${this.getBasicURL()}/${provider.identifier}/tags?type=310`);
+					liveTVRequests.push(
+						axios.get(url, {
+							timeout: this.requestTimeout
+						})
+					);
+					liveTVRequestsNames.push(provider.title);
+				}
+			});
+			const allResults = await Promise.all(liveTVRequests);
+			_.forEach(allResults, (result, key) => {
+				returnData[liveTVRequestsNames[key]] = result.data.MediaContainer.Directory;
+			});
+			this.livetv = returnData;
+		}
+		return this.livetv;
+	};
+
+	getEPG = async (): Promise<Record<string, any>> => {
+		if (_.isEmpty(this.livetvepg)) {
+			const returnData: Record<string, any> = {};
+			const providers = await this.getProviders();
+			const liveTVRequests: Array<Promise<any>> = [];
+			const liveTVRequestsNames: Array<string> = [];
+			_.forEach(providers, provider => {
+				if (_.isEqual(provider.protocols, 'livetv')) {
+					let url = this.authorizeURL(`${this.getBasicURL()}/${provider.identifier}/grid?type=1&sort=beginsAt`);
+					url += `&endsAt>=${Math.floor(Date.now() / 1000)}`;
+					url += `&beginsAt<=${Math.floor(Date.now() / 1000)}`;
+					liveTVRequests.push(
+						axios.get(url, {
+							timeout: this.requestTimeout
+						})
+					);
+					liveTVRequestsNames.push(provider.title);
+				}
+			});
+			const allResults = await Promise.all(liveTVRequests);
+			_.forEach(allResults, (result, key) => {
+				returnData[liveTVRequestsNames[key]] = {};
+				_.forEach(result.data.MediaContainer.Metadata, data => {
+					returnData[liveTVRequestsNames[key]][data.Media[0].channelCallSign] = data;
+				});
+			});
+			this.livetvepg = returnData;
+		}
+		return this.livetvepg;
 	};
 
 	getServerID = async (): Promise<any> => {
