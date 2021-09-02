@@ -158,12 +158,12 @@ class PlayController {
 					startURL += `&X-Plex-Chunked=1`;
 					startURL += `&X-Plex-Product=Plex%20Cast`;
 					startURL += `&X-Plex-Version=4.54.1`;
-					startURL += `&X-Plex-Client-Identifier=3ievywhylzj29yvxxjmoyq7h`;
+					startURL += `&X-Plex-Client-Identifier=CHANGE_ME`;
 					startURL += `&X-Plex-Platform-Version=86.0`;
 					startURL += `&X-Plex-Device=Android`;
 					startURL += `&X-Plex-Device-Name=Chromecast`;
 					startURL += `&X-Plex-Device-Screen-Resolution=1280x720%2C960x540`;
-					startURL += `&X-Plex-Token=transient-ba74f27d-1aae-4518-9047-b7fcfdd88dbb`;
+					startURL += `&X-Plex-Token=CHANGE_ME`;
 					console.log(startURL);
 
 					this.playViaCast(entity.value, startURL);
