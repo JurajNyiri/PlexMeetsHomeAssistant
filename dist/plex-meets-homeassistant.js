@@ -19033,7 +19033,7 @@ class Plex {
             let res = await axios.get(this.authorizeURL(decisionURL), {
                 timeout: this.requestTimeout
             });
-            while (parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 10) {
+            while (parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 3) {
                 // eslint-disable-next-line no-await-in-loop
                 await sleep(500);
                 // eslint-disable-next-line no-await-in-loop
@@ -19333,7 +19333,7 @@ class PlayController {
         this.getKodiSearchResults = async () => {
             return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
         };
-        this.getKodiSearch = async (search) => {
+        this.getKodiSearch = async (search, silent = false) => {
             await this.hass.callService('kodi_media_sensors', 'call_method', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: 'sensor.kodi_media_sensor_search',
@@ -19351,8 +19351,12 @@ class PlayController {
                     foundResult = result;
                     return false;
                 }
+                if (lodash.isEqual(result.label, search)) {
+                    foundResult = result;
+                    return false;
+                }
             });
-            if (lodash.isEmpty(foundResult)) {
+            if (lodash.isEmpty(foundResult) && !silent) {
                 // eslint-disable-next-line no-alert
                 alert(`Title ${search} not found in Kodi.`);
                 throw Error(`Title ${search} not found in Kodi.`);
@@ -19549,15 +19553,28 @@ class PlayController {
         };
         this.playViaKodi = async (entityName, data, type) => {
             if (!lodash.isNil(lodash.get(data, 'epg.Media[0].channelCallSign'))) {
-                const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
-                await this.hass.callService('kodi', 'call_method', {
-                    // eslint-disable-next-line @typescript-eslint/camelcase
-                    entity_id: entityName,
-                    method: 'Player.Open',
-                    item: {
-                        file: streamLink
-                    }
-                });
+                try {
+                    const kodiData = await this.getKodiSearch(lodash.get(data, 'epg.Media[0].channelCallSign'), true);
+                    await this.hass.callService('kodi', 'call_method', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        entity_id: entityName,
+                        method: 'Player.Open',
+                        item: {
+                            channelid: kodiData.channelid
+                        }
+                    });
+                }
+                catch (err) {
+                    const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
+                    await this.hass.callService('kodi', 'call_method', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        entity_id: entityName,
+                        method: 'Player.Open',
+                        item: {
+                            file: streamLink
+                        }
+                    });
+                }
             }
             else if (type === 'movie') {
                 const kodiData = await this.getKodiSearch(data.title);

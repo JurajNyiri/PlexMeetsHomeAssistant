@@ -475,9 +475,7 @@ class Plex {
 		let res = await axios.get(this.authorizeURL(decisionURL), {
 			timeout: this.requestTimeout
 		});
-		while (
-			parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 10
-		) {
+		while (parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 3) {
 			// eslint-disable-next-line no-await-in-loop
 			await sleep(500);
 			// eslint-disable-next-line no-await-in-loop

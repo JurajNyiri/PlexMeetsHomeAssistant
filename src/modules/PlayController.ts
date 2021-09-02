@@ -49,7 +49,7 @@ class PlayController {
 		return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
 	};
 
-	private getKodiSearch = async (search: string): Promise<Record<string, any>> => {
+	private getKodiSearch = async (search: string, silent = false): Promise<Record<string, any>> => {
 		await this.hass.callService('kodi_media_sensors', 'call_method', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			entity_id: 'sensor.kodi_media_sensor_search',
@@ -67,8 +67,12 @@ class PlayController {
 				foundResult = result;
 				return false;
 			}
+			if (_.isEqual(result.label, search)) {
+				foundResult = result;
+				return false;
+			}
 		});
-		if (_.isEmpty(foundResult)) {
+		if (_.isEmpty(foundResult) && !silent) {
 			// eslint-disable-next-line no-alert
 			alert(`Title ${search} not found in Kodi.`);
 			throw Error(`Title ${search} not found in Kodi.`);
@@ -280,15 +284,28 @@ class PlayController {
 
 	private playViaKodi = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
 		if (!_.isNil(_.get(data, 'epg.Media[0].channelCallSign'))) {
-			const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
-			await this.hass.callService('kodi', 'call_method', {
-				// eslint-disable-next-line @typescript-eslint/camelcase
-				entity_id: entityName,
-				method: 'Player.Open',
-				item: {
-					file: streamLink
-				}
-			});
+			try {
+				const kodiData = await this.getKodiSearch(_.get(data, 'epg.Media[0].channelCallSign'), true);
+
+				await this.hass.callService('kodi', 'call_method', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: entityName,
+					method: 'Player.Open',
+					item: {
+						channelid: kodiData.channelid
+					}
+				});
+			} catch (err) {
+				const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
+				await this.hass.callService('kodi', 'call_method', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: entityName,
+					method: 'Player.Open',
+					item: {
+						file: streamLink
+					}
+				});
+			}
 		} else if (type === 'movie') {
 			const kodiData = await this.getKodiSearch(data.title);
 			await this.hass.callService('kodi', 'call_method', {
