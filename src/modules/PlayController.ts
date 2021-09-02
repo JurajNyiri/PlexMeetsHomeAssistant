@@ -103,6 +103,7 @@ class PlayController {
 	};
 
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
+		console.log('play');
 		if (_.isArray(this.runBefore)) {
 			const entityID = `${this.runBefore[0]}.${this.runBefore[1]}`;
 			await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
@@ -113,21 +114,31 @@ class PlayController {
 			}
 		}
 		const entity = this.getPlayService(data);
+
+		let processData = data;
+		let provider;
+		if (!_.isNil(data.epg)) {
+			processData = data.epg;
+			provider = '';
+		}
+		console.log(processData);
 		switch (entity.key) {
 			case 'kodi':
-				await this.playViaKodi(entity.value, data, data.type);
+				await this.playViaKodi(entity.value, processData, processData.type);
 				break;
 			case 'androidtv':
-				await this.playViaAndroidTV(entity.value, data.key.split('/')[3], instantPlay);
+				await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
 				break;
 			case 'plexPlayer':
-				await this.playViaPlexPlayer(entity.value, data.key.split('/')[3]);
+				await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
 				break;
 			case 'cast':
 				if (this.hass.services.plex) {
-					const libraryName = _.isNil(data.librarySectionTitle) ? this.libraryName : data.librarySectionTitle;
+					const libraryName = _.isNil(processData.librarySectionTitle)
+						? this.libraryName
+						: processData.librarySectionTitle;
 					try {
-						switch (data.type) {
+						switch (processData.type) {
 							case 'movie':
 								await this.playViaCastPlex(
 									entity.value,
@@ -135,7 +146,7 @@ class PlayController {
 									`plex://${JSON.stringify({
 										// eslint-disable-next-line @typescript-eslint/camelcase
 										library_name: libraryName,
-										title: data.title
+										title: processData.title
 									})}`
 								);
 								break;
@@ -147,27 +158,27 @@ class PlayController {
 										// eslint-disable-next-line @typescript-eslint/camelcase
 										library_name: libraryName,
 										// eslint-disable-next-line @typescript-eslint/camelcase
-										show_name: data.grandparentTitle,
+										show_name: processData.grandparentTitle,
 										// eslint-disable-next-line @typescript-eslint/camelcase
-										season_number: data.parentIndex,
+										season_number: processData.parentIndex,
 										// eslint-disable-next-line @typescript-eslint/camelcase
-										episode_number: data.index
+										episode_number: processData.index
 									})}`
 								);
 								break;
 							default:
-								this.playViaCast(entity.value, data.Media[0].Part[0].key);
+								this.playViaCast(entity.value, processData.Media[0].Part[0].key);
 						}
 					} catch (err) {
 						console.log(err);
-						this.playViaCast(entity.value, data.Media[0].Part[0].key);
+						this.playViaCast(entity.value, processData.Media[0].Part[0].key);
 					}
 				} else {
-					this.playViaCast(entity.value, data.Media[0].Part[0].key);
+					this.playViaCast(entity.value, processData.Media[0].Part[0].key);
 				}
 				break;
 			default:
-				throw Error(`No service available to play ${data.title}!`);
+				throw Error(`No service available to play ${processData.title}!`);
 		}
 		if (_.isArray(this.runAfter)) {
 			await this.hass.callService(this.runAfter[0], this.runAfter[1], {});
@@ -317,7 +328,12 @@ class PlayController {
 		});
 	};
 
-	private playViaAndroidTV = async (entityName: string, mediaID: number, instantPlay = false): Promise<void> => {
+	private playViaAndroidTV = async (
+		entityName: string,
+		mediaID: string,
+		instantPlay = false,
+		provider = 'com.plexapp.plugins.library'
+	): Promise<void> => {
 		const serverID = await this.plex.getServerID();
 		let command = `am start`;
 
@@ -325,7 +341,9 @@ class PlayController {
 			command += ' --ez "android.intent.extra.START_PLAYBACK" true';
 		}
 
-		command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/com.plexapp.plugins.library/library/metadata/${mediaID}'`;
+		command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/${provider}${mediaID}'`;
+
+		console.log(command);
 
 		this.hass.callService('androidtv', 'adb_command', {
 			// eslint-disable-next-line @typescript-eslint/camelcase

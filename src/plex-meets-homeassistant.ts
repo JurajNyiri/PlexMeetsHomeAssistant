@@ -450,6 +450,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					_.forEach(this.data[key], (libraryData, libraryKey) => {
 						if (!_.isNil(this.epgData[key][libraryData.channelCallSign])) {
 							this.data[key][libraryKey].epg = this.epgData[key][libraryData.channelCallSign];
+							this.data[key][libraryKey].type = 'epg';
 						}
 					});
 				});
@@ -1054,7 +1055,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	showDetails = async (data: any): Promise<void> => {
-		console.log(data);
 		this.detailsShown = true;
 		const top = this.getTop();
 		if (this.detailElem) {
