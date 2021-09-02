@@ -19407,16 +19407,9 @@ class PlayController {
                 case 'androidtv':
                     if (!lodash.isNil(data.epg)) {
                         const session = `${Math.floor(Date.now() / 1000)}`;
-                        const streamData = await this.plex.tune(data.channelIdentifier, session);
-                        console.log(streamData);
-                        /*
-                        await this.playViaAndroidTV(
-                            entity.value,
-                            streamData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key,
-                            instantPlay,
-                            provider
-                        );
-                        */
+                        const streamLink = await this.plex.tune(data.channelIdentifier, session);
+                        console.log(streamLink);
+                        await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
                     }
                     else {
                         await this.playViaAndroidTV(entity.value, processData.guid, instantPlay, provider);
@@ -19430,7 +19423,7 @@ class PlayController {
                         const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
                         const streamURL = await this.plex.tune(data.channelIdentifier, session);
                         console.log(`${this.plex.getBasicURL()}${streamURL}`);
-                        // this.playViaCast(entity.value, `${playlistLink}`);
+                        this.playViaCast(entity.value, `${streamURL}`);
                     }
                     else if (this.hass.services.plex) {
                         const libraryName = lodash.isNil(processData.librarySectionTitle)
@@ -19593,22 +19586,31 @@ class PlayController {
             }
         };
         this.playViaCast = (entityName, mediaLink) => {
-            console.log({
+            mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
+            const payload = {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: entityName,
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_type: 'video',
+                media_content_type: 'application/vnd.apple.mpegurl',
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
-            });
-            this.hass.callService('media_player', 'play_media', {
+                media_content_id: mediaLink
+            };
+            /*
+            payload = {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: entityName,
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_type: 'video',
+                media_content_type: 'cast',
                 // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
-            });
+                media_content_id: `{
+                "app_name": "bubbleupnp",
+                "media_id": "${mediaLink}",
+                "media_type": "application/x-mpegURL"
+              }`
+            };
+            */
+            console.log(payload);
+            this.hass.callService('media_player', 'play_media', payload);
         };
         this.playViaCastPlex = (entityName, contentType, mediaLink) => {
             return this.hass.callService('media_player', 'play_media', {
