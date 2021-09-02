@@ -131,7 +131,43 @@ class PlayController {
 				await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
 				break;
 			case 'cast':
-				if (this.hass.services.plex) {
+				if (!_.isNil(data.epg)) {
+					const session = `${Math.floor(Date.now() / 1000)}`;
+					const streamData = await this.plex.tune(data.channelIdentifier, session);
+					console.log(streamData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key);
+					let startURL = `/video/:/transcode/universal/start`;
+					startURL += `?hasMDE=1`;
+					startURL += `&path=${streamData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
+					startURL += `&mediaIndex=0`;
+					startURL += `&partIndex=0`;
+					startURL += `&protocol=http`;
+					startURL += `&fastSeek=1`;
+					startURL += `&directPlay=0`;
+					startURL += `&directStream=1`;
+					startURL += `&subtitleSize=100`;
+					startURL += `&audioBoost=100`;
+					startURL += `&location=lan`;
+					startURL += `&directStreamAudio=1`;
+					startURL += `&mediaBufferSize=30720`;
+					startURL += `&session=${session}`;
+					startURL += `&offset=0`;
+					startURL += `&subtitles=burn`;
+					startURL += `&copyts=0`;
+					startURL += `&X-Plex-Session-Identifier=${session}`;
+					startURL += `&X-Plex-Client-Profile-Extra=add-transcode-target-audio-codec%28type%3DvideoProfile%26context%3Dstreaming%26protocol%3Dhttp%26audioCodec%3Dac3%29%2Badd-limitation%28scope%3DvideoAudioCodec%26scopeName%3Dac3%26type%3DupperBound%26name%3Daudio.channel%26value%3D6%29%2Badd-transcode-target-audio-codec%28type%3DvideoProfile%26context%3Dstreaming%26protocol%3Dhttp%26audioCodec%3Deac3%29%2Badd-limitation%28scope%3DvideoAudioCodec%26scopeName%3Deac3%26type%3DupperBound%26name%3Daudio.channel%26value%3D6%29%2Badd-limitation%28scope%3DvideoAudioCodec%26scopeName%3Daac%26type%3DupperBound%26name%3Daudio.channel%26value%3D2%29%2Badd-limitation%28scope%3DvideoTranscodeTarget%26scopeName%3Dhevc%26scopeType%3DvideoCodec%26context%3Dstreaming%26protocol%3Dhttp%26type%3Dmatch%26name%3Dvideo.colorTrc%26list%3Dbt709%7Cbt470m%7Cbt470bg%7Csmpte170m%7Csmpte240m%7Cbt2020-10%7Csmpte2084%26isRequired%3Dfalse%29`;
+					startURL += `&X-Plex-Chunked=1`;
+					startURL += `&X-Plex-Product=Plex%20Cast`;
+					startURL += `&X-Plex-Version=4.54.1`;
+					startURL += `&X-Plex-Client-Identifier=3ievywhylzj29yvxxjmoyq7h`;
+					startURL += `&X-Plex-Platform-Version=86.0`;
+					startURL += `&X-Plex-Device=Android`;
+					startURL += `&X-Plex-Device-Name=Chromecast`;
+					startURL += `&X-Plex-Device-Screen-Resolution=1280x720%2C960x540`;
+					startURL += `&X-Plex-Token=transient-ba74f27d-1aae-4518-9047-b7fcfdd88dbb`;
+					console.log(startURL);
+
+					this.playViaCast(entity.value, startURL);
+				} else if (this.hass.services.plex) {
 					const libraryName = _.isNil(processData.librarySectionTitle)
 						? this.libraryName
 						: processData.librarySectionTitle;
@@ -305,6 +341,14 @@ class PlayController {
 	};
 
 	private playViaCast = (entityName: string, mediaLink: string): void => {
+		console.log({
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			entity_id: entityName,
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			media_content_type: 'video',
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+		});
 		this.hass.callService('media_player', 'play_media', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			entity_id: entityName,

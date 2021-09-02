@@ -365,6 +365,18 @@ class Plex {
 		).data.MediaContainer;
 	};
 
+	tune = async (channelID: string, session: string): Promise<any> => {
+		// Todo: what is 12? do we need to get this from somewhere and change?
+		const url = this.authorizeURL(
+			`${this.getBasicURL()}/livetv/dvrs/12/channels/${channelID}/tune?X-Plex-Session-Identifier=${session}`
+		);
+		return (
+			await axios.post(url, {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer;
+	};
+
 	getContinueWatching = async (): Promise<any> => {
 		const hubs = await this.getHubs();
 		let continueWatchingData: Record<string, any> = {};
