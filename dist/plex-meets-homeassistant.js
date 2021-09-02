@@ -19417,7 +19417,7 @@ class PlayController {
                         await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
                     }
                     else {
-                        await this.playViaAndroidTV(entity.value, processData.guid, instantPlay, provider);
+                        await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
                     }
                     break;
                 case 'plexPlayer':
@@ -19796,8 +19796,7 @@ class PlayController {
                     hasKodiMediaSearchInstalled) ||
                     (!lodash.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled));
             }
-            return true; // temp
-            // return false;
+            return false;
         };
         this.isCastSupported = (entityName) => {
             return ((this.hass.states[entityName] &&
