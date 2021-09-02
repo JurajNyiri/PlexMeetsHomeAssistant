@@ -17205,9 +17205,9 @@ const CSS_STYLE = {
 };
 const supported = {
     kodi: ['movie', 'episode', 'epg'],
-    androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'epg'],
+    androidtv: ['movie', 'show', 'season', 'episode', 'clip'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
-    cast: ['movie', 'episode', 'epg']
+    cast: ['movie', 'episode']
 };
 
 var bind = function bind(fn, thisArg) {
