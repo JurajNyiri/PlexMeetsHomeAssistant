@@ -17205,7 +17205,7 @@ const CSS_STYLE = {
 };
 const supported = {
     kodi: ['movie', 'episode'],
-    androidtv: ['movie', 'show', 'season', 'episode', 'clip'],
+    androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'epg'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
     cast: ['movie', 'episode', 'epg']
 };
@@ -18943,11 +18943,90 @@ class Plex {
             })).data.MediaContainer;
         };
         this.tune = async (channelID, session) => {
+            session = 'PlexMeetsHomeAssistant';
+            console.log(channelID);
             // Todo: what is 12? do we need to get this from somewhere and change?
-            const url = this.authorizeURL(`${this.getBasicURL()}/livetv/dvrs/12/channels/${channelID}/tune?X-Plex-Session-Identifier=${session}`);
-            return (await axios.post(url, {
+            let url = this.authorizeURL(`${this.getBasicURL()}/livetv/dvrs/12/channels/${channelID}/tune?X-Plex-Language=en-us`);
+            console.log('Starting tune process...');
+            url = `${this.getBasicURL()}/livetv/dvrs/12/channels/`;
+            url += `${channelID}`;
+            url += `/tune`;
+            url += `?X-Plex-Client-Identifier=${session}`;
+            url += `&X-Plex-Session-Identifier=${session}`;
+            const tuneData = (await axios.post(this.authorizeURL(url), {
                 timeout: this.requestTimeout
             })).data.MediaContainer;
+            console.log(url);
+            console.log(tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.title);
+            console.log('___');
+            let startURL = `${this.getBasicURL()}/video/:/transcode/universal/start.mpd`;
+            startURL += `?hasMDE=1`;
+            startURL += `&path=${tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
+            startURL += `&mediaIndex=0`;
+            startURL += `&partIndex=0`;
+            startURL += `&protocol=dash`;
+            startURL += `&fastSeek=1`;
+            startURL += `&directPlay=0`;
+            startURL += `&directStream=1`;
+            startURL += `&subtitleSize=100`;
+            startURL += `&audioBoost=100`;
+            startURL += `&location=lan`;
+            startURL += `&addDebugOverlay=0`;
+            startURL += `&autoAdjustQuality=0`;
+            startURL += `&directStreamAudio=1`;
+            startURL += `&mediaBufferSize=102400`;
+            startURL += `&session=${session}`;
+            startURL += `&subtitles=burn`;
+            startURL += `&copyts=0`;
+            startURL += `&Accept-Language=en-GB`;
+            startURL += `&X-Plex-Session-Identifier=${session}`;
+            startURL += `&X-Plex-Client-Profile-Extra=append-transcode-target-codec%28type%3DvideoProfile%26context%3Dstreaming%26audioCodec%3Daac%26protocol%3Ddash%29`;
+            startURL += `&X-Plex-Incomplete-Segments=1`;
+            startURL += `&X-Plex-Product=Plex%20Web`;
+            startURL += `&X-Plex-Version=4.59.2`;
+            startURL += `&X-Plex-Client-Identifier=${session}`;
+            startURL += `&X-Plex-Platform=Chrome`;
+            startURL += `&X-Plex-Platform-Version=92.0`;
+            startURL += `&X-Plex-Sync-Version=2`;
+            startURL += `&X-Plex-Features=external-media%2Cindirect-media`;
+            startURL += `&X-Plex-Model=bundled`;
+            startURL += `&X-Plex-Device=OSX`;
+            startURL += `&X-Plex-Device-Name=Chrome`;
+            startURL += `&X-Plex-Device-Screen-Resolution=1792x444%2C1792x1120`;
+            startURL += `&X-Plex-Language=en-GB`;
+            console.log('Deciding...');
+            let decisionURL = `${this.getBasicURL()}/video/:/transcode/universal/decision`;
+            decisionURL += `?advancedSubtitles=text`;
+            decisionURL += `&audioBoost=100`;
+            decisionURL += `&autoAdjustQuality=0`;
+            decisionURL += `&directPlay=1`;
+            decisionURL += `&directStream=1`;
+            decisionURL += `&directStreamAudio=1`;
+            decisionURL += `&fastSeek=1`;
+            decisionURL += `&hasMDE=1`;
+            decisionURL += `&location=lan`;
+            decisionURL += `&mediaIndex=0`;
+            decisionURL += `&partIndex=0`;
+            decisionURL += `&path=${tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
+            decisionURL += `&protocol=*`;
+            decisionURL += `&session=${session}`;
+            decisionURL += `&skipSubtitles=1`;
+            decisionURL += `&videoBitrate=200000`;
+            decisionURL += `&videoQuality=100`;
+            decisionURL += `&X-Plex-Client-Identifier=${session}`;
+            decisionURL += `&X-Plex-Platform=Android`;
+            const res = await axios.get(this.authorizeURL(decisionURL), {
+                timeout: this.requestTimeout
+            });
+            console.log(res);
+            console.log('Starting...');
+            // why bad request???
+            const res1 = await axios.get(this.authorizeURL(startURL), {
+                timeout: 60000
+            });
+            console.log(res1);
+            console.log('____');
+            return res.data.MediaContainer.Metadata[0].Media[0].Part[0].key;
         };
         this.getContinueWatching = async () => {
             const hubs = await this.getHubs();
@@ -19310,47 +19389,32 @@ class PlayController {
                     await this.playViaKodi(entity.value, processData, processData.type);
                     break;
                 case 'androidtv':
-                    await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
+                    if (!lodash.isNil(data.epg)) {
+                        const session = `${Math.floor(Date.now() / 1000)}`;
+                        const streamData = await this.plex.tune(data.channelIdentifier, session);
+                        console.log(streamData);
+                        /*
+                        await this.playViaAndroidTV(
+                            entity.value,
+                            streamData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key,
+                            instantPlay,
+                            provider
+                        );
+                        */
+                    }
+                    else {
+                        await this.playViaAndroidTV(entity.value, processData.guid, instantPlay, provider);
+                    }
                     break;
                 case 'plexPlayer':
                     await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
                     break;
                 case 'cast':
                     if (!lodash.isNil(data.epg)) {
-                        const session = `${Math.floor(Date.now() / 1000)}`;
-                        const streamData = await this.plex.tune(data.channelIdentifier, session);
-                        console.log(streamData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key);
-                        let startURL = `/video/:/transcode/universal/start`;
-                        startURL += `?hasMDE=1`;
-                        startURL += `&path=${streamData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
-                        startURL += `&mediaIndex=0`;
-                        startURL += `&partIndex=0`;
-                        startURL += `&protocol=http`;
-                        startURL += `&fastSeek=1`;
-                        startURL += `&directPlay=0`;
-                        startURL += `&directStream=1`;
-                        startURL += `&subtitleSize=100`;
-                        startURL += `&audioBoost=100`;
-                        startURL += `&location=lan`;
-                        startURL += `&directStreamAudio=1`;
-                        startURL += `&mediaBufferSize=30720`;
-                        startURL += `&session=${session}`;
-                        startURL += `&offset=0`;
-                        startURL += `&subtitles=burn`;
-                        startURL += `&copyts=0`;
-                        startURL += `&X-Plex-Session-Identifier=${session}`;
-                        startURL += `&X-Plex-Client-Profile-Extra=add-transcode-target-audio-codec%28type%3DvideoProfile%26context%3Dstreaming%26protocol%3Dhttp%26audioCodec%3Dac3%29%2Badd-limitation%28scope%3DvideoAudioCodec%26scopeName%3Dac3%26type%3DupperBound%26name%3Daudio.channel%26value%3D6%29%2Badd-transcode-target-audio-codec%28type%3DvideoProfile%26context%3Dstreaming%26protocol%3Dhttp%26audioCodec%3Deac3%29%2Badd-limitation%28scope%3DvideoAudioCodec%26scopeName%3Deac3%26type%3DupperBound%26name%3Daudio.channel%26value%3D6%29%2Badd-limitation%28scope%3DvideoAudioCodec%26scopeName%3Daac%26type%3DupperBound%26name%3Daudio.channel%26value%3D2%29%2Badd-limitation%28scope%3DvideoTranscodeTarget%26scopeName%3Dhevc%26scopeType%3DvideoCodec%26context%3Dstreaming%26protocol%3Dhttp%26type%3Dmatch%26name%3Dvideo.colorTrc%26list%3Dbt709%7Cbt470m%7Cbt470bg%7Csmpte170m%7Csmpte240m%7Cbt2020-10%7Csmpte2084%26isRequired%3Dfalse%29`;
-                        startURL += `&X-Plex-Chunked=1`;
-                        startURL += `&X-Plex-Product=Plex%20Cast`;
-                        startURL += `&X-Plex-Version=4.54.1`;
-                        startURL += `&X-Plex-Client-Identifier=CHANGE_ME`;
-                        startURL += `&X-Plex-Platform-Version=86.0`;
-                        startURL += `&X-Plex-Device=Android`;
-                        startURL += `&X-Plex-Device-Name=Chromecast`;
-                        startURL += `&X-Plex-Device-Screen-Resolution=1280x720%2C960x540`;
-                        startURL += `&X-Plex-Token=CHANGE_ME`;
-                        console.log(startURL);
-                        this.playViaCast(entity.value, startURL);
+                        const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
+                        const streamURL = await this.plex.tune(data.channelIdentifier, session);
+                        console.log(`${this.plex.getBasicURL()}${streamURL}`);
+                        // this.playViaCast(entity.value, `${playlistLink}`);
                     }
                     else if (this.hass.services.plex) {
                         const libraryName = lodash.isNil(processData.librarySectionTitle)
@@ -19547,6 +19611,7 @@ class PlayController {
                 command += ' --ez "android.intent.extra.START_PLAYBACK" true';
             }
             command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/${provider}${mediaID}'`;
+            console.log(command);
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: entityName,
