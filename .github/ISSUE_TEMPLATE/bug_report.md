@@ -32,8 +32,11 @@ Please check below if true:
 [ ] My Plex server is accessible through protocol, port and ip/hostname I have specified for the card.
 [ ] My Plex server is running on HTTPS and has a valid certificate.
 
-**Version**
+**Card Version**
 Replace this text with version of card you are using.
+
+**Plex Version**
+Replace this text with version of Plex you are using.
 
 **Additional context**
 Add any other context about the problem here.
