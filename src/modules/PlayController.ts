@@ -126,7 +126,7 @@ class PlayController {
 		}
 		switch (entity.key) {
 			case 'kodi':
-				await this.playViaKodi(entity.value, data, processData.type);
+				await this.playViaKodi(entity.value, data, data.type);
 				break;
 			case 'androidtv':
 				if (!_.isNil(data.epg)) {
@@ -283,9 +283,9 @@ class PlayController {
 	};
 
 	private playViaKodi = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
-		if (!_.isNil(_.get(data, 'epg.Media[0].channelCallSign'))) {
+		if (type === 'epg') {
 			try {
-				const kodiData = await this.getKodiSearch(_.get(data, 'epg.Media[0].channelCallSign'), true);
+				const kodiData = await this.getKodiSearch(_.get(data, 'channelCallSign'), true);
 
 				await this.hass.callService('kodi', 'call_method', {
 					// eslint-disable-next-line @typescript-eslint/camelcase

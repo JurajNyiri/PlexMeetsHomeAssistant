@@ -19407,7 +19407,7 @@ class PlayController {
             }
             switch (entity.key) {
                 case 'kodi':
-                    await this.playViaKodi(entity.value, data, processData.type);
+                    await this.playViaKodi(entity.value, data, data.type);
                     break;
                 case 'androidtv':
                     if (!lodash.isNil(data.epg)) {
@@ -19553,9 +19553,9 @@ class PlayController {
             }
         };
         this.playViaKodi = async (entityName, data, type) => {
-            if (!lodash.isNil(lodash.get(data, 'epg.Media[0].channelCallSign'))) {
+            if (type === 'epg') {
                 try {
-                    const kodiData = await this.getKodiSearch(lodash.get(data, 'epg.Media[0].channelCallSign'), true);
+                    const kodiData = await this.getKodiSearch(lodash.get(data, 'channelCallSign'), true);
                     await this.hass.callService('kodi', 'call_method', {
                         // eslint-disable-next-line @typescript-eslint/camelcase
                         entity_id: entityName,
@@ -21452,6 +21452,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             const liveTV = await this.plex.getLiveTV();
                             lodash.forEach(liveTV, (data, key) => {
                                 this.data[key] = data;
+                                lodash.forEach(this.data[key], (value, innerKey) => {
+                                    this.data[key][innerKey].type = 'epg';
+                                });
                             });
                         }
                     };
@@ -21491,7 +21494,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         lodash.forEach(this.data[key], (libraryData, libraryKey) => {
                             if (!lodash.isNil(this.epgData[key][libraryData.channelCallSign])) {
                                 this.data[key][libraryKey].epg = this.epgData[key][libraryData.channelCallSign];
-                                this.data[key][libraryKey].type = 'epg';
                             }
                         });
                     });
