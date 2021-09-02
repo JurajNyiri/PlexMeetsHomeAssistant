@@ -17204,7 +17204,7 @@ const CSS_STYLE = {
     minimumEpisodeWidth: 300
 };
 const supported = {
-    kodi: ['movie', 'episode'],
+    kodi: ['movie', 'episode', 'epg'],
     androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'epg'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
     cast: ['movie', 'episode', 'epg']
@@ -19402,7 +19402,7 @@ class PlayController {
             }
             switch (entity.key) {
                 case 'kodi':
-                    await this.playViaKodi(entity.value, processData, processData.type);
+                    await this.playViaKodi(entity.value, data, processData.type);
                     break;
                 case 'androidtv':
                     if (!lodash.isNil(data.epg)) {
@@ -19548,7 +19548,18 @@ class PlayController {
             }
         };
         this.playViaKodi = async (entityName, data, type) => {
-            if (type === 'movie') {
+            if (!lodash.isNil(lodash.get(data, 'epg.Media[0].channelCallSign'))) {
+                const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
+                await this.hass.callService('kodi', 'call_method', {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    method: 'Player.Open',
+                    item: {
+                        file: streamLink
+                    }
+                });
+            }
+            else if (type === 'movie') {
                 const kodiData = await this.getKodiSearch(data.title);
                 await this.hass.callService('kodi', 'call_method', {
                     // eslint-disable-next-line @typescript-eslint/camelcase
@@ -19755,7 +19766,8 @@ class PlayController {
                     hasKodiMediaSearchInstalled) ||
                     (!lodash.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled));
             }
-            return false;
+            return true; // temp
+            // return false;
         };
         this.isCastSupported = (entityName) => {
             return ((this.hass.states[entityName] &&

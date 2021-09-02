@@ -122,7 +122,7 @@ class PlayController {
 		}
 		switch (entity.key) {
 			case 'kodi':
-				await this.playViaKodi(entity.value, processData, processData.type);
+				await this.playViaKodi(entity.value, data, processData.type);
 				break;
 			case 'androidtv':
 				if (!_.isNil(data.epg)) {
@@ -279,7 +279,17 @@ class PlayController {
 	};
 
 	private playViaKodi = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
-		if (type === 'movie') {
+		if (!_.isNil(_.get(data, 'epg.Media[0].channelCallSign'))) {
+			const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
+			await this.hass.callService('kodi', 'call_method', {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				method: 'Player.Open',
+				item: {
+					file: streamLink
+				}
+			});
+		} else if (type === 'movie') {
 			const kodiData = await this.getKodiSearch(data.title);
 			await this.hass.callService('kodi', 'call_method', {
 				// eslint-disable-next-line @typescript-eslint/camelcase
@@ -528,7 +538,8 @@ class PlayController {
 				(!_.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled)
 			);
 		}
-		return false;
+		return true; // temp
+		// return false;
 	};
 
 	private isCastSupported = (entityName: string): boolean => {
