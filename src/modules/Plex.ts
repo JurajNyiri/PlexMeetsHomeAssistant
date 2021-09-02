@@ -366,7 +366,7 @@ class Plex {
 	};
 
 	tune = async (channelID: string, session: string): Promise<any> => {
-		session = 'PlexMeetsHomeAssistant';
+		session = 'PlexMeetsHomeAssistant3';
 		console.log(channelID);
 		// Todo: what is 12? do we need to get this from somewhere and change?
 		let url = this.authorizeURL(
@@ -385,13 +385,11 @@ class Plex {
 			})
 		).data.MediaContainer;
 
-		console.log(url);
-		console.log(tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.title);
-		console.log('___');
+		console.log('Tuning started.');
 
 		let startURL = `${this.getBasicURL()}/video/:/transcode/universal/start.mpd`;
 		startURL += `?hasMDE=1`;
-		startURL += `&path=${tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
+		startURL += `&path=${encodeURIComponent(tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key)}`;
 		startURL += `&mediaIndex=0`;
 		startURL += `&partIndex=0`;
 		startURL += `&protocol=dash`;
@@ -425,8 +423,6 @@ class Plex {
 		startURL += `&X-Plex-Device-Screen-Resolution=1792x444%2C1792x1120`;
 		startURL += `&X-Plex-Language=en-GB`;
 
-		console.log('Deciding...');
-
 		let decisionURL = `${this.getBasicURL()}/video/:/transcode/universal/decision`;
 
 		decisionURL += `?advancedSubtitles=text`;
@@ -449,19 +445,44 @@ class Plex {
 		decisionURL += `&X-Plex-Client-Identifier=${session}`;
 		decisionURL += `&X-Plex-Platform=Android`;
 
-		const res = await axios.get(this.authorizeURL(decisionURL), {
+		const url2 = this.authorizeURL(
+			`${this.getBasicURL()}${
+				tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key
+			}?includeBandwidths=1&offset=-1&X-Plex-Incomplete-Segments=1&X-Plex-Session-Identifier=${session}`
+		);
+
+		console.log('Getting info about channel stream...');
+		const res2 = await axios.get(url2, {
+			timeout: 60000
+		});
+
+		console.log(res2.data);
+
+		if (_.isNil(res2.data.MediaContainer.Metadata[0].Media[0].TranscodeSession)) {
+			console.log('NOT STARTED - Starting...');
+			const res1 = await axios.get(this.authorizeURL(startURL), {
+				timeout: 60000
+			});
+			console.log(res1);
+			console.log('____');
+		}
+
+		const sleep = async (ms: number): Promise<void> => {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		};
+
+		console.log('Deciding...');
+		let res = await axios.get(this.authorizeURL(decisionURL), {
 			timeout: this.requestTimeout
 		});
 		console.log(res);
 
-		console.log('Starting...');
-
-		// why bad request???
-		const res1 = await axios.get(this.authorizeURL(startURL), {
-			timeout: 60000
+		console.log('Waiting for new url...');
+		await sleep(10000);
+		res = await axios.get(this.authorizeURL(decisionURL), {
+			timeout: this.requestTimeout
 		});
-		console.log(res1);
-		console.log('____');
+		console.log(res);
 
 		return res.data.MediaContainer.Metadata[0].Media[0].Part[0].key;
 	};
