@@ -120,7 +120,7 @@ class PlayController {
 
 		let processData = data;
 		let provider;
-		if (!_.isNil(data.epg)) {
+		if (_.isEqual(data.type, 'epg')) {
 			processData = data.epg;
 			provider = '';
 		}
@@ -129,7 +129,7 @@ class PlayController {
 				await this.playViaKodi(entity.value, data, data.type);
 				break;
 			case 'androidtv':
-				if (!_.isNil(data.epg)) {
+				if (_.isEqual(data.type, 'epg')) {
 					const session = `${Math.floor(Date.now() / 1000)}`;
 					const streamLink = await this.plex.tune(data.channelIdentifier, session);
 					console.log(streamLink);
@@ -144,7 +144,7 @@ class PlayController {
 				await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
 				break;
 			case 'cast':
-				if (!_.isNil(data.epg)) {
+				if (_.isEqual(data.type, 'epg')) {
 					const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
 					const streamURL = await this.plex.tune(data.channelIdentifier, session);
 					console.log(`${this.plex.getBasicURL()}${streamURL}`);
