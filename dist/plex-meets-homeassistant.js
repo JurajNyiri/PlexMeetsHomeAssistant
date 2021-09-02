@@ -21416,7 +21416,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         }
                         else if (lodash.includes(lodash.toUpper(movieData.title), lodash.toUpper(this.searchValue)) ||
                             lodash.includes(lodash.toUpper(movieData.parentTitle), lodash.toUpper(this.searchValue)) ||
-                            lodash.includes(lodash.toUpper(movieData.grandparentTitle), lodash.toUpper(this.searchValue))) {
+                            lodash.includes(lodash.toUpper(movieData.grandparentTitle), lodash.toUpper(this.searchValue)) ||
+                            lodash.includes(lodash.toUpper(movieData.tag), lodash.toUpper(this.searchValue)) ||
+                            lodash.includes(lodash.toUpper(lodash.get(movieData, 'epg.title')), lodash.toUpper(this.searchValue))) {
                             shouldRender = true;
                         }
                         if (shouldRender) {

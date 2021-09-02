@@ -563,7 +563,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					} else if (
 						_.includes(_.toUpper(movieData.title), _.toUpper(this.searchValue)) ||
 						_.includes(_.toUpper(movieData.parentTitle), _.toUpper(this.searchValue)) ||
-						_.includes(_.toUpper(movieData.grandparentTitle), _.toUpper(this.searchValue))
+						_.includes(_.toUpper(movieData.grandparentTitle), _.toUpper(this.searchValue)) ||
+						_.includes(_.toUpper(movieData.tag), _.toUpper(this.searchValue)) ||
+						_.includes(_.toUpper(_.get(movieData, 'epg.title')), _.toUpper(this.searchValue))
 					) {
 						shouldRender = true;
 					}
