@@ -35,6 +35,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	plexPort: number | false = false;
 
+	epgData: Record<string, any> = {};
+
 	detailsShown = false;
 
 	entityRegistry: Array<Record<string, any>> = [];
@@ -406,10 +408,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				const getLiveTV = async (): Promise<void> => {
 					if (this.plex) {
 						const liveTV = await this.plex.getLiveTV();
-						console.log(await this.plex.getEPG());
 						_.forEach(liveTV, (data, key) => {
 							this.data[key] = data;
 						});
+					}
+				};
+
+				const getEPG = async (): Promise<void> => {
+					if (this.plex) {
+						this.epgData = await this.plex.getEPG();
 					}
 				};
 
@@ -436,8 +443,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 
 				loadDataRequests.push(getLiveTV());
+				loadDataRequests.push(getEPG());
 
 				const [plexSections] = await Promise.all(loadDataRequests);
+				_.forEach(this.epgData, (value, key) => {
+					_.forEach(this.data[key], (libraryData, libraryKey) => {
+						if (!_.isNil(this.epgData[key][libraryData.channelCallSign])) {
+							this.data[key][libraryKey].epg = this.epgData[key][libraryData.channelCallSign];
+						}
+					});
+				});
 
 				if (plexSections && sectionKey) {
 					_.forEach(plexSections, section => {
@@ -1107,7 +1122,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(mainData.title);
 					}
 
-					(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.year);
+					if (!_.isNil(mainData.year)) {
+						(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.year);
+					} else if (!_.isNil(mainData.epg) && !_.isNil(mainData.epg.title)) {
+						(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.epg.title);
+					} else {
+						(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = '';
+					}
+
 					(this.getElementsByClassName('metaInfo')[0] as HTMLElement).innerHTML = `${(mainData.duration !== undefined
 						? `<span class='minutesDetail'>${Math.round(
 								parseInt(escapeHtml(mainData.duration), 10) / 60 / 1000
@@ -1121,7 +1143,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									parseFloat(escapeHtml(mainData.rating)) * 10
 							  ) / 10}</span>`
 							: '')}<div class='clear'></div>`;
-					(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(mainData.summary);
+
+					if (!_.isNil(mainData.summary)) {
+						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(mainData.summary);
+					} else if (!_.isNil(mainData.epg) && !_.isNil(mainData.epg.summary)) {
+						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(mainData.epg.summary);
+					} else {
+						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = '';
+					}
 
 					/* todo temp disabled
 					if (data.type === 'movie') {
@@ -1672,8 +1701,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const yearElem = document.createElement('div');
 		if (_.isEqual(data.type, 'episode')) {
 			yearElem.innerHTML = escapeHtml(data.title);
-		} else {
+		} else if (!_.isNil(data.year)) {
 			yearElem.innerHTML = escapeHtml(data.year);
+		} else if (!_.isNil(data.epg)) {
+			yearElem.innerHTML = escapeHtml(data.epg.title);
 		}
 		yearElem.className = 'yearElem';
 
