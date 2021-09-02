@@ -19033,13 +19033,15 @@ class Plex {
             let res = await axios.get(this.authorizeURL(decisionURL), {
                 timeout: this.requestTimeout
             });
-            console.log(res);
-            console.log('Waiting for new url...');
-            await sleep(10000);
-            res = await axios.get(this.authorizeURL(decisionURL), {
-                timeout: this.requestTimeout
-            });
-            console.log(res);
+            while (parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 10) {
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(500);
+                // eslint-disable-next-line no-await-in-loop
+                res = await axios.get(this.authorizeURL(decisionURL), {
+                    timeout: this.requestTimeout
+                });
+                console.log('Waiting for new url...');
+            }
             return res.data.MediaContainer.Metadata[0].Media[0].Part[0].key;
         };
         this.getContinueWatching = async () => {
