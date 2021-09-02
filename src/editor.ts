@@ -95,7 +95,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	valueUpdated = (): void => {
 		const originalConfig = _.clone(this.config);
 		this.config.protocol = this.protocol.value;
-		this.config.ip = this.ip.value;
+		this.config.ip = this.ip.value.replace(/^https?\:\/\//i, '').replace(/\/$/, '');
 		this.config.token = this.token.value;
 		this.config.port = this.port.value;
 		if (this.loaded) {
@@ -266,8 +266,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		}
 		this.content.appendChild(this.protocol);
 
-		this.ip.label = 'Plex IP Address';
-		this.ip.value = this.config.ip;
+		this.ip.label = 'Plex IP Address / Hostname';
+		this.ip.value = this.config.ip.replace(/^https?\:\/\//i, '').replace(/\/$/, '');
 		this.ip.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.ip);
 
@@ -304,7 +304,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.appendChild(this.content);
 
-		this.plex = new Plex(this.config.ip, this.plexPort, this.config.token, this.plexProtocol, this.config.sort);
+		this.plex = new Plex(
+			this.config.ip.replace(/^https?\:\/\//i, '').replace(/\/$/, ''),
+			this.plexPort,
+			this.config.token,
+			this.plexProtocol,
+			this.config.sort
+		);
 		this.sections = await this.plex.getSections();
 		this.livetv = await this.plex.getLiveTV();
 		this.collections = await this.plex.getCollections();
