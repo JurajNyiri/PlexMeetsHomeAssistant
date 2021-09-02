@@ -18943,6 +18943,7 @@ class Plex {
             })).data.MediaContainer;
         };
         this.tune = async (channelID, session) => {
+            // eslint-disable-next-line no-param-reassign
             session = 'PlexMeetsHomeAssistant3';
             console.log(channelID);
             // Todo: what is 12? do we need to get this from somewhere and change?
@@ -19427,7 +19428,7 @@ class PlayController {
                         const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
                         const streamURL = await this.plex.tune(data.channelIdentifier, session);
                         console.log(`${this.plex.getBasicURL()}${streamURL}`);
-                        this.playViaCast(entity.value, `${streamURL}`);
+                        this.playViaCast(entity.value, `${streamURL}`, 'epg');
                     }
                     else if (this.hass.services.plex) {
                         const libraryName = lodash.isNil(processData.librarySectionTitle)
@@ -19613,32 +19614,45 @@ class PlayController {
                 throw Error(`Plex type ${type} is not supported in Kodi.`);
             }
         };
-        this.playViaCast = (entityName, mediaLink) => {
-            mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
-            const payload = {
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: entityName,
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_type: 'application/vnd.apple.mpegurl',
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_id: mediaLink
-            };
-            /*
-            payload = {
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: entityName,
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_type: 'cast',
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_id: `{
-                "app_name": "bubbleupnp",
-                "media_id": "${mediaLink}",
-                "media_type": "application/x-mpegURL"
-              }`
-            };
-            */
-            console.log(payload);
-            this.hass.callService('media_player', 'play_media', payload);
+        this.playViaCast = (entityName, mediaLink, contentType = 'video') => {
+            if (lodash.isEqual(contentType, 'video')) {
+                this.hass.callService('media_player', 'play_media', {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_type: 'video',
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+                });
+            }
+            else if (lodash.isEqual(contentType, 'epg')) {
+                // eslint-disable-next-line no-param-reassign
+                mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
+                const payload = {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_type: 'application/vnd.apple.mpegurl',
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_id: mediaLink
+                };
+                /*
+                payload = {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_type: 'cast',
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_id: `{
+                        "app_name": "bubbleupnp",
+                        "media_id": "${mediaLink}",
+                        "media_type": "application/x-mpegURL"
+                    }`
+                };
+                */
+                console.log(payload);
+                this.hass.callService('media_player', 'play_media', payload);
+            }
         };
         this.playViaCastPlex = (entityName, contentType, mediaLink) => {
             return this.hass.callService('media_player', 'play_media', {
@@ -19657,7 +19671,6 @@ class PlayController {
                 command += ' --ez "android.intent.extra.START_PLAYBACK" true';
             }
             command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/${provider}${mediaID}'`;
-            console.log(command);
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: entityName,

@@ -148,7 +148,7 @@ class PlayController {
 					const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
 					const streamURL = await this.plex.tune(data.channelIdentifier, session);
 					console.log(`${this.plex.getBasicURL()}${streamURL}`);
-					this.playViaCast(entity.value, `${streamURL}`);
+					this.playViaCast(entity.value, `${streamURL}`, 'epg');
 				} else if (this.hass.services.plex) {
 					const libraryName = _.isNil(processData.librarySectionTitle)
 						? this.libraryName
@@ -345,34 +345,46 @@ class PlayController {
 		}
 	};
 
-	private playViaCast = (entityName: string, mediaLink: string): void => {
-		mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
-		const payload: any = {
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			entity_id: entityName,
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_type: 'application/vnd.apple.mpegurl',
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_id: mediaLink
-		};
+	private playViaCast = (entityName: string, mediaLink: string, contentType = 'video'): void => {
+		if (_.isEqual(contentType, 'video')) {
+			this.hass.callService('media_player', 'play_media', {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_type: 'video',
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+			});
+		} else if (_.isEqual(contentType, 'epg')) {
+			// eslint-disable-next-line no-param-reassign
+			mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
+			const payload: any = {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_type: 'application/vnd.apple.mpegurl',
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_id: mediaLink
+			};
 
-		/*
-		payload = {
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			entity_id: entityName,
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_type: 'cast',
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_id: `{
-            "app_name": "bubbleupnp",
-            "media_id": "${mediaLink}",
-            "media_type": "application/x-mpegURL"
-          }`
-		};
-		*/
+			/*
+			payload = {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_type: 'cast',
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_id: `{
+					"app_name": "bubbleupnp",
+					"media_id": "${mediaLink}",
+					"media_type": "application/x-mpegURL"
+				}`
+			};
+			*/
 
-		console.log(payload);
-		this.hass.callService('media_player', 'play_media', payload);
+			console.log(payload);
+			this.hass.callService('media_player', 'play_media', payload);
+		}
 	};
 
 	private playViaCastPlex = (entityName: string, contentType: string, mediaLink: string): Promise<void> => {
@@ -400,8 +412,6 @@ class PlayController {
 		}
 
 		command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/${provider}${mediaID}'`;
-
-		console.log(command);
 
 		this.hass.callService('androidtv', 'adb_command', {
 			// eslint-disable-next-line @typescript-eslint/camelcase

@@ -366,6 +366,7 @@ class Plex {
 	};
 
 	tune = async (channelID: string, session: string): Promise<any> => {
+		// eslint-disable-next-line no-param-reassign
 		session = 'PlexMeetsHomeAssistant3';
 		console.log(channelID);
 		// Todo: what is 12? do we need to get this from somewhere and change?
