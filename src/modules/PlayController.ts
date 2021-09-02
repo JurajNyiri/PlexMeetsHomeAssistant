@@ -103,7 +103,6 @@ class PlayController {
 	};
 
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
-		console.log('play');
 		if (_.isArray(this.runBefore)) {
 			const entityID = `${this.runBefore[0]}.${this.runBefore[1]}`;
 			await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
@@ -121,7 +120,6 @@ class PlayController {
 			processData = data.epg;
 			provider = '';
 		}
-		console.log(processData);
 		switch (entity.key) {
 			case 'kodi':
 				await this.playViaKodi(entity.value, processData, processData.type);
@@ -342,8 +340,6 @@ class PlayController {
 		}
 
 		command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/${provider}${mediaID}'`;
-
-		console.log(command);
 
 		this.hass.callService('androidtv', 'adb_command', {
 			// eslint-disable-next-line @typescript-eslint/camelcase

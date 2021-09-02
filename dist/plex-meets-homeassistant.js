@@ -17205,9 +17205,9 @@ const CSS_STYLE = {
 };
 const supported = {
     kodi: ['movie', 'episode'],
-    androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'epg'],
-    plexPlayer: ['movie', 'show', 'season', 'episode', 'clip', 'epg'],
-    cast: ['movie', 'episode', 'epg']
+    androidtv: ['movie', 'show', 'season', 'episode', 'clip'],
+    plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
+    cast: ['movie', 'episode']
 };
 
 var bind = function bind(fn, thisArg) {
@@ -19283,7 +19283,6 @@ class PlayController {
             return foundResult;
         };
         this.play = async (data, instantPlay = false) => {
-            console.log('play');
             if (lodash.isArray(this.runBefore)) {
                 const entityID = `${this.runBefore[0]}.${this.runBefore[1]}`;
                 await this.hass.callService(this.runBefore[0], this.runBefore[1], {});
@@ -19299,7 +19298,6 @@ class PlayController {
                 processData = data.epg;
                 provider = '';
             }
-            console.log(processData);
             switch (entity.key) {
                 case 'kodi':
                     await this.playViaKodi(entity.value, processData, processData.type);
@@ -19498,7 +19496,6 @@ class PlayController {
                 command += ' --ez "android.intent.extra.START_PLAYBACK" true';
             }
             command += ` -a android.intent.action.VIEW 'plex://server://${serverID}/${provider}${mediaID}'`;
-            console.log(command);
             this.hass.callService('androidtv', 'adb_command', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: entityName,
@@ -22377,6 +22374,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else {
                 container.style.height = `${CSS_STYLE.height + 30}px`;
+            }
+            if (!lodash.isNil(data.channelCallSign)) {
+                container.style.marginBottom = '50px';
             }
             const movieElem = document.createElement('div');
             movieElem.className = 'movieElem';

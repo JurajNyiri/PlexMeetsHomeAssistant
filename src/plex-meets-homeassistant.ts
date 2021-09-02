@@ -1613,6 +1613,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		} else {
 			container.style.height = `${CSS_STYLE.height + 30}px`;
 		}
+		if (!_.isNil(data.channelCallSign)) {
+			container.style.marginBottom = '50px';
+		}
 
 		const movieElem = document.createElement('div');
 		movieElem.className = 'movieElem';
