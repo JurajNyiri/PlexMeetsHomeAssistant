@@ -365,6 +365,129 @@ class Plex {
 		).data.MediaContainer;
 	};
 
+	tune = async (channelID: string, session: string): Promise<any> => {
+		// eslint-disable-next-line no-param-reassign
+		session = 'PlexMeetsHomeAssistant3';
+		console.log(channelID);
+		// Todo: what is 12? do we need to get this from somewhere and change?
+		let url = this.authorizeURL(
+			`${this.getBasicURL()}/livetv/dvrs/12/channels/${channelID}/tune?X-Plex-Language=en-us`
+		);
+		console.log('Starting tune process...');
+		url = `${this.getBasicURL()}/livetv/dvrs/12/channels/`;
+		url += `${channelID}`;
+		url += `/tune`;
+		url += `?X-Plex-Client-Identifier=${session}`;
+		url += `&X-Plex-Session-Identifier=${session}`;
+
+		const tuneData = (
+			await axios.post(this.authorizeURL(url), {
+				timeout: this.requestTimeout
+			})
+		).data.MediaContainer;
+
+		console.log('Tuning started.');
+
+		let startURL = `${this.getBasicURL()}/video/:/transcode/universal/start.mpd`;
+		startURL += `?hasMDE=1`;
+		startURL += `&path=${encodeURIComponent(tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key)}`;
+		startURL += `&mediaIndex=0`;
+		startURL += `&partIndex=0`;
+		startURL += `&protocol=dash`;
+		startURL += `&fastSeek=1`;
+		startURL += `&directPlay=0`;
+		startURL += `&directStream=1`;
+		startURL += `&subtitleSize=100`;
+		startURL += `&audioBoost=100`;
+		startURL += `&location=lan`;
+		startURL += `&addDebugOverlay=0`;
+		startURL += `&autoAdjustQuality=0`;
+		startURL += `&directStreamAudio=1`;
+		startURL += `&mediaBufferSize=102400`;
+		startURL += `&session=${session}`;
+		startURL += `&subtitles=burn`;
+		startURL += `&copyts=0`;
+		startURL += `&Accept-Language=en-GB`;
+		startURL += `&X-Plex-Session-Identifier=${session}`;
+		startURL += `&X-Plex-Client-Profile-Extra=append-transcode-target-codec%28type%3DvideoProfile%26context%3Dstreaming%26audioCodec%3Daac%26protocol%3Ddash%29`;
+		startURL += `&X-Plex-Incomplete-Segments=1`;
+		startURL += `&X-Plex-Product=Plex%20Web`;
+		startURL += `&X-Plex-Version=4.59.2`;
+		startURL += `&X-Plex-Client-Identifier=${session}`;
+		startURL += `&X-Plex-Platform=Chrome`;
+		startURL += `&X-Plex-Platform-Version=92.0`;
+		startURL += `&X-Plex-Sync-Version=2`;
+		startURL += `&X-Plex-Features=external-media%2Cindirect-media`;
+		startURL += `&X-Plex-Model=bundled`;
+		startURL += `&X-Plex-Device=OSX`;
+		startURL += `&X-Plex-Device-Name=Chrome`;
+		startURL += `&X-Plex-Device-Screen-Resolution=1792x444%2C1792x1120`;
+		startURL += `&X-Plex-Language=en-GB`;
+
+		let decisionURL = `${this.getBasicURL()}/video/:/transcode/universal/decision`;
+
+		decisionURL += `?advancedSubtitles=text`;
+		decisionURL += `&audioBoost=100`;
+		decisionURL += `&autoAdjustQuality=0`;
+		decisionURL += `&directPlay=1`;
+		decisionURL += `&directStream=1`;
+		decisionURL += `&directStreamAudio=1`;
+		decisionURL += `&fastSeek=1`;
+		decisionURL += `&hasMDE=1`;
+		decisionURL += `&location=lan`;
+		decisionURL += `&mediaIndex=0`;
+		decisionURL += `&partIndex=0`;
+		decisionURL += `&path=${tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
+		decisionURL += `&protocol=*`;
+		decisionURL += `&session=${session}`;
+		decisionURL += `&skipSubtitles=1`;
+		decisionURL += `&videoBitrate=200000`;
+		decisionURL += `&videoQuality=100`;
+		decisionURL += `&X-Plex-Client-Identifier=${session}`;
+		decisionURL += `&X-Plex-Platform=Android`;
+
+		const url2 = this.authorizeURL(
+			`${this.getBasicURL()}${
+				tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key
+			}?includeBandwidths=1&offset=-1&X-Plex-Incomplete-Segments=1&X-Plex-Session-Identifier=${session}`
+		);
+
+		console.log('Getting info about channel stream...');
+		const res2 = await axios.get(url2, {
+			timeout: 60000
+		});
+
+		console.log(res2.data);
+
+		if (_.isNil(res2.data.MediaContainer.Metadata[0].Media[0].TranscodeSession)) {
+			console.log('NOT STARTED - Starting...');
+			const res1 = await axios.get(this.authorizeURL(startURL), {
+				timeout: 60000
+			});
+			console.log(res1);
+			console.log('____');
+		}
+
+		const sleep = async (ms: number): Promise<void> => {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		};
+
+		console.log('Deciding...');
+		let res = await axios.get(this.authorizeURL(decisionURL), {
+			timeout: this.requestTimeout
+		});
+		while (parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 3) {
+			// eslint-disable-next-line no-await-in-loop
+			await sleep(500);
+			// eslint-disable-next-line no-await-in-loop
+			res = await axios.get(this.authorizeURL(decisionURL), {
+				timeout: this.requestTimeout
+			});
+			console.log('Waiting for new url...');
+		}
+		return res.data.MediaContainer.Metadata[0].Media[0].Part[0].key;
+	};
+
 	getContinueWatching = async (): Promise<any> => {
 		const hubs = await this.getHubs();
 		let continueWatchingData: Record<string, any> = {};

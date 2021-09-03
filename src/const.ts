@@ -9,7 +9,7 @@ const CSS_STYLE: any = {
 };
 
 const supported: any = {
-	kodi: ['movie', 'episode'],
+	kodi: ['movie', 'episode', 'epg'],
 	androidtv: ['movie', 'show', 'season', 'episode', 'clip'],
 	plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
 	cast: ['movie', 'episode']

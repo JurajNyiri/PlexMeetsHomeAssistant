@@ -17,6 +17,8 @@ _Available special libraries:_
 | Continue Watching | Shows movies and tv shows in progress, uses old Plex API.                                                                   |
 | Deck              | Shows tv shows on deck, uses old Plex API.                                                                                  |
 
+You can also use Live TV library by specifying its name, usually "Live TV & DVR".
+
 **entity**: You need to configure at least one supported media_player entity.
 
 - **androidtv**: Entity id of your media_player configured via [Android TV](https://www.home-assistant.io/integrations/androidtv/). See [detailed instructions](#android-tv-or-fire-tv). It is also possible to use short declaration with androidtv.
@@ -27,6 +29,8 @@ _Available special libraries:_
 **port**: _Optional_ Port of your plex sever.
 
 **protocol**: _Optional_ Protocol to use for Plex. Defaults to "http".
+
+**maxRows**: _Optional_ Maximum number of rows to display in card. Especially useful when using sidebar card with dock for example.
 
 **maxCount**: _Optional_ Maximum number of items to display in card.
 
@@ -167,6 +171,8 @@ Play button is only visible if all the conditions inside Availability section of
 
 ✅ Episodes
 
+❌ Live TV
+
 ### Kodi
 
 **Difficulty to setup**: Moderate
@@ -175,7 +181,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 - Install and configure [PlexKodiConnect](https://github.com/croneter/PlexKodiConnect#download-and-installation) on Kodi itself.
 - Setup [Kodi](https://www.home-assistant.io/integrations/kodi/) integration for your device.
-- Install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) and its sensor **kodi_media_sensor_search**
+- Install and configure integration [Kodi Recently Added Media](https://github.com/jtbgroup/kodi-media-sensors#installation) and its sensor **kodi_media_sensor_search**. For support of Live TV, if [this PR](https://github.com/jtbgroup/kodi-media-sensors/pull/5) has not been merged yet, you need to use [this modified](https://github.com/JurajNyiri/kodi-media-sensors/tree/add_channels_search) integration with support for PVR.
 
 <details>
     <summary>Images of installation of Kodi Recently Added Media</summary>
@@ -209,6 +215,8 @@ Play button is only visible if all the conditions inside Availability section of
 
 ✅ Episodes
 
+✅ Live TV
+
 ### Google Cast
 
 **Difficulty to setup**: Very easy
@@ -234,6 +242,8 @@ Play button is only visible if all the conditions inside Availability section of
 ❌ Season
 
 ✅ Episodes
+
+❌ Live TV
 
 ### All other plex clients
 
@@ -295,6 +305,8 @@ entity:
 ✅ Season
 
 ✅ Episodes
+
+❌ Live TV
 
 **Shared Plex servers configuration**
 

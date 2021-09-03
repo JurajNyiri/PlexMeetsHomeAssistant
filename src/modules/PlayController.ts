@@ -49,7 +49,7 @@ class PlayController {
 		return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
 	};
 
-	private getKodiSearch = async (search: string): Promise<Record<string, any>> => {
+	private getKodiSearch = async (search: string, silent = false): Promise<Record<string, any>> => {
 		await this.hass.callService('kodi_media_sensors', 'call_method', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			entity_id: 'sensor.kodi_media_sensor_search',
@@ -67,8 +67,12 @@ class PlayController {
 				foundResult = result;
 				return false;
 			}
+			if (_.isEqual(result.label, search)) {
+				foundResult = result;
+				return false;
+			}
 		});
-		if (_.isEmpty(foundResult)) {
+		if (_.isEmpty(foundResult) && !silent) {
 			// eslint-disable-next-line no-alert
 			alert(`Title ${search} not found in Kodi.`);
 			throw Error(`Title ${search} not found in Kodi.`);
@@ -116,22 +120,36 @@ class PlayController {
 
 		let processData = data;
 		let provider;
-		if (!_.isNil(data.epg)) {
+		if (_.isEqual(data.type, 'epg')) {
 			processData = data.epg;
 			provider = '';
 		}
 		switch (entity.key) {
 			case 'kodi':
-				await this.playViaKodi(entity.value, processData, processData.type);
+				await this.playViaKodi(entity.value, data, data.type);
 				break;
 			case 'androidtv':
-				await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
+				if (_.isEqual(data.type, 'epg')) {
+					const session = `${Math.floor(Date.now() / 1000)}`;
+					const streamLink = await this.plex.tune(data.channelIdentifier, session);
+					console.log(streamLink);
+
+					await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
+				} else {
+					await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
+				}
+
 				break;
 			case 'plexPlayer':
 				await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
 				break;
 			case 'cast':
-				if (this.hass.services.plex) {
+				if (_.isEqual(data.type, 'epg')) {
+					const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
+					const streamURL = await this.plex.tune(data.channelIdentifier, session);
+					console.log(`${this.plex.getBasicURL()}${streamURL}`);
+					this.playViaCast(entity.value, `${streamURL}`, 'epg');
+				} else if (this.hass.services.plex) {
 					const libraryName = _.isNil(processData.librarySectionTitle)
 						? this.libraryName
 						: processData.librarySectionTitle;
@@ -265,7 +283,30 @@ class PlayController {
 	};
 
 	private playViaKodi = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
-		if (type === 'movie') {
+		if (type === 'epg') {
+			try {
+				const kodiData = await this.getKodiSearch(_.get(data, 'channelCallSign'), true);
+
+				await this.hass.callService('kodi', 'call_method', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: entityName,
+					method: 'Player.Open',
+					item: {
+						channelid: kodiData.channelid
+					}
+				});
+			} catch (err) {
+				const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
+				await this.hass.callService('kodi', 'call_method', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: entityName,
+					method: 'Player.Open',
+					item: {
+						file: streamLink
+					}
+				});
+			}
+		} else if (type === 'movie') {
 			const kodiData = await this.getKodiSearch(data.title);
 			await this.hass.callService('kodi', 'call_method', {
 				// eslint-disable-next-line @typescript-eslint/camelcase
@@ -304,15 +345,46 @@ class PlayController {
 		}
 	};
 
-	private playViaCast = (entityName: string, mediaLink: string): void => {
-		this.hass.callService('media_player', 'play_media', {
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			entity_id: entityName,
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_type: 'video',
-			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
-		});
+	private playViaCast = (entityName: string, mediaLink: string, contentType = 'video'): void => {
+		if (_.isEqual(contentType, 'video')) {
+			this.hass.callService('media_player', 'play_media', {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_type: contentType,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+			});
+		} else if (_.isEqual(contentType, 'epg')) {
+			// eslint-disable-next-line no-param-reassign
+			mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
+			const payload: any = {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_type: 'application/vnd.apple.mpegurl',
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_id: mediaLink
+			};
+
+			/*
+			payload = {
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				entity_id: entityName,
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_type: 'cast',
+				// eslint-disable-next-line @typescript-eslint/camelcase
+				media_content_id: `{
+					"app_name": "bubbleupnp",
+					"media_id": "${mediaLink}",
+					"media_type": "application/x-mpegURL"
+				}`
+			};
+			*/
+
+			console.log(payload);
+			this.hass.callService('media_player', 'play_media', payload);
+		}
 	};
 
 	private playViaCastPlex = (entityName: string, contentType: string, mediaLink: string): Promise<void> => {

@@ -410,6 +410,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						const liveTV = await this.plex.getLiveTV();
 						_.forEach(liveTV, (data, key) => {
 							this.data[key] = data;
+							_.forEach(this.data[key], (value, innerKey) => {
+								this.data[key][innerKey].type = 'epg';
+							});
 						});
 					}
 				};
@@ -450,7 +453,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					_.forEach(this.data[key], (libraryData, libraryKey) => {
 						if (!_.isNil(this.epgData[key][libraryData.channelCallSign])) {
 							this.data[key][libraryKey].epg = this.epgData[key][libraryData.channelCallSign];
-							this.data[key][libraryKey].type = 'epg';
 						}
 					});
 				});

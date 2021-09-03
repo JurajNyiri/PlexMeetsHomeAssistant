@@ -536,7 +536,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			libraryItems.appendChild(addDropdownItem('Live TV', true));
 			_.forEach(_.keys(this.livetv), (livetv: string) => {
 				if (_.isEqual(this.config.libraryName, livetv)) {
-					warningLibrary.textContent = `Warning: ${this.config.libraryName} play action currently not supported by Plex.`;
+					warningLibrary.innerHTML = `Warning: ${this.config.libraryName} play action currently only supported with Kodi.<br/>You might also need custom build of kodi-media-sensors, see <a href="https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md#kodi" target="_blank">detailed configuration</a> for more information.`;
 				}
 				libraryItems.appendChild(addDropdownItem(livetv));
 			});

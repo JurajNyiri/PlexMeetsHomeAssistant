@@ -17204,7 +17204,7 @@ const CSS_STYLE = {
     minimumEpisodeWidth: 300
 };
 const supported = {
-    kodi: ['movie', 'episode'],
+    kodi: ['movie', 'episode', 'epg'],
     androidtv: ['movie', 'show', 'season', 'episode', 'clip'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip'],
     cast: ['movie', 'episode']
@@ -18942,6 +18942,109 @@ class Plex {
                 timeout: this.requestTimeout
             })).data.MediaContainer;
         };
+        this.tune = async (channelID, session) => {
+            // eslint-disable-next-line no-param-reassign
+            session = 'PlexMeetsHomeAssistant3';
+            console.log(channelID);
+            // Todo: what is 12? do we need to get this from somewhere and change?
+            let url = this.authorizeURL(`${this.getBasicURL()}/livetv/dvrs/12/channels/${channelID}/tune?X-Plex-Language=en-us`);
+            console.log('Starting tune process...');
+            url = `${this.getBasicURL()}/livetv/dvrs/12/channels/`;
+            url += `${channelID}`;
+            url += `/tune`;
+            url += `?X-Plex-Client-Identifier=${session}`;
+            url += `&X-Plex-Session-Identifier=${session}`;
+            const tuneData = (await axios.post(this.authorizeURL(url), {
+                timeout: this.requestTimeout
+            })).data.MediaContainer;
+            console.log('Tuning started.');
+            let startURL = `${this.getBasicURL()}/video/:/transcode/universal/start.mpd`;
+            startURL += `?hasMDE=1`;
+            startURL += `&path=${encodeURIComponent(tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key)}`;
+            startURL += `&mediaIndex=0`;
+            startURL += `&partIndex=0`;
+            startURL += `&protocol=dash`;
+            startURL += `&fastSeek=1`;
+            startURL += `&directPlay=0`;
+            startURL += `&directStream=1`;
+            startURL += `&subtitleSize=100`;
+            startURL += `&audioBoost=100`;
+            startURL += `&location=lan`;
+            startURL += `&addDebugOverlay=0`;
+            startURL += `&autoAdjustQuality=0`;
+            startURL += `&directStreamAudio=1`;
+            startURL += `&mediaBufferSize=102400`;
+            startURL += `&session=${session}`;
+            startURL += `&subtitles=burn`;
+            startURL += `&copyts=0`;
+            startURL += `&Accept-Language=en-GB`;
+            startURL += `&X-Plex-Session-Identifier=${session}`;
+            startURL += `&X-Plex-Client-Profile-Extra=append-transcode-target-codec%28type%3DvideoProfile%26context%3Dstreaming%26audioCodec%3Daac%26protocol%3Ddash%29`;
+            startURL += `&X-Plex-Incomplete-Segments=1`;
+            startURL += `&X-Plex-Product=Plex%20Web`;
+            startURL += `&X-Plex-Version=4.59.2`;
+            startURL += `&X-Plex-Client-Identifier=${session}`;
+            startURL += `&X-Plex-Platform=Chrome`;
+            startURL += `&X-Plex-Platform-Version=92.0`;
+            startURL += `&X-Plex-Sync-Version=2`;
+            startURL += `&X-Plex-Features=external-media%2Cindirect-media`;
+            startURL += `&X-Plex-Model=bundled`;
+            startURL += `&X-Plex-Device=OSX`;
+            startURL += `&X-Plex-Device-Name=Chrome`;
+            startURL += `&X-Plex-Device-Screen-Resolution=1792x444%2C1792x1120`;
+            startURL += `&X-Plex-Language=en-GB`;
+            let decisionURL = `${this.getBasicURL()}/video/:/transcode/universal/decision`;
+            decisionURL += `?advancedSubtitles=text`;
+            decisionURL += `&audioBoost=100`;
+            decisionURL += `&autoAdjustQuality=0`;
+            decisionURL += `&directPlay=1`;
+            decisionURL += `&directStream=1`;
+            decisionURL += `&directStreamAudio=1`;
+            decisionURL += `&fastSeek=1`;
+            decisionURL += `&hasMDE=1`;
+            decisionURL += `&location=lan`;
+            decisionURL += `&mediaIndex=0`;
+            decisionURL += `&partIndex=0`;
+            decisionURL += `&path=${tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}`;
+            decisionURL += `&protocol=*`;
+            decisionURL += `&session=${session}`;
+            decisionURL += `&skipSubtitles=1`;
+            decisionURL += `&videoBitrate=200000`;
+            decisionURL += `&videoQuality=100`;
+            decisionURL += `&X-Plex-Client-Identifier=${session}`;
+            decisionURL += `&X-Plex-Platform=Android`;
+            const url2 = this.authorizeURL(`${this.getBasicURL()}${tuneData.MediaSubscription[0].MediaGrabOperation[0].Metadata.key}?includeBandwidths=1&offset=-1&X-Plex-Incomplete-Segments=1&X-Plex-Session-Identifier=${session}`);
+            console.log('Getting info about channel stream...');
+            const res2 = await axios.get(url2, {
+                timeout: 60000
+            });
+            console.log(res2.data);
+            if (lodash.isNil(res2.data.MediaContainer.Metadata[0].Media[0].TranscodeSession)) {
+                console.log('NOT STARTED - Starting...');
+                const res1 = await axios.get(this.authorizeURL(startURL), {
+                    timeout: 60000
+                });
+                console.log(res1);
+                console.log('____');
+            }
+            const sleep = async (ms) => {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            };
+            console.log('Deciding...');
+            let res = await axios.get(this.authorizeURL(decisionURL), {
+                timeout: this.requestTimeout
+            });
+            while (parseFloat(res.data.MediaContainer.Metadata[0].Media[0].Part[0].key.split('offset=')[1].split('&')[0]) < 3) {
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(500);
+                // eslint-disable-next-line no-await-in-loop
+                res = await axios.get(this.authorizeURL(decisionURL), {
+                    timeout: this.requestTimeout
+                });
+                console.log('Waiting for new url...');
+            }
+            return res.data.MediaContainer.Metadata[0].Media[0].Part[0].key;
+        };
         this.getContinueWatching = async () => {
             const hubs = await this.getHubs();
             let continueWatchingData = {};
@@ -19231,7 +19334,7 @@ class PlayController {
         this.getKodiSearchResults = async () => {
             return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
         };
-        this.getKodiSearch = async (search) => {
+        this.getKodiSearch = async (search, silent = false) => {
             await this.hass.callService('kodi_media_sensors', 'call_method', {
                 // eslint-disable-next-line @typescript-eslint/camelcase
                 entity_id: 'sensor.kodi_media_sensor_search',
@@ -19249,8 +19352,12 @@ class PlayController {
                     foundResult = result;
                     return false;
                 }
+                if (lodash.isEqual(result.label, search)) {
+                    foundResult = result;
+                    return false;
+                }
             });
-            if (lodash.isEmpty(foundResult)) {
+            if (lodash.isEmpty(foundResult) && !silent) {
                 // eslint-disable-next-line no-alert
                 alert(`Title ${search} not found in Kodi.`);
                 throw Error(`Title ${search} not found in Kodi.`);
@@ -19294,22 +19401,36 @@ class PlayController {
             const entity = this.getPlayService(data);
             let processData = data;
             let provider;
-            if (!lodash.isNil(data.epg)) {
+            if (lodash.isEqual(data.type, 'epg')) {
                 processData = data.epg;
                 provider = '';
             }
             switch (entity.key) {
                 case 'kodi':
-                    await this.playViaKodi(entity.value, processData, processData.type);
+                    await this.playViaKodi(entity.value, data, data.type);
                     break;
                 case 'androidtv':
-                    await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
+                    if (lodash.isEqual(data.type, 'epg')) {
+                        const session = `${Math.floor(Date.now() / 1000)}`;
+                        const streamLink = await this.plex.tune(data.channelIdentifier, session);
+                        console.log(streamLink);
+                        await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
+                    }
+                    else {
+                        await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
+                    }
                     break;
                 case 'plexPlayer':
                     await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
                     break;
                 case 'cast':
-                    if (this.hass.services.plex) {
+                    if (lodash.isEqual(data.type, 'epg')) {
+                        const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
+                        const streamURL = await this.plex.tune(data.channelIdentifier, session);
+                        console.log(`${this.plex.getBasicURL()}${streamURL}`);
+                        this.playViaCast(entity.value, `${streamURL}`, 'epg');
+                    }
+                    else if (this.hass.services.plex) {
                         const libraryName = lodash.isNil(processData.librarySectionTitle)
                             ? this.libraryName
                             : processData.librarySectionTitle;
@@ -19432,7 +19553,31 @@ class PlayController {
             }
         };
         this.playViaKodi = async (entityName, data, type) => {
-            if (type === 'movie') {
+            if (type === 'epg') {
+                try {
+                    const kodiData = await this.getKodiSearch(lodash.get(data, 'channelCallSign'), true);
+                    await this.hass.callService('kodi', 'call_method', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        entity_id: entityName,
+                        method: 'Player.Open',
+                        item: {
+                            channelid: kodiData.channelid
+                        }
+                    });
+                }
+                catch (err) {
+                    const streamLink = `${this.plex.getBasicURL()}${await this.plex.tune(data.channelIdentifier, 'todo')}`;
+                    await this.hass.callService('kodi', 'call_method', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        entity_id: entityName,
+                        method: 'Player.Open',
+                        item: {
+                            file: streamLink
+                        }
+                    });
+                }
+            }
+            else if (type === 'movie') {
                 const kodiData = await this.getKodiSearch(data.title);
                 await this.hass.callService('kodi', 'call_method', {
                     // eslint-disable-next-line @typescript-eslint/camelcase
@@ -19469,15 +19614,45 @@ class PlayController {
                 throw Error(`Plex type ${type} is not supported in Kodi.`);
             }
         };
-        this.playViaCast = (entityName, mediaLink) => {
-            this.hass.callService('media_player', 'play_media', {
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                entity_id: entityName,
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_type: 'video',
-                // eslint-disable-next-line @typescript-eslint/camelcase
-                media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
-            });
+        this.playViaCast = (entityName, mediaLink, contentType = 'video') => {
+            if (lodash.isEqual(contentType, 'video')) {
+                this.hass.callService('media_player', 'play_media', {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_type: contentType,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+                });
+            }
+            else if (lodash.isEqual(contentType, 'epg')) {
+                // eslint-disable-next-line no-param-reassign
+                mediaLink = this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`);
+                const payload = {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_type: 'application/vnd.apple.mpegurl',
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_id: mediaLink
+                };
+                /*
+                payload = {
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    entity_id: entityName,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_type: 'cast',
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    media_content_id: `{
+                        "app_name": "bubbleupnp",
+                        "media_id": "${mediaLink}",
+                        "media_type": "application/x-mpegURL"
+                    }`
+                };
+                */
+                console.log(payload);
+                this.hass.callService('media_player', 'play_media', payload);
+            }
         };
         this.playViaCastPlex = (entityName, contentType, mediaLink) => {
             return this.hass.callService('media_player', 'play_media', {
@@ -20114,7 +20289,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 libraryItems.appendChild(addDropdownItem('Live TV', true));
                 lodash.forEach(lodash.keys(this.livetv), (livetv) => {
                     if (lodash.isEqual(this.config.libraryName, livetv)) {
-                        warningLibrary.textContent = `Warning: ${this.config.libraryName} play action currently not supported by Plex.`;
+                        warningLibrary.innerHTML = `Warning: ${this.config.libraryName} play action currently only supported with Kodi.<br/>You might also need custom build of kodi-media-sensors, see <a href="https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md#kodi" target="_blank">detailed configuration</a> for more information.`;
                     }
                     libraryItems.appendChild(addDropdownItem(livetv));
                 });
@@ -21277,6 +21452,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             const liveTV = await this.plex.getLiveTV();
                             lodash.forEach(liveTV, (data, key) => {
                                 this.data[key] = data;
+                                lodash.forEach(this.data[key], (value, innerKey) => {
+                                    this.data[key][innerKey].type = 'epg';
+                                });
                             });
                         }
                     };
@@ -21316,7 +21494,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         lodash.forEach(this.data[key], (libraryData, libraryKey) => {
                             if (!lodash.isNil(this.epgData[key][libraryData.channelCallSign])) {
                                 this.data[key][libraryKey].epg = this.epgData[key][libraryData.channelCallSign];
-                                this.data[key][libraryKey].type = 'epg';
                             }
                         });
                     });
