@@ -102,6 +102,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			if (!this.config.entity) {
 				this.config.entity = [];
 			}
+			console.log(this.libraryName);
+			console.log(this.libraryName.value);
 			if (!_.isEmpty(this.libraryName.value)) {
 				this.config.libraryName = this.libraryName.value;
 
@@ -172,7 +174,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	render = async (): Promise<void> => {
 		const addDropdownItem = (text: string, disabled = false): HTMLElement => {
 			const libraryItem: any = document.createElement('paper-item');
-			libraryItem.innerHTML = text;
+			libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
 			if (disabled) {
 				libraryItem.disabled = true;
 			}
@@ -311,6 +313,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.plexProtocol,
 			this.config.sort
 		);
+
 		this.sections = await this.plex.getSections();
 		this.livetv = await this.plex.getLiveTV();
 		this.collections = await this.plex.getCollections();

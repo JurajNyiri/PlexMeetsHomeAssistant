@@ -19881,6 +19881,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 if (!this.config.entity) {
                     this.config.entity = [];
                 }
+                console.log(this.libraryName);
+                console.log(this.libraryName.value);
                 if (!lodash.isEmpty(this.libraryName.value)) {
                     this.config.libraryName = this.libraryName.value;
                     let sortOrderValue = '';
@@ -19954,7 +19956,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.render = async () => {
             const addDropdownItem = (text, disabled = false) => {
                 const libraryItem = document.createElement('paper-item');
-                libraryItem.innerHTML = text;
+                libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
                 if (disabled) {
                     libraryItem.disabled = true;
                 }
