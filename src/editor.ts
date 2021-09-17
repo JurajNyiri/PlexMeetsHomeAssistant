@@ -175,6 +175,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		const addDropdownItem = (text: string, disabled = false): HTMLElement => {
 			const libraryItem: any = document.createElement('paper-item');
 			libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
+			libraryItem.label = text;
+			console.log('Test2');
 			if (disabled) {
 				libraryItem.disabled = true;
 			}
