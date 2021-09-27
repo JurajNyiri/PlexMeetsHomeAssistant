@@ -20041,7 +20041,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             this.content.appendChild(this.protocol);
             this.ip.label = 'Plex IP Address / Hostname';
-            this.ip.value = this.config.ip.replace(/^https?\:\/\//i, '').replace(/\/$/, '');
+            if (this.config.ip) {
+                this.ip.value = this.config.ip.replace(/^https?\:\/\//i, '').replace(/\/$/, '');
+            }
+            else {
+                this.ip.value = this.config.ip;
+            }
             this.ip.addEventListener('change', this.valueUpdated);
             this.content.appendChild(this.ip);
             this.port.label = 'Plex Port (Optional)';
