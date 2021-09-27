@@ -19413,7 +19413,6 @@ class PlayController {
                     if (lodash.isEqual(data.type, 'epg')) {
                         const session = `${Math.floor(Date.now() / 1000)}`;
                         const streamLink = await this.plex.tune(data.channelIdentifier, session);
-                        console.log(streamLink);
                         await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
                     }
                     else {
@@ -19427,7 +19426,6 @@ class PlayController {
                     if (lodash.isEqual(data.type, 'epg')) {
                         const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
                         const streamURL = await this.plex.tune(data.channelIdentifier, session);
-                        console.log(`${this.plex.getBasicURL()}${streamURL}`);
                         this.playViaCast(entity.value, `${streamURL}`, 'epg');
                     }
                     else if (this.hass.services.plex) {
@@ -19650,7 +19648,6 @@ class PlayController {
                     }`
                 };
                 */
-                console.log(payload);
                 this.hass.callService('media_player', 'play_media', payload);
             }
         };
@@ -19881,8 +19878,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 if (!this.config.entity) {
                     this.config.entity = [];
                 }
-                console.log(this.libraryName);
-                console.log(this.libraryName.value);
                 if (!lodash.isEmpty(this.libraryName.value)) {
                     this.config.libraryName = this.libraryName.value;
                     let sortOrderValue = '';
@@ -19958,7 +19953,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                 const libraryItem = document.createElement('paper-item');
                 libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
                 libraryItem.label = text;
-                console.log('Test2');
                 if (disabled) {
                     libraryItem.disabled = true;
                 }
@@ -21503,7 +21497,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     });
                     if (plexSections && sectionKey) {
                         lodash.forEach(plexSections, section => {
-                            this.data[section.title1] = section.Metadata;
+                            this.data[section.librarySectionTitle] = section.Metadata;
                         });
                     }
                     const collections = await this.plex.getCollections();

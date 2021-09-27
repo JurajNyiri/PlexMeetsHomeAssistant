@@ -102,8 +102,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			if (!this.config.entity) {
 				this.config.entity = [];
 			}
-			console.log(this.libraryName);
-			console.log(this.libraryName.value);
 			if (!_.isEmpty(this.libraryName.value)) {
 				this.config.libraryName = this.libraryName.value;
 
@@ -176,7 +174,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			const libraryItem: any = document.createElement('paper-item');
 			libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
 			libraryItem.label = text;
-			console.log('Test2');
 			if (disabled) {
 				libraryItem.disabled = true;
 			}

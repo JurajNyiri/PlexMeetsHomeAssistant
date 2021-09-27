@@ -132,7 +132,6 @@ class PlayController {
 				if (_.isEqual(data.type, 'epg')) {
 					const session = `${Math.floor(Date.now() / 1000)}`;
 					const streamLink = await this.plex.tune(data.channelIdentifier, session);
-					console.log(streamLink);
 
 					await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
 				} else {
@@ -147,7 +146,6 @@ class PlayController {
 				if (_.isEqual(data.type, 'epg')) {
 					const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
 					const streamURL = await this.plex.tune(data.channelIdentifier, session);
-					console.log(`${this.plex.getBasicURL()}${streamURL}`);
 					this.playViaCast(entity.value, `${streamURL}`, 'epg');
 				} else if (this.hass.services.plex) {
 					const libraryName = _.isNil(processData.librarySectionTitle)
@@ -382,7 +380,6 @@ class PlayController {
 			};
 			*/
 
-			console.log(payload);
 			this.hass.callService('media_player', 'play_media', payload);
 		}
 	};

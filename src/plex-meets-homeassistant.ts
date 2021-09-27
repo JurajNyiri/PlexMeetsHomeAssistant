@@ -459,7 +459,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 				if (plexSections && sectionKey) {
 					_.forEach(plexSections, section => {
-						this.data[section.title1] = section.Metadata;
+						this.data[section.librarySectionTitle] = section.Metadata;
 					});
 				}
 				const collections = await this.plex.getCollections();
