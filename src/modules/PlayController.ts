@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable consistent-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-env browser */
@@ -9,6 +10,10 @@ import { supported } from '../const';
 import { waitUntilState, getState } from './utils';
 
 class PlayController {
+	readyPlayersForType: Record<string, Record<string, any>> = {};
+
+	entityStates: Record<string, any> = {};
+
 	entity: Record<string, any>;
 
 	plexPlayerEntity = '';
@@ -43,6 +48,8 @@ class PlayController {
 		if (!_.isEmpty(runAfter) && this.hass.states[runAfter]) {
 			this.runAfter = runAfter.split('.');
 		}
+
+		this.refreshAvailableServicesPeriodically();
 	}
 
 	private getKodiSearchResults = async (): Promise<Record<string, any>> => {
@@ -116,7 +123,7 @@ class PlayController {
 				await waitUntilState(this.hass, entityID, 'off');
 			}
 		}
-		const entity = this.getPlayService(data);
+		const entity = this.getPlayService(data, true);
 
 		let processData = data;
 		let provider;
@@ -422,7 +429,36 @@ class PlayController {
 		});
 	};
 
-	private getPlayService = (data: Record<string, any>): Record<string, string> => {
+	private refreshAvailableServicesPeriodically = async () => {
+		const sleep = async (ms: number): Promise<void> => {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		};
+
+		while (true) {
+			// eslint-disable-next-line no-await-in-loop
+			await this.refreshStates();
+			const previousReadyPlayersForType = _.clone(this.readyPlayersForType);
+			_.forEach(this.readyPlayersForType, (value, key) => {
+				const mockData = {
+					type: key
+				};
+				this.getPlayService(mockData, true);
+				if (!_.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
+					console.log('CHANGED');
+				} else {
+					console.log('SAME');
+				}
+				console.log(JSON.stringify(this.readyPlayersForType));
+			});
+			// eslint-disable-next-line no-await-in-loop
+			await sleep(1000);
+		}
+	};
+
+	private getPlayService = (data: Record<string, any>, forceRefresh = false): Record<string, string> => {
+		if (!_.isNil(this.readyPlayersForType[data.type]) && forceRefresh === false) {
+			return this.readyPlayersForType[data.type];
+		}
 		let service: Record<string, string> = {};
 		_.forEach(this.entity, (value, key) => {
 			if (_.isEmpty(service)) {
@@ -454,7 +490,8 @@ class PlayController {
 				}
 			}
 		});
-		return service;
+		this.readyPlayersForType[data.type] = service;
+		return this.readyPlayersForType[data.type];
 	};
 
 	init = async (): Promise<void> => {
@@ -505,6 +542,23 @@ class PlayController {
 				await this.entity.plexPlayer.plex.getClients();
 			}
 		}
+		await this.refreshStates();
+	};
+
+	private refreshStates = async (): Promise<Record<string, any>> => {
+		for (const [, value] of Object.entries(this.entity)) {
+			const entityVal = value;
+			if (_.isArray(entityVal)) {
+				for (const entity of entityVal) {
+					// eslint-disable-next-line no-await-in-loop
+					this.entityStates[entity] = await getState(this.hass, entity);
+				}
+			} else {
+				// eslint-disable-next-line no-await-in-loop
+				this.entityStates[entityVal] = await getState(this.hass, entityVal);
+			}
+		}
+		return this.entityStates;
 	};
 
 	private getPlexPlayerMachineIdentifier = (entity: string | Record<string, any>): string => {
@@ -552,12 +606,12 @@ class PlayController {
 	private isKodiSupported = (entityName: string): boolean => {
 		if (entityName) {
 			const hasKodiMediaSearchInstalled =
-				this.hass.states['sensor.kodi_media_sensor_search'] &&
-				this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable';
+				this.entityStates['sensor.kodi_media_sensor_search'] &&
+				this.entityStates['sensor.kodi_media_sensor_search'].state !== 'unavailable';
 			return (
-				(this.hass.states[entityName] &&
-					this.hass.states[entityName].state !== 'off' &&
-					this.hass.states[entityName].state !== 'unavailable' &&
+				(this.entityStates[entityName] &&
+					this.entityStates[entityName].state !== 'off' &&
+					this.entityStates[entityName].state !== 'unavailable' &&
 					hasKodiMediaSearchInstalled) ||
 				(!_.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled)
 			);
@@ -567,19 +621,19 @@ class PlayController {
 
 	private isCastSupported = (entityName: string): boolean => {
 		return (
-			(this.hass.states[entityName] &&
-				!_.isNil(this.hass.states[entityName].attributes) &&
-				this.hass.states[entityName].state !== 'unavailable') ||
+			(this.entityStates[entityName] &&
+				!_.isNil(this.entityStates[entityName].attributes) &&
+				this.entityStates[entityName].state !== 'unavailable') ||
 			!_.isEqual(this.runBefore, false)
 		);
 	};
 
 	private isAndroidTVSupported = (entityName: string): boolean => {
 		return (
-			(this.hass.states[entityName] &&
-				!_.isEqual(this.hass.states[entityName].state, 'off') &&
-				this.hass.states[entityName].attributes &&
-				this.hass.states[entityName].attributes.adb_response !== undefined) ||
+			(this.entityStates[entityName] &&
+				!_.isEqual(this.entityStates[entityName].state, 'off') &&
+				this.entityStates[entityName].attributes &&
+				this.entityStates[entityName].attributes.adb_response !== undefined) ||
 			!_.isEqual(this.runBefore, false)
 		);
 	};

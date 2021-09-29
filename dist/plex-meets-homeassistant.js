@@ -19327,6 +19327,8 @@ const isScrolledIntoView = (elem) => {
 
 class PlayController {
     constructor(hass, plex, entity, runBefore, runAfter, libraryName) {
+        this.readyPlayersForType = {};
+        this.entityStates = {};
         this.plexPlayerEntity = '';
         this.runBefore = false;
         this.runAfter = false;
@@ -19398,7 +19400,7 @@ class PlayController {
                     await waitUntilState(this.hass, entityID, 'off');
                 }
             }
-            const entity = this.getPlayService(data);
+            const entity = this.getPlayService(data, true);
             let processData = data;
             let provider;
             if (lodash.isEqual(data.type, 'epg')) {
@@ -19679,7 +19681,35 @@ class PlayController {
                 command
             });
         };
-        this.getPlayService = (data) => {
+        this.refreshAvailableServicesPeriodically = async () => {
+            const sleep = async (ms) => {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            };
+            while (true) {
+                // eslint-disable-next-line no-await-in-loop
+                await this.refreshStates();
+                const previousReadyPlayersForType = lodash.clone(this.readyPlayersForType);
+                lodash.forEach(this.readyPlayersForType, (value, key) => {
+                    const mockData = {
+                        type: key
+                    };
+                    this.getPlayService(mockData, true);
+                    if (!lodash.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
+                        console.log('CHANGED');
+                    }
+                    else {
+                        console.log('SAME');
+                    }
+                    console.log(JSON.stringify(this.readyPlayersForType));
+                });
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(1000);
+            }
+        };
+        this.getPlayService = (data, forceRefresh = false) => {
+            if (!lodash.isNil(this.readyPlayersForType[data.type]) && forceRefresh === false) {
+                return this.readyPlayersForType[data.type];
+            }
             let service = {};
             lodash.forEach(this.entity, (value, key) => {
                 if (lodash.isEmpty(service)) {
@@ -19708,7 +19738,8 @@ class PlayController {
                     }
                 }
             });
-            return service;
+            this.readyPlayersForType[data.type] = service;
+            return this.readyPlayersForType[data.type];
         };
         this.init = async () => {
             if (!lodash.isNil(this.entity.plexPlayer)) {
@@ -19747,6 +19778,23 @@ class PlayController {
                     await this.entity.plexPlayer.plex.getClients();
                 }
             }
+            await this.refreshStates();
+        };
+        this.refreshStates = async () => {
+            for (const [, value] of Object.entries(this.entity)) {
+                const entityVal = value;
+                if (lodash.isArray(entityVal)) {
+                    for (const entity of entityVal) {
+                        // eslint-disable-next-line no-await-in-loop
+                        this.entityStates[entity] = await getState(this.hass, entity);
+                    }
+                }
+                else {
+                    // eslint-disable-next-line no-await-in-loop
+                    this.entityStates[entityVal] = await getState(this.hass, entityVal);
+                }
+            }
+            return this.entityStates;
         };
         this.getPlexPlayerMachineIdentifier = (entity) => {
             let machineIdentifier = '';
@@ -19785,27 +19833,27 @@ class PlayController {
         };
         this.isKodiSupported = (entityName) => {
             if (entityName) {
-                const hasKodiMediaSearchInstalled = this.hass.states['sensor.kodi_media_sensor_search'] &&
-                    this.hass.states['sensor.kodi_media_sensor_search'].state !== 'unavailable';
-                return ((this.hass.states[entityName] &&
-                    this.hass.states[entityName].state !== 'off' &&
-                    this.hass.states[entityName].state !== 'unavailable' &&
+                const hasKodiMediaSearchInstalled = this.entityStates['sensor.kodi_media_sensor_search'] &&
+                    this.entityStates['sensor.kodi_media_sensor_search'].state !== 'unavailable';
+                return ((this.entityStates[entityName] &&
+                    this.entityStates[entityName].state !== 'off' &&
+                    this.entityStates[entityName].state !== 'unavailable' &&
                     hasKodiMediaSearchInstalled) ||
                     (!lodash.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled));
             }
             return false;
         };
         this.isCastSupported = (entityName) => {
-            return ((this.hass.states[entityName] &&
-                !lodash.isNil(this.hass.states[entityName].attributes) &&
-                this.hass.states[entityName].state !== 'unavailable') ||
+            return ((this.entityStates[entityName] &&
+                !lodash.isNil(this.entityStates[entityName].attributes) &&
+                this.entityStates[entityName].state !== 'unavailable') ||
                 !lodash.isEqual(this.runBefore, false));
         };
         this.isAndroidTVSupported = (entityName) => {
-            return ((this.hass.states[entityName] &&
-                !lodash.isEqual(this.hass.states[entityName].state, 'off') &&
-                this.hass.states[entityName].attributes &&
-                this.hass.states[entityName].attributes.adb_response !== undefined) ||
+            return ((this.entityStates[entityName] &&
+                !lodash.isEqual(this.entityStates[entityName].state, 'off') &&
+                this.entityStates[entityName].attributes &&
+                this.entityStates[entityName].attributes.adb_response !== undefined) ||
                 !lodash.isEqual(this.runBefore, false));
         };
         this.hass = hass;
@@ -19818,6 +19866,7 @@ class PlayController {
         if (!lodash.isEmpty(runAfter) && this.hass.states[runAfter]) {
             this.runAfter = runAfter.split('.');
         }
+        this.refreshAvailableServicesPeriodically();
     }
 }
 
