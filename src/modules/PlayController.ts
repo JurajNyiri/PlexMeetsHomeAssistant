@@ -10,6 +10,8 @@ import { supported } from '../const';
 import { waitUntilState, getState } from './utils';
 
 class PlayController {
+	playButtons: Array<any> = [];
+
 	readyPlayersForType: Record<string, Record<string, any>> = {};
 
 	entityStates: Record<string, any> = {};
@@ -429,6 +431,15 @@ class PlayController {
 		});
 	};
 
+	getPlayButton = (mediaType: string): HTMLButtonElement => {
+		const playButton = document.createElement('button');
+		playButton.name = 'playButton';
+		playButton.classList.add('disabled');
+		playButton.setAttribute('data-mediaType', mediaType);
+		this.playButtons.push(playButton);
+		return playButton;
+	};
+
 	private refreshAvailableServicesPeriodically = async () => {
 		const sleep = async (ms: number): Promise<void> => {
 			return new Promise(resolve => setTimeout(resolve, ms));
@@ -444,7 +455,14 @@ class PlayController {
 				};
 				this.getPlayService(mockData, true);
 				if (!_.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
-					console.log('CHANGED');
+					_.forEach(this.playButtons, playButton => {
+						const playButtonType = playButton.getAttribute('data-mediaType');
+						if (_.isEmpty(this.readyPlayersForType[playButtonType])) {
+							playButton.classList.add('disabled');
+						} else {
+							playButton.classList.remove('disabled');
+						}
+					});
 				}
 			});
 			// eslint-disable-next-line no-await-in-loop
