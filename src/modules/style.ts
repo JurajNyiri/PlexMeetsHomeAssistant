@@ -416,6 +416,9 @@ style.textContent = css`
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);
 	}
+	button[name='playButton'].disabled {
+		display: none;
+	}
 	button[name='playButton'] {
 		width: 40px;
 		height: 40px;

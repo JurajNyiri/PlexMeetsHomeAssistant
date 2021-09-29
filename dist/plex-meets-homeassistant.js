@@ -19265,18 +19265,19 @@ const createEpisodesView = (playController, plex, data) => {
         toViewElem.className = 'toViewEpisode';
         episodeElem.appendChild(toViewElem);
     }
-    if (playController.isPlaySupported(data)) {
-        const episodeInteractiveArea = document.createElement('div');
-        episodeInteractiveArea.className = 'interactiveArea';
-        const episodePlayButton = document.createElement('button');
-        episodePlayButton.name = 'playButton';
-        episodePlayButton.addEventListener('click', episodeEvent => {
-            episodeEvent.stopPropagation();
-            playController.play(data, true);
-        });
-        episodeInteractiveArea.append(episodePlayButton);
-        episodeElem.append(episodeInteractiveArea);
+    const episodeInteractiveArea = document.createElement('div');
+    episodeInteractiveArea.className = 'interactiveArea';
+    const episodePlayButton = document.createElement('button');
+    episodePlayButton.name = 'playButton';
+    episodePlayButton.addEventListener('click', episodeEvent => {
+        episodeEvent.stopPropagation();
+        playController.play(data, true);
+    });
+    if (!playController.isPlaySupported(data)) {
+        episodePlayButton.classList.add('disabled');
     }
+    episodeInteractiveArea.append(episodePlayButton);
+    episodeElem.append(episodeInteractiveArea);
     episodeContainer.append(episodeElem);
     const episodeTitleElem = document.createElement('div');
     episodeTitleElem.className = 'episodeTitleElem';
@@ -19697,10 +19698,6 @@ class PlayController {
                     if (!lodash.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
                         console.log('CHANGED');
                     }
-                    else {
-                        console.log('SAME');
-                    }
-                    console.log(JSON.stringify(this.readyPlayersForType));
                 });
                 // eslint-disable-next-line no-await-in-loop
                 await sleep(1000);
@@ -21155,6 +21152,9 @@ style.textContent = css `
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);
 	}
+	button[name='playButton'].disabled {
+		display: none;
+	}
 	button[name='playButton'] {
 		width: 40px;
 		height: 40px;
@@ -22339,16 +22339,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 toViewElem.innerHTML = (seasonData.leafCount - seasonData.viewedLeafCount).toString();
                                 interactiveArea.appendChild(toViewElem);
                             }
+                            const playButton = this.getPlayButton();
                             if (this.playController && this.playController.isPlaySupported(seasonData)) {
-                                const playButton = this.getPlayButton();
-                                playButton.addEventListener('click', event => {
-                                    event.stopPropagation();
-                                    if (this.plex && this.playController) {
-                                        this.playController.play(seasonData, true);
-                                    }
-                                });
-                                interactiveArea.append(playButton);
+                                playButton.classList.remove('disabled');
                             }
+                            playButton.addEventListener('click', event => {
+                                event.stopPropagation();
+                                if (this.plex && this.playController) {
+                                    this.playController.play(seasonData, true);
+                                }
+                            });
+                            interactiveArea.append(playButton);
                             seasonElem.append(interactiveArea);
                             seasonContainer.append(seasonElem);
                             const seasonTitleElem = document.createElement('div');
@@ -22655,8 +22656,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             interactiveArea.className = 'interactiveArea';
             if (this.playController && this.playController.isPlaySupported(data)) {
-                interactiveArea.append(playButton);
+                playButton.classList.remove('disabled');
             }
+            interactiveArea.append(playButton);
             movieElem.append(interactiveArea);
             clickHandler(playButton, (event) => {
                 event.stopPropagation();
@@ -22713,6 +22715,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.getPlayButton = () => {
             const playButton = document.createElement('button');
             playButton.name = 'playButton';
+            playButton.classList.add('disabled');
             return playButton;
         };
         this.setConfig = (config) => {

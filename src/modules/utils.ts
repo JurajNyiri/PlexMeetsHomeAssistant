@@ -201,20 +201,19 @@ const createEpisodesView = (playController: any, plex: Plex, data: Record<string
 		episodeElem.appendChild(toViewElem);
 	}
 
-	if (playController.isPlaySupported(data)) {
-		const episodeInteractiveArea = document.createElement('div');
-		episodeInteractiveArea.className = 'interactiveArea';
-
-		const episodePlayButton = document.createElement('button');
-		episodePlayButton.name = 'playButton';
-		episodePlayButton.addEventListener('click', episodeEvent => {
-			episodeEvent.stopPropagation();
-			playController.play(data, true);
-		});
-
-		episodeInteractiveArea.append(episodePlayButton);
-		episodeElem.append(episodeInteractiveArea);
+	const episodeInteractiveArea = document.createElement('div');
+	episodeInteractiveArea.className = 'interactiveArea';
+	const episodePlayButton = document.createElement('button');
+	episodePlayButton.name = 'playButton';
+	episodePlayButton.addEventListener('click', episodeEvent => {
+		episodeEvent.stopPropagation();
+		playController.play(data, true);
+	});
+	if (!playController.isPlaySupported(data)) {
+		episodePlayButton.classList.add('disabled');
 	}
+	episodeInteractiveArea.append(episodePlayButton);
+	episodeElem.append(episodeInteractiveArea);
 	episodeContainer.append(episodeElem);
 
 	const episodeTitleElem = document.createElement('div');

@@ -1320,17 +1320,18 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							interactiveArea.appendChild(toViewElem);
 						}
 
+						const playButton = this.getPlayButton();
 						if (this.playController && this.playController.isPlaySupported(seasonData)) {
-							const playButton = this.getPlayButton();
-							playButton.addEventListener('click', event => {
-								event.stopPropagation();
-								if (this.plex && this.playController) {
-									this.playController.play(seasonData, true);
-								}
-							});
-
-							interactiveArea.append(playButton);
+							playButton.classList.remove('disabled');
 						}
+						playButton.addEventListener('click', event => {
+							event.stopPropagation();
+							if (this.plex && this.playController) {
+								this.playController.play(seasonData, true);
+							}
+						});
+
+						interactiveArea.append(playButton);
 						seasonElem.append(interactiveArea);
 						seasonContainer.append(seasonElem);
 
@@ -1670,8 +1671,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		interactiveArea.className = 'interactiveArea';
 		if (this.playController && this.playController.isPlaySupported(data)) {
-			interactiveArea.append(playButton);
+			playButton.classList.remove('disabled');
 		}
+		interactiveArea.append(playButton);
 
 		movieElem.append(interactiveArea);
 
@@ -1737,6 +1739,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	getPlayButton = (): HTMLButtonElement => {
 		const playButton = document.createElement('button');
 		playButton.name = 'playButton';
+		playButton.classList.add('disabled');
 		return playButton;
 	};
 

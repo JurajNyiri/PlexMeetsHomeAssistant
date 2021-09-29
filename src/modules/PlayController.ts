@@ -445,10 +445,7 @@ class PlayController {
 				this.getPlayService(mockData, true);
 				if (!_.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
 					console.log('CHANGED');
-				} else {
-					console.log('SAME');
 				}
-				console.log(JSON.stringify(this.readyPlayersForType));
 			});
 			// eslint-disable-next-line no-await-in-loop
 			await sleep(1000);
