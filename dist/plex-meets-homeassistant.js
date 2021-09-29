@@ -19328,7 +19328,7 @@ const isScrolledIntoView = (elem) => {
 };
 
 class PlayController {
-    constructor(hass, plex, entity, runBefore, runAfter, libraryName) {
+    constructor(card, hass, plex, entity, runBefore, runAfter, libraryName) {
         this.playButtons = [];
         this.readyPlayersForType = {};
         this.entityStates = {};
@@ -19336,6 +19336,7 @@ class PlayController {
         this.runBefore = false;
         this.runAfter = false;
         this.supported = supported;
+        this.playActionButton = document.createElement('button');
         this.getKodiSearchResults = async () => {
             return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
         };
@@ -19688,9 +19689,31 @@ class PlayController {
             const playButton = document.createElement('button');
             playButton.name = 'playButton';
             playButton.classList.add('disabled');
+            if (this.isTouchDevice()) {
+                playButton.classList.add('touchDevice');
+            }
             playButton.setAttribute('data-mediaType', mediaType);
             this.playButtons.push(playButton);
             return playButton;
+        };
+        this.setPlayActionButtonType = (mediaType) => {
+            this.playActionButton = this.card.getElementsByClassName('detailPlayAction')[0]; // fix for innerHTML+= in main file overriding DOM
+            this.playActionButton.setAttribute('data-mediaType', mediaType);
+            const mockData = {
+                type: mediaType
+            };
+            if (lodash.isEmpty(this.getPlayService(mockData))) {
+                this.playActionButton.classList.add('disabled');
+            }
+            else {
+                this.playActionButton.classList.remove('disabled');
+            }
+        };
+        this.getPlayActionButton = () => {
+            return this.playActionButton;
+        };
+        this.isTouchDevice = () => {
+            return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
         };
         this.refreshAvailableServicesPeriodically = async () => {
             const sleep = async (ms) => {
@@ -19708,6 +19731,7 @@ class PlayController {
                     if (!lodash.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
                         lodash.forEach(this.playButtons, playButton => {
                             const playButtonType = playButton.getAttribute('data-mediaType');
+                            // todo: add disabled also for detailPlayAction depending on currently displayed content
                             if (lodash.isEmpty(this.readyPlayersForType[playButtonType])) {
                                 playButton.classList.add('disabled');
                             }
@@ -19715,6 +19739,16 @@ class PlayController {
                                 playButton.classList.remove('disabled');
                             }
                         });
+                    }
+                    const playActionButton = this.getPlayActionButton();
+                    const playActionButtonType = playActionButton.getAttribute('data-mediaType');
+                    if (playActionButtonType) {
+                        if (lodash.isEmpty(this.readyPlayersForType[playActionButtonType])) {
+                            playActionButton.classList.add('disabled');
+                        }
+                        else {
+                            playActionButton.classList.remove('disabled');
+                        }
                     }
                 });
                 // eslint-disable-next-line no-await-in-loop
@@ -19871,6 +19905,7 @@ class PlayController {
                 this.entityStates[entityName].attributes.adb_response !== undefined) ||
                 !lodash.isEqual(this.runBefore, false));
         };
+        this.card = card;
         this.hass = hass;
         this.plex = plex;
         this.entity = entity;
@@ -19882,6 +19917,8 @@ class PlayController {
             this.runAfter = runAfter.split('.');
         }
         this.refreshAvailableServicesPeriodically();
+        this.playActionButton.classList.add('detailPlayAction');
+        this.playActionButton.innerText = 'Play';
     }
 }
 
@@ -20774,6 +20811,23 @@ style.textContent = css `
 		position: relative;
 		background: orange;
 		border: none;
+		margin-right: 10px;
+	}
+	.detailPlayAction.disabled {
+		cursor: default;
+		background-color: gray;
+		color: white;
+	}
+	.detailPlayTrailerAction {
+		color: rgb(15 17 19);
+		font-weight: bold;
+		float: left;
+		padding: 7px 10px;
+		border-radius: 5px;
+		cursor: pointer;
+		position: relative;
+		background: orange;
+		border: none;
 		visibility: hidden;
 	}
 	.seasons {
@@ -21170,7 +21224,8 @@ style.textContent = css `
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);
 	}
-	button[name='playButton'].disabled {
+	button[name='playButton'].disabled,
+	button[name='playButton'].touchDevice {
 		display: none;
 	}
 	button[name='playButton'] {
@@ -21434,7 +21489,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.renderPage();
             try {
                 if (this.plex && this.hassObj) {
-                    this.playController = new PlayController(this.hassObj, this.plex, entity, this.runBefore, this.runAfter, this.config.libraryName);
+                    this.playController = new PlayController(this, this.hassObj, this.plex, entity, this.runBefore, this.runAfter, this.config.libraryName);
                     if (this.playController) {
                         await this.playController.init();
                     }
@@ -21792,8 +21847,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.detailElem.className = 'detail';
             this.detailElem.innerHTML = `<h1 class='detailsTitle'></h1>
 			<h2 class='detailsYear'></h2>
-			<span class='metaInfo'></span>
-			<button class='detailPlayAction'>Fullscreen Trailer</button>
+			<span class='metaInfo'></span>`;
+            if (this.playController) {
+                this.detailElem.appendChild(this.playController.getPlayActionButton());
+            }
+            this.detailElem.innerHTML += `
+			<button class='detailPlayTrailerAction'>Fullscreen Trailer</button>
 			<div class='clear'></div>
 			<span class='detailDesc'></span>
 			<div class='clear'></div>
@@ -21836,7 +21895,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.minimizeAll();
             });
             this.content.appendChild(this.detailElem);
-            const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
+            const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0];
             fullscreenTrailer.addEventListener('click', event => {
                 event.stopPropagation();
                 if (this.videoElem) {
@@ -22110,13 +22169,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.renderNewElementsIfNeededTimeout = setTimeout(() => {
                 this.renderNewElementsIfNeeded();
             }, 1000);
-            const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
+            const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0];
             fullscreenTrailer.style.visibility = 'hidden';
         };
         this.showDetails = async (data) => {
             this.detailsShown = true;
             const top = this.getTop();
             if (this.detailElem) {
+                if (this.playController) {
+                    this.playController.setPlayActionButtonType(data.type);
+                }
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
                 clearInterval(this.showDetailsTimeout);
@@ -22302,7 +22364,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             video.addEventListener('playing', () => {
                                 if (this.videoElem && !playingFired) {
                                     const contentbg = this.getElementsByClassName('contentbg')[0];
-                                    const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0];
+                                    const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0];
                                     fullscreenTrailer.style.visibility = 'visible';
                                     contentbg.classList.add('no-transparency');
                                     playingFired = true;
@@ -22389,6 +22451,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                     }, 500);
                                     if (this.activeMovieElem) {
                                         if (seasonElem.dataset.clicked === 'false') {
+                                            if (this.playController) {
+                                                this.playController.setPlayActionButtonType(seasonData.type);
+                                            }
                                             if (typeof seasonElem.children[0].children[0] !== 'undefined') {
                                                 seasonElem.children[0].children[0].style.display = 'none';
                                             }
@@ -22443,6 +22508,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                             })();
                                         }
                                         else {
+                                            // todo: change title from season and change media type of play button back
+                                            if (this.playController) {
+                                                this.playController.setPlayActionButtonType(seasonData.type);
+                                            }
                                             seasonContainer.style.top = `${seasonContainer.dataset.top}px`;
                                             this.minimizeSeasons();
                                             this.hideEpisodes();

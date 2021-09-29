@@ -322,6 +322,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		try {
 			if (this.plex && this.hassObj) {
 				this.playController = new PlayController(
+					this,
 					this.hassObj,
 					this.plex,
 					entity,
@@ -713,8 +714,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.detailElem.className = 'detail';
 		this.detailElem.innerHTML = `<h1 class='detailsTitle'></h1>
 			<h2 class='detailsYear'></h2>
-			<span class='metaInfo'></span>
-			<button class='detailPlayAction'>Fullscreen Trailer</button>
+			<span class='metaInfo'></span>`;
+
+		if (this.playController) {
+			this.detailElem.appendChild(this.playController.getPlayActionButton());
+		}
+
+		this.detailElem.innerHTML += `
+			<button class='detailPlayTrailerAction'>Fullscreen Trailer</button>
 			<div class='clear'></div>
 			<span class='detailDesc'></span>
 			<div class='clear'></div>
@@ -760,7 +767,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.content.appendChild(this.detailElem);
 
-		const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
+		const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0] as HTMLElement;
 		fullscreenTrailer.addEventListener('click', event => {
 			event.stopPropagation();
 			if (this.videoElem) {
@@ -1054,7 +1061,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.renderNewElementsIfNeededTimeout = setTimeout(() => {
 			this.renderNewElementsIfNeeded();
 		}, 1000);
-		const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
+		const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0] as HTMLElement;
 		fullscreenTrailer.style.visibility = 'hidden';
 	};
 
@@ -1062,6 +1069,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.detailsShown = true;
 		const top = this.getTop();
 		if (this.detailElem) {
+			if (this.playController) {
+				this.playController.setPlayActionButtonType(data.type);
+			}
+
 			this.detailElem.style.transition = '0s';
 			this.detailElem.style.top = `${top - 1000}px`;
 			clearInterval(this.showDetailsTimeout);
@@ -1256,7 +1267,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						video.addEventListener('playing', () => {
 							if (this.videoElem && !playingFired) {
 								const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
-								const fullscreenTrailer = this.getElementsByClassName('detailPlayAction')[0] as HTMLElement;
+								const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0] as HTMLElement;
 								fullscreenTrailer.style.visibility = 'visible';
 								contentbg.classList.add('no-transparency');
 								playingFired = true;
@@ -1357,6 +1368,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								}, 500);
 								if (this.activeMovieElem) {
 									if (seasonElem.dataset.clicked === 'false') {
+										if (this.playController) {
+											this.playController.setPlayActionButtonType(seasonData.type);
+										}
 										if (typeof seasonElem.children[0].children[0] !== 'undefined') {
 											(seasonElem.children[0].children[0] as HTMLElement).style.display = 'none';
 										}
@@ -1417,6 +1431,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 											}
 										})();
 									} else {
+										// todo: change title from season and change media type of play button back
+										if (this.playController) {
+											this.playController.setPlayActionButtonType(seasonData.type);
+										}
 										seasonContainer.style.top = `${seasonContainer.dataset.top}px`;
 										this.minimizeSeasons();
 										this.hideEpisodes();

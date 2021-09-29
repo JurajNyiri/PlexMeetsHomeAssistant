@@ -20,6 +20,23 @@ style.textContent = css`
 		position: relative;
 		background: orange;
 		border: none;
+		margin-right: 10px;
+	}
+	.detailPlayAction.disabled {
+		cursor: default;
+		background-color: gray;
+		color: white;
+	}
+	.detailPlayTrailerAction {
+		color: rgb(15 17 19);
+		font-weight: bold;
+		float: left;
+		padding: 7px 10px;
+		border-radius: 5px;
+		cursor: pointer;
+		position: relative;
+		background: orange;
+		border: none;
 		visibility: hidden;
 	}
 	.seasons {
@@ -416,7 +433,8 @@ style.textContent = css`
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);
 	}
-	button[name='playButton'].disabled {
+	button[name='playButton'].disabled,
+	button[name='playButton'].touchDevice {
 		display: none;
 	}
 	button[name='playButton'] {

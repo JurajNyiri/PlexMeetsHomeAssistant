@@ -32,7 +32,12 @@ class PlayController {
 
 	libraryName: string;
 
+	playActionButton: any = document.createElement('button');
+
+	card: any;
+
 	constructor(
+		card: any,
 		hass: HomeAssistant,
 		plex: Plex,
 		entity: Record<string, any>,
@@ -40,6 +45,7 @@ class PlayController {
 		runAfter: string,
 		libraryName: string
 	) {
+		this.card = card;
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
@@ -52,6 +58,9 @@ class PlayController {
 		}
 
 		this.refreshAvailableServicesPeriodically();
+
+		this.playActionButton.classList.add('detailPlayAction');
+		this.playActionButton.innerText = 'Play';
 	}
 
 	private getKodiSearchResults = async (): Promise<Record<string, any>> => {
@@ -435,9 +444,33 @@ class PlayController {
 		const playButton = document.createElement('button');
 		playButton.name = 'playButton';
 		playButton.classList.add('disabled');
+		if (this.isTouchDevice()) {
+			playButton.classList.add('touchDevice');
+		}
 		playButton.setAttribute('data-mediaType', mediaType);
 		this.playButtons.push(playButton);
 		return playButton;
+	};
+
+	setPlayActionButtonType = (mediaType: string): void => {
+		this.playActionButton = this.card.getElementsByClassName('detailPlayAction')[0] as HTMLElement; // fix for innerHTML+= in main file overriding DOM
+		this.playActionButton.setAttribute('data-mediaType', mediaType);
+		const mockData = {
+			type: mediaType
+		};
+		if (_.isEmpty(this.getPlayService(mockData))) {
+			this.playActionButton.classList.add('disabled');
+		} else {
+			this.playActionButton.classList.remove('disabled');
+		}
+	};
+
+	getPlayActionButton = (): any => {
+		return this.playActionButton;
+	};
+
+	private isTouchDevice = () => {
+		return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
 	};
 
 	private refreshAvailableServicesPeriodically = async () => {
@@ -457,12 +490,22 @@ class PlayController {
 				if (!_.isEqual(previousReadyPlayersForType, this.readyPlayersForType)) {
 					_.forEach(this.playButtons, playButton => {
 						const playButtonType = playButton.getAttribute('data-mediaType');
+						// todo: add disabled also for detailPlayAction depending on currently displayed content
 						if (_.isEmpty(this.readyPlayersForType[playButtonType])) {
 							playButton.classList.add('disabled');
 						} else {
 							playButton.classList.remove('disabled');
 						}
 					});
+				}
+				const playActionButton = this.getPlayActionButton();
+				const playActionButtonType = playActionButton.getAttribute('data-mediaType');
+				if (playActionButtonType) {
+					if (_.isEmpty(this.readyPlayersForType[playActionButtonType])) {
+						playActionButton.classList.add('disabled');
+					} else {
+						playActionButton.classList.remove('disabled');
+					}
 				}
 			});
 			// eslint-disable-next-line no-await-in-loop
