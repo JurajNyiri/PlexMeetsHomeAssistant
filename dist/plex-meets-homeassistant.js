@@ -19337,6 +19337,7 @@ class PlayController {
         this.runAfter = false;
         this.supported = supported;
         this.playActionButton = document.createElement('button');
+        this.playActionClickFunction = false;
         this.getKodiSearchResults = async () => {
             return JSON.parse((await getState(this.hass, 'sensor.kodi_media_sensor_search')).attributes.data);
         };
@@ -19697,17 +19698,31 @@ class PlayController {
             return playButton;
         };
         this.setPlayActionButtonType = (mediaType) => {
-            this.playActionButton = this.card.getElementsByClassName('detailPlayAction')[0]; // fix for innerHTML+= in main file overriding DOM
-            this.playActionButton.setAttribute('data-mediaType', mediaType);
+            const playActionButton = this.updateDetailPlayAction();
+            playActionButton.setAttribute('data-mediaType', mediaType);
             const mockData = {
                 type: mediaType
             };
             if (lodash.isEmpty(this.getPlayService(mockData))) {
-                this.playActionButton.classList.add('disabled');
+                playActionButton.classList.add('disabled');
             }
             else {
-                this.playActionButton.classList.remove('disabled');
+                playActionButton.classList.remove('disabled');
             }
+        };
+        this.updateDetailPlayAction = () => {
+            if (this.card.getElementsByClassName('detailPlayAction').length > 0) {
+                this.playActionButton = this.card.getElementsByClassName('detailPlayAction')[0]; // fix for innerHTML+= in main file overriding DOM
+            }
+            return this.playActionButton;
+        };
+        this.setPlayButtonClickFunction = (callbackFunc) => {
+            const playActionButton = this.updateDetailPlayAction();
+            if (this.playActionClickFunction) {
+                playActionButton.removeEventListener('click', this.playActionClickFunction);
+            }
+            playActionButton.addEventListener('click', callbackFunc);
+            this.playActionClickFunction = callbackFunc;
         };
         this.getPlayActionButton = () => {
             return this.playActionButton;
@@ -22178,6 +22193,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.detailElem) {
                 if (this.playController) {
                     this.playController.setPlayActionButtonType(data.type);
+                    this.playController.setPlayButtonClickFunction((event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (this.playController) {
+                            this.playController.play(data, true);
+                        }
+                    });
                 }
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
@@ -22270,14 +22292,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         else {
                             this.getElementsByClassName('detailDesc')[0].innerHTML = '';
                         }
-                        /* todo temp disabled
-                        if (data.type === 'movie') {
-                            (this.detailElem.children[5] as HTMLElement).style.visibility = 'visible';
-                            this.detailElem.children[5].innerHTML = 'Play';
-                        } else {
-                            (this.detailElem.children[5] as HTMLElement).style.visibility = 'hidden';
-                        }
-                        */
                         this.detailElem.style.color = 'rgba(255,255,255,1)';
                         this.detailElem.style.zIndex = '4';
                     }
@@ -22453,6 +22467,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         if (seasonElem.dataset.clicked === 'false') {
                                             if (this.playController) {
                                                 this.playController.setPlayActionButtonType(seasonData.type);
+                                                this.playController.setPlayButtonClickFunction((thisEvent) => {
+                                                    thisEvent.preventDefault();
+                                                    thisEvent.stopPropagation();
+                                                    if (this.playController) {
+                                                        this.playController.play(seasonData, true);
+                                                    }
+                                                });
                                             }
                                             if (typeof seasonElem.children[0].children[0] !== 'undefined') {
                                                 seasonElem.children[0].children[0].style.display = 'none';

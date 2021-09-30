@@ -1071,6 +1071,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (this.detailElem) {
 			if (this.playController) {
 				this.playController.setPlayActionButtonType(data.type);
+
+				this.playController.setPlayButtonClickFunction((event: MouseEvent) => {
+					event.preventDefault();
+					event.stopPropagation();
+					if (this.playController) {
+						this.playController.play(data, true);
+					}
+				});
 			}
 
 			this.detailElem.style.transition = '0s';
@@ -1166,15 +1174,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					} else {
 						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = '';
 					}
-
-					/* todo temp disabled
-					if (data.type === 'movie') {
-						(this.detailElem.children[5] as HTMLElement).style.visibility = 'visible';
-						this.detailElem.children[5].innerHTML = 'Play';
-					} else {
-						(this.detailElem.children[5] as HTMLElement).style.visibility = 'hidden';
-					}
-					*/
 
 					this.detailElem.style.color = 'rgba(255,255,255,1)';
 					this.detailElem.style.zIndex = '4';
@@ -1370,6 +1369,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									if (seasonElem.dataset.clicked === 'false') {
 										if (this.playController) {
 											this.playController.setPlayActionButtonType(seasonData.type);
+											this.playController.setPlayButtonClickFunction((thisEvent: MouseEvent) => {
+												thisEvent.preventDefault();
+												thisEvent.stopPropagation();
+												if (this.playController) {
+													this.playController.play(seasonData, true);
+												}
+											});
 										}
 										if (typeof seasonElem.children[0].children[0] !== 'undefined') {
 											(seasonElem.children[0].children[0] as HTMLElement).style.display = 'none';

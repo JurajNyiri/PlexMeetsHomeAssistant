@@ -34,6 +34,8 @@ class PlayController {
 
 	playActionButton: any = document.createElement('button');
 
+	playActionClickFunction: any = false;
+
 	card: any;
 
 	constructor(
@@ -453,16 +455,33 @@ class PlayController {
 	};
 
 	setPlayActionButtonType = (mediaType: string): void => {
-		this.playActionButton = this.card.getElementsByClassName('detailPlayAction')[0] as HTMLElement; // fix for innerHTML+= in main file overriding DOM
-		this.playActionButton.setAttribute('data-mediaType', mediaType);
+		const playActionButton = this.updateDetailPlayAction();
+		playActionButton.setAttribute('data-mediaType', mediaType);
 		const mockData = {
 			type: mediaType
 		};
 		if (_.isEmpty(this.getPlayService(mockData))) {
-			this.playActionButton.classList.add('disabled');
+			playActionButton.classList.add('disabled');
 		} else {
-			this.playActionButton.classList.remove('disabled');
+			playActionButton.classList.remove('disabled');
 		}
+	};
+
+	private updateDetailPlayAction = (): any => {
+		if (this.card.getElementsByClassName('detailPlayAction').length > 0) {
+			this.playActionButton = this.card.getElementsByClassName('detailPlayAction')[0] as HTMLElement; // fix for innerHTML+= in main file overriding DOM
+		}
+		return this.playActionButton;
+	};
+
+	setPlayButtonClickFunction = (callbackFunc: Function): void => {
+		const playActionButton = this.updateDetailPlayAction();
+		if (this.playActionClickFunction) {
+			playActionButton.removeEventListener('click', this.playActionClickFunction);
+		}
+
+		playActionButton.addEventListener('click', callbackFunc);
+		this.playActionClickFunction = callbackFunc;
 	};
 
 	getPlayActionButton = (): any => {
