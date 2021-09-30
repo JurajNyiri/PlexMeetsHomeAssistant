@@ -435,7 +435,7 @@ style.textContent = css`
 	}
 	button[name='playButton'].disabled,
 	button[name='playButton'].touchDevice {
-		display: none;
+		display: none !important;
 	}
 	button[name='playButton'] {
 		width: 40px;
