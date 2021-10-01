@@ -69,6 +69,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	minWidth: number = CSS_STYLE.minimumWidth;
 
+	minEpisodeWidth: number = CSS_STYLE.minimumEpisodeWidth;
+
 	minExpandedWidth: number = CSS_STYLE.expandedWidth;
 
 	minExpandedHeight: number = CSS_STYLE.expandedHeight;
@@ -76,6 +78,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	fontSize1 = 14;
 
 	fontSize2 = 14;
+
+	fontSize3 = 28;
+
+	fontSize4 = 16;
 
 	seasonContainerClickEnabled = true;
 
@@ -628,7 +634,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (areaSize > 0) {
 				CSS_STYLE.width = areaSize / postersInRow - marginRight;
 				CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
-				const episodesInRow = Math.floor(areaSize / CSS_STYLE.minimumEpisodeWidth);
+				const episodesInRow = Math.floor(areaSize / this.minEpisodeWidth);
 
 				CSS_STYLE.episodeWidth = Math.floor(areaSize / episodesInRow - marginRight);
 				CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
@@ -727,7 +733,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			<span class='metaInfo'></span>`;
 
 		if (this.playController) {
-			this.detailElem.appendChild(this.playController.getPlayActionButton());
+			const playActionButton = this.playController.getPlayActionButton();
+			playActionButton.style.fontSize = `${this.fontSize4}px`;
+			playActionButton.style.lineHeight = `${this.fontSize4}px`;
+			playActionButton.style.marginTop = `${this.fontSize4 / 4}px`;
+			playActionButton.style.marginBottom = `${this.fontSize4 / 4}px`;
+			playActionButton.style.marginRight = `${this.fontSize4 / 4}px`;
+			playActionButton.style.padding = `${this.fontSize4 / 2}px ${this.fontSize4}px`;
+			this.detailElem.appendChild(playActionButton);
 		}
 
 		this.detailElem.innerHTML += `
@@ -737,7 +750,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			<div class='clear'></div>
 			<table>
 				<tr>
-					<td class='metaInfoDetails'>
+					<td class='metaInfoDetails' style='font-size:${this.fontSize4}px; line-height:${this.fontSize4}px; margin-top:${this
+			.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this.fontSize4 / 4}px;'>
 						Directed by
 					</td>
 					<td class='metaInfoDetailsData'>
@@ -745,7 +759,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					</td>
 				</tr>
 				<tr>
-					<td class='metaInfoDetails'>
+					<td class='metaInfoDetails' style='font-size:${this.fontSize4}px; line-height:${this.fontSize4}px; margin-top:${this
+			.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this.fontSize4 / 4}px;'>
 						Written by
 					</td>
 					<td class='metaInfoDetailsData'>
@@ -753,7 +768,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					</td>
 				</tr>
 				<tr>
-					<td class='metaInfoDetails'>
+					<td class='metaInfoDetails' style='font-size:${this.fontSize4}px; line-height:${this.fontSize4}px; margin-top:${this
+			.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this.fontSize4 / 4}px;'>
 						Studio
 					</td>
 					<td class='metaInfoDetailsData'>
@@ -761,7 +777,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					</td>
 				</tr>
 				<tr>
-					<td class='metaInfoDetails'>
+					<td class='metaInfoDetails' style='font-size:${this.fontSize4}px; line-height:${this.fontSize4}px; margin-top:${this
+			.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this.fontSize4 / 4}px;'>
 						Genre
 					</td>
 					<td class='metaInfoDetailsData'>
@@ -1111,6 +1128,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						mainData.title = `${mainData.title} - ${data.title}`;
 					}
 					const directorElem = this.getElementsByClassName('metaInfoDetailsData')[0] as HTMLElement;
+					directorElem.style.fontSize = `${this.fontSize4}px`;
+					directorElem.style.lineHeight = `${this.fontSize4}px`;
+					directorElem.style.marginTop = `${this.fontSize4 / 4}px`;
+					directorElem.style.marginBottom = `${this.fontSize4 / 4}px`;
+					directorElem.style.display = 'block';
 					if (directorElem.parentElement) {
 						if (mainData.Director && mainData.Director.length > 0) {
 							directorElem.innerHTML = escapeHtml(mainData.Director[0].tag);
@@ -1121,6 +1143,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 
 					const writerElem = this.getElementsByClassName('metaInfoDetailsData')[1] as HTMLElement;
+					writerElem.style.fontSize = `${this.fontSize4}px`;
+					writerElem.style.lineHeight = `${this.fontSize4}px`;
+					writerElem.style.marginTop = `${this.fontSize4 / 4}px`;
+					writerElem.style.marginBottom = `${this.fontSize4 / 4}px`;
+					writerElem.style.display = 'block';
 					if (writerElem.parentElement) {
 						if (mainData.Writer && mainData.Writer.length > 0) {
 							writerElem.innerHTML = escapeHtml(mainData.Writer[0].tag);
@@ -1130,6 +1157,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						}
 					}
 					const studioElem = this.getElementsByClassName('metaInfoDetailsData')[2] as HTMLElement;
+					studioElem.style.fontSize = `${this.fontSize4}px`;
+					studioElem.style.lineHeight = `${this.fontSize4}px`;
+					studioElem.style.marginTop = `${this.fontSize4 / 4}px`;
+					studioElem.style.marginBottom = `${this.fontSize4 / 4}px`;
+					studioElem.style.display = 'block';
 					if (studioElem.parentElement) {
 						if (mainData.studio) {
 							studioElem.innerHTML = escapeHtml(mainData.studio);
@@ -1139,6 +1171,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						}
 					}
 					const genreElem = this.getElementsByClassName('metaInfoDetailsData')[3] as HTMLElement;
+					genreElem.style.fontSize = `${this.fontSize4}px`;
+					genreElem.style.lineHeight = `${this.fontSize4}px`;
+					genreElem.style.marginTop = `${this.fontSize4 / 4}px`;
+					genreElem.style.marginBottom = `${this.fontSize4 / 4}px`;
+					genreElem.style.display = 'block';
 					if (genreElem.parentElement) {
 						if (mainData.Genre && mainData.Genre.length > 0) {
 							let genre = '';
@@ -1151,42 +1188,69 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							genreElem.parentElement.style.display = 'none';
 						}
 					}
+					const detailsTitle = this.getElementsByClassName('detailsTitle')[0] as HTMLElement;
 					if (!_.isNil(mainData.channelCallSign)) {
-						(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(
-							mainData.channelCallSign
-						);
+						detailsTitle.innerHTML = escapeHtml(mainData.channelCallSign);
 					} else {
-						(this.getElementsByClassName('detailsTitle')[0] as HTMLElement).innerHTML = escapeHtml(mainData.title);
+						detailsTitle.innerHTML = escapeHtml(mainData.title);
 					}
+					detailsTitle.style.lineHeight = `${this.fontSize3}px`;
+					detailsTitle.style.fontSize = `${this.fontSize3}px`;
+					detailsTitle.style.marginBottom = `${this.fontSize3 / 4}px`;
 
+					const detailsYear = this.getElementsByClassName('detailsYear')[0] as HTMLElement;
+					detailsYear.style.display = 'block';
+					detailsYear.style.fontSize = `${this.fontSize4}px`;
+					detailsYear.style.lineHeight = `${this.fontSize4}px`;
+					detailsYear.style.marginTop = `0px`;
+					detailsYear.style.marginBottom = `${this.fontSize4 / 4}px`;
 					if (!_.isNil(mainData.year)) {
-						(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.year);
+						detailsYear.innerHTML = escapeHtml(mainData.year);
 					} else if (!_.isNil(mainData.epg) && !_.isNil(mainData.epg.title)) {
-						(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = escapeHtml(mainData.epg.title);
+						detailsYear.innerHTML = escapeHtml(mainData.epg.title);
 					} else {
-						(this.getElementsByClassName('detailsYear')[0] as HTMLElement).innerHTML = '';
+						detailsYear.style.display = 'none';
+						detailsYear.innerHTML = '';
 					}
 
 					(this.getElementsByClassName('metaInfo')[0] as HTMLElement).innerHTML = `${(mainData.duration !== undefined
-						? `<span class='minutesDetail'>${Math.round(
+						? `<span class='minutesDetail' style='font-size:${this.fontSize4}px; line-height:${
+								this.fontSize4
+						  }px; margin-top:${this.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this
+								.fontSize4 / 4}px; padding:${this.fontSize4 / 2}px ${this.fontSize4}px;'>${Math.round(
 								parseInt(escapeHtml(mainData.duration), 10) / 60 / 1000
 						  )} min</span>`
 						: '') +
 						(mainData.contentRating !== undefined
-							? `<span class='contentRatingDetail'>${escapeHtml(mainData.contentRating)}</span>`
+							? `<span class='contentRatingDetail' style='font-size:${this.fontSize4}px; line-height:${
+									this.fontSize4
+							  }px; margin-top:${this.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this
+									.fontSize4 / 4}px; padding:${this.fontSize4 / 2}px ${this.fontSize4}px;'>${escapeHtml(
+									mainData.contentRating
+							  )}</span>`
 							: '') +
 						(mainData.rating !== undefined
-							? `<span class='ratingDetail'>${mainData.rating < 5 ? '&#128465;' : '&#11088;'}&nbsp;${Math.round(
-									parseFloat(escapeHtml(mainData.rating)) * 10
-							  ) / 10}</span>`
+							? `<span class='ratingDetail' style='font-size:${this.fontSize4}px; line-height:${
+									this.fontSize4
+							  }px; margin-top:${this.fontSize4 / 4}px; margin-bottom:${this.fontSize4 / 4}px; margin-right:${this
+									.fontSize4 / 4}px; padding:${this.fontSize4 / 2}px ${this.fontSize4}px;'>${
+									mainData.rating < 5 ? '&#128465;' : '&#11088;'
+							  }&nbsp;${Math.round(parseFloat(escapeHtml(mainData.rating)) * 10) / 10}</span>`
 							: '')}<div class='clear'></div>`;
 
+					const detailDesc = this.getElementsByClassName('detailDesc')[0] as HTMLElement;
+					detailDesc.style.fontSize = `${this.fontSize4}px`;
+					detailDesc.style.lineHeight = `${this.fontSize4}px`;
+					detailDesc.style.marginTop = `${this.fontSize4 / 4}px`;
+					detailDesc.style.marginBottom = `${this.fontSize4 / 4}px`;
+					detailDesc.style.display = 'block';
 					if (!_.isNil(mainData.summary)) {
-						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(mainData.summary);
+						detailDesc.innerHTML = escapeHtml(mainData.summary);
 					} else if (!_.isNil(mainData.epg) && !_.isNil(mainData.epg.summary)) {
-						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = escapeHtml(mainData.epg.summary);
+						detailDesc.innerHTML = escapeHtml(mainData.epg.summary);
 					} else {
-						(this.getElementsByClassName('detailDesc')[0] as HTMLElement).innerHTML = '';
+						detailDesc.innerHTML = '';
+						detailDesc.style.display = 'none';
 					}
 
 					this.detailElem.style.color = 'rgba(255,255,255,1)';
@@ -1283,6 +1347,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							if (this.videoElem && !playingFired) {
 								const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
 								const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0] as HTMLElement;
+								fullscreenTrailer.style.fontSize = `${this.fontSize4}px`;
+								fullscreenTrailer.style.lineHeight = `${this.fontSize4}px`;
+								fullscreenTrailer.style.marginTop = `${this.fontSize4 / 4}px`;
+								fullscreenTrailer.style.marginBottom = `${this.fontSize4 / 4}px`;
+								fullscreenTrailer.style.marginRight = `${this.fontSize4 / 4}px`;
+								fullscreenTrailer.style.padding = `${this.fontSize4 / 2}px ${this.fontSize4}px`;
 								fullscreenTrailer.style.visibility = 'visible';
 								contentbg.classList.add('no-transparency');
 								playingFired = true;
@@ -1343,6 +1413,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							const toViewElem = document.createElement('div');
 							toViewElem.className = 'toViewSeason';
 							toViewElem.innerHTML = (seasonData.leafCount - seasonData.viewedLeafCount).toString();
+
+							toViewElem.style.fontSize = `${this.fontSize4}px`;
+							toViewElem.style.lineHeight = `${this.fontSize4}px`;
+							toViewElem.style.padding = `${this.fontSize4 / 2}px`;
+
 							interactiveArea.appendChild(toViewElem);
 						}
 
@@ -1437,7 +1512,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													this.episodesElem.style.top = `${top + 2000}px`;
 													_.forEach(episodesData, episodeData => {
 														if (this.episodesElem && this.playController && this.plex) {
-															this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData));
+															this.episodesElem.append(
+																createEpisodesView(
+																	this.playController,
+																	this.plex,
+																	episodeData,
+																	this.fontSize1,
+																	this.fontSize2
+																)
+															);
 														}
 													});
 													clearInterval(this.episodesLoadTimeout);
@@ -1526,14 +1609,18 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						const episodesData = await this.plex.getLibraryData(data.key.split('/')[3]);
 						_.forEach(episodesData, episodeData => {
 							if (this.episodesElem && this.playController && this.plex) {
-								this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData));
+								this.episodesElem.append(
+									createEpisodesView(this.playController, this.plex, episodeData, this.fontSize1, this.fontSize2)
+								);
 							}
 						});
 					} else if (this.showExtras && !_.isNil(dataDetails.Extras)) {
 						const extras = dataDetails.Extras.Metadata;
 						_.forEach(extras, extrasData => {
 							if (this.episodesElem && this.playController && this.plex) {
-								this.episodesElem.append(createEpisodesView(this.playController, this.plex, extrasData));
+								this.episodesElem.append(
+									createEpisodesView(this.playController, this.plex, extrasData, this.fontSize1, this.fontSize2)
+								);
 							}
 						});
 					}
@@ -1709,6 +1796,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			const toViewElem = document.createElement('div');
 			toViewElem.className = 'toViewSeason';
 			toViewElem.innerHTML = (data.leafCount - data.viewedLeafCount).toString();
+			toViewElem.style.fontSize = `${this.fontSize4}px`;
+			toViewElem.style.lineHeight = `${this.fontSize4}px`;
+			toViewElem.style.padding = `${this.fontSize4 / 2}px`;
 			interactiveArea.appendChild(toViewElem);
 		}
 
@@ -1853,6 +1943,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (config.minWidth && config.minWidth !== '' && config.minWidth !== '0' && config.minWidth !== 0) {
 			this.minWidth = parseInt(config.minWidth, 10);
 		}
+		if (
+			config.minEpisodeWidth &&
+			config.minEpisodeWidth !== '' &&
+			config.minEpisodeWidth !== '0' &&
+			config.minEpisodeWidth !== 0
+		) {
+			this.minEpisodeWidth = parseInt(config.minEpisodeWidth, 10);
+		}
 
 		if (
 			config.minExpandedWidth &&
@@ -1868,6 +1966,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (config.fontSize2 && config.fontSize2 !== '' && config.fontSize2 !== '0' && config.fontSize2 !== 0) {
 			this.fontSize2 = parseInt(config.fontSize2, 10);
+		}
+		if (config.fontSize3 && config.fontSize3 !== '' && config.fontSize3 !== '0' && config.fontSize3 !== 0) {
+			this.fontSize3 = parseInt(config.fontSize3, 10);
+		}
+		if (config.fontSize4 && config.fontSize4 !== '' && config.fontSize4 !== '0' && config.fontSize4 !== 0) {
+			this.fontSize4 = parseInt(config.fontSize4, 10);
 		}
 
 		if (

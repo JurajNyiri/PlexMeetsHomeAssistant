@@ -28,6 +28,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	minWidth: any = document.createElement('paper-input');
 
+	minEpisodeWidth: any = document.createElement('paper-input');
+
 	minExpandedWidth: any = document.createElement('paper-input');
 
 	minExpandedHeight: any = document.createElement('paper-input');
@@ -35,6 +37,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	fontSize1: any = document.createElement('paper-input');
 
 	fontSize2: any = document.createElement('paper-input');
+
+	fontSize3: any = document.createElement('paper-input');
+
+	fontSize4: any = document.createElement('paper-input');
 
 	cardTitle: any = document.createElement('paper-input');
 
@@ -145,6 +151,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.minWidth = this.minWidth.value;
 				}
 
+				if (_.isEmpty(this.minEpisodeWidth.value)) {
+					this.config.minEpisodeWidth = '';
+				} else {
+					this.config.minEpisodeWidth = this.minEpisodeWidth.value;
+				}
+
 				if (_.isEmpty(this.minExpandedWidth.value)) {
 					this.config.minExpandedWidth = '';
 				} else {
@@ -161,6 +173,18 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.fontSize2 = '';
 				} else {
 					this.config.fontSize2 = this.fontSize2.value;
+				}
+
+				if (_.isEmpty(this.fontSize3.value)) {
+					this.config.fontSize3 = '';
+				} else {
+					this.config.fontSize3 = this.fontSize3.value;
+				}
+
+				if (_.isEmpty(this.fontSize4.value)) {
+					this.config.fontSize4 = '';
+				} else {
+					this.config.fontSize4 = this.fontSize4.value;
 				}
 
 				if (_.isEmpty(this.minExpandedHeight.value)) {
@@ -604,17 +628,35 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.minExpandedHeight.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minExpandedHeight);
 
+		this.minEpisodeWidth.label = 'Minimum width of the episode card';
+		this.minEpisodeWidth.value = this.config.minEpisodeWidth;
+		this.minEpisodeWidth.type = 'number';
+		this.minEpisodeWidth.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.minEpisodeWidth);
+
 		this.fontSize1.label = 'Font size used in titles under cards';
 		this.fontSize1.value = this.config.fontSize1;
 		this.fontSize1.type = 'number';
 		this.fontSize1.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize1);
 
-		this.fontSize2.label = 'Font size used in subtitles under cards';
+		this.fontSize2.label = 'Font size used in sub-titles under cards';
 		this.fontSize2.value = this.config.fontSize2;
 		this.fontSize2.type = 'number';
 		this.fontSize2.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize2);
+
+		this.fontSize3.label = 'Font size used in title of the opened content';
+		this.fontSize3.value = this.config.fontSize3;
+		this.fontSize3.type = 'number';
+		this.fontSize3.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.fontSize3);
+
+		this.fontSize4.label = 'Font size used in sub-titles, to-view count and description of the opened content';
+		this.fontSize4.value = this.config.fontSize4;
+		this.fontSize4.type = 'number';
+		this.fontSize4.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.fontSize4);
 
 		if (!_.isEmpty(this.livetv)) {
 			libraryItems.appendChild(addDropdownItem('Live TV', true));
@@ -778,6 +820,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.minWidth = `${this.config.minWidth}`;
 		}
 
+		if (_.isNumber(this.config.minEpisodeWidth)) {
+			this.config.minEpisodeWidth = `${this.config.minEpisodeWidth}`;
+		}
+
 		if (_.isNumber(this.config.minExpandedWidth)) {
 			this.config.minExpandedWidth = `${this.config.minExpandedWidth}`;
 		}
@@ -788,6 +834,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (_.isNumber(this.config.fontSize2)) {
 			this.config.fontSize2 = `${this.config.fontSize2}`;
+		}
+
+		if (_.isNumber(this.config.fontSize3)) {
+			this.config.fontSize3 = `${this.config.fontSize3}`;
+		}
+
+		if (_.isNumber(this.config.fontSize4)) {
+			this.config.fontSize4 = `${this.config.fontSize4}`;
 		}
 
 		if (_.isNumber(this.config.minExpandedHeight)) {

@@ -178,7 +178,13 @@ const waitUntilState = async (hass: HomeAssistant, entityID: string, state: stri
 	}
 };
 
-const createEpisodesView = (playController: any, plex: Plex, data: Record<string, any>): HTMLElement => {
+const createEpisodesView = (
+	playController: any,
+	plex: Plex,
+	data: Record<string, any>,
+	fontSize1: number,
+	fontSize2: number
+): HTMLElement => {
 	const episodeContainer = document.createElement('div');
 	episodeContainer.className = 'episodeContainer';
 	episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
@@ -221,10 +227,21 @@ const createEpisodesView = (playController: any, plex: Plex, data: Record<string
 	const episodeTitleElem = document.createElement('div');
 	episodeTitleElem.className = 'episodeTitleElem';
 	episodeTitleElem.innerHTML = escapeHtml(data.title);
+
+	const margin1 = fontSize1 / 4;
+	const margin2 = fontSize2 / 4;
+	episodeTitleElem.style.fontSize = `${fontSize1}px`;
+	episodeTitleElem.style.lineHeight = `${fontSize1}px`;
+	episodeTitleElem.style.marginBottom = `${margin1}px`;
+
 	episodeContainer.append(episodeTitleElem);
 
 	const episodeNumber = document.createElement('div');
 	episodeNumber.className = 'episodeNumber';
+	episodeNumber.style.fontSize = `${fontSize2}px`;
+	episodeNumber.style.lineHeight = `${fontSize2}px`;
+	episodeNumber.style.marginTop = `${margin2}px`;
+	episodeNumber.style.marginBottom = `${margin2}px`;
 	if (data.type === 'episode') {
 		episodeNumber.innerHTML = escapeHtml(`Episode ${escapeHtml(data.index)}`);
 	} else if (data.type === 'clip') {
