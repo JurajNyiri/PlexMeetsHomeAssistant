@@ -26,6 +26,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	maxRows: any = document.createElement('paper-input');
 
+	minWidth: any = document.createElement('paper-input');
+
 	cardTitle: any = document.createElement('paper-input');
 
 	libraryName: any = document.createElement('paper-dropdown-menu');
@@ -127,6 +129,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.maxRows = '';
 				} else {
 					this.config.maxRows = this.maxRows.value;
+				}
+
+				if (_.isEmpty(this.minWidth.value)) {
+					this.config.minWidth = '';
+				} else {
+					this.config.minWidth = this.minWidth.value;
 				}
 
 				if (_.isEmpty(this.cardTitle.value)) {
@@ -539,6 +547,19 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.runAfter.value = this.config.runAfter;
 		this.plexValidSection.appendChild(this.runAfter);
 
+		const styleTitle = document.createElement('h2');
+		styleTitle.innerHTML = `Style Configuration`;
+		styleTitle.style.lineHeight = '29px';
+		styleTitle.style.marginBottom = '0px';
+		styleTitle.style.marginTop = '20px';
+		this.plexValidSection.appendChild(styleTitle);
+
+		this.minWidth.label = 'Minimum width of the card';
+		this.minWidth.value = this.config.minWidth;
+		this.minWidth.type = 'number';
+		this.minWidth.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.minWidth);
+
 		if (!_.isEmpty(this.livetv)) {
 			libraryItems.appendChild(addDropdownItem('Live TV', true));
 			_.forEach(_.keys(this.livetv), (livetv: string) => {
@@ -695,6 +716,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (_.isNumber(this.config.maxRows)) {
 			this.config.maxRows = `${this.config.maxRows}`;
+		}
+
+		if (_.isNumber(this.config.minWidth)) {
+			this.config.minWidth = `${this.config.minWidth}`;
 		}
 
 		this.render();

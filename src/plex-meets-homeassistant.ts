@@ -67,6 +67,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	maxRenderCount: number | boolean = false;
 
+	minWidth: number = CSS_STYLE.minimumWidth;
+
 	seasonContainerClickEnabled = true;
 
 	showDetailsTimeout: any;
@@ -614,7 +616,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			const marginRight = 10; // needs to be equal to .container margin right
 			const areaSize =
 				this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);
-			const postersInRow = Math.floor(areaSize / CSS_STYLE.minimumWidth);
+			const postersInRow = Math.floor(areaSize / this.minWidth);
 			if (areaSize > 0) {
 				CSS_STYLE.width = areaSize / postersInRow - marginRight;
 				CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
@@ -1812,6 +1814,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		} else {
 			this.maxRows = false;
 		}
+
+		if (config.minWidth && config.minWidth !== '' && config.minWidth !== '0' && config.minWidth !== 0) {
+			this.minWidth = config.minWidth;
+		}
+
 		if (config.runBefore && !_.isEqual(config.runBefore, '')) {
 			this.runBefore = config.runBefore;
 		}

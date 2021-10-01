@@ -19949,6 +19949,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.port = document.createElement('paper-input');
         this.maxCount = document.createElement('paper-input');
         this.maxRows = document.createElement('paper-input');
+        this.minWidth = document.createElement('paper-input');
         this.cardTitle = document.createElement('paper-input');
         this.libraryName = document.createElement('paper-dropdown-menu');
         this.protocol = document.createElement('paper-dropdown-menu');
@@ -20020,6 +20021,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     }
                     else {
                         this.config.maxRows = this.maxRows.value;
+                    }
+                    if (lodash.isEmpty(this.minWidth.value)) {
+                        this.config.minWidth = '';
+                    }
+                    else {
+                        this.config.minWidth = this.minWidth.value;
                     }
                     if (lodash.isEmpty(this.cardTitle.value)) {
                         this.config.title = '';
@@ -20404,6 +20411,17 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.runAfter.addEventListener('value-changed', this.valueUpdated);
             this.runAfter.value = this.config.runAfter;
             this.plexValidSection.appendChild(this.runAfter);
+            const styleTitle = document.createElement('h2');
+            styleTitle.innerHTML = `Style Configuration`;
+            styleTitle.style.lineHeight = '29px';
+            styleTitle.style.marginBottom = '0px';
+            styleTitle.style.marginTop = '20px';
+            this.plexValidSection.appendChild(styleTitle);
+            this.minWidth.label = 'Minimum width of the card';
+            this.minWidth.value = this.config.minWidth;
+            this.minWidth.type = 'number';
+            this.minWidth.addEventListener('change', this.valueUpdated);
+            this.plexValidSection.appendChild(this.minWidth);
             if (!lodash.isEmpty(this.livetv)) {
                 libraryItems.appendChild(addDropdownItem('Live TV', true));
                 lodash.forEach(lodash.keys(this.livetv), (livetv) => {
@@ -20555,6 +20573,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (lodash.isNumber(this.config.maxRows)) {
                 this.config.maxRows = `${this.config.maxRows}`;
+            }
+            if (lodash.isNumber(this.config.minWidth)) {
+                this.config.minWidth = `${this.config.minWidth}`;
             }
             this.render();
         };
@@ -21326,6 +21347,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.renderedRows = 0;
         this.renderedItems = 0;
         this.maxRenderCount = false;
+        this.minWidth = CSS_STYLE.minimumWidth;
         this.seasonContainerClickEnabled = true;
         this.looseSearch = false;
         this.movieElems = [];
@@ -21777,7 +21799,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.card) {
                 const marginRight = 10; // needs to be equal to .container margin right
                 const areaSize = this.card.offsetWidth - parseInt(this.card.style.paddingRight, 10) - parseInt(this.card.style.paddingLeft, 10);
-                const postersInRow = Math.floor(areaSize / CSS_STYLE.minimumWidth);
+                const postersInRow = Math.floor(areaSize / this.minWidth);
                 if (areaSize > 0) {
                     CSS_STYLE.width = areaSize / postersInRow - marginRight;
                     CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
@@ -22872,6 +22894,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else {
                 this.maxRows = false;
+            }
+            if (config.minWidth && config.minWidth !== '' && config.minWidth !== '0' && config.minWidth !== 0) {
+                this.minWidth = config.minWidth;
             }
             if (config.runBefore && !lodash.isEqual(config.runBefore, '')) {
                 this.runBefore = config.runBefore;
