@@ -377,6 +377,9 @@ style.textContent = css`
 		border-radius: 5px;
 		transition: 0.5s;
 	}
+	.contentContainer {
+		overflow: hidden;
+	}
 	.movieElem {
 		margin-bottom: 5px;
 		background-repeat: no-repeat;

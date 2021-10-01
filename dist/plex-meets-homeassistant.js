@@ -19128,6 +19128,10 @@ const getHeight = (el) => {
     const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
     return height;
 };
+const getWidth = (el) => {
+    const width = Math.max(el.scrollWidth, el.offsetWidth, el.clientWidth, el.scrollWidth, el.offsetWidth);
+    return width;
+};
 const getOffset = (el) => {
     let x = 0;
     let y = 0;
@@ -21319,6 +21323,9 @@ style.textContent = css `
 		border-radius: 5px;
 		transition: 0.5s;
 	}
+	.contentContainer {
+		overflow: hidden;
+	}
 	.movieElem {
 		margin-bottom: 5px;
 		background-repeat: no-repeat;
@@ -21897,6 +21904,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             count += 1;
                             if (count > this.renderedItems) {
                                 this.contentContainer.appendChild(movieElem);
+                                if (lodash.isEmpty(this.contentContainer.style.width)) {
+                                    console.log('1');
+                                    this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+                                }
+                                else {
+                                    console.log('2');
+                                    this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
+                                        getWidth(movieElem) +
+                                        10}px`;
+                                }
+                                console.log(getWidth(movieElem));
                                 this.renderedItems += 1;
                             }
                         }
@@ -22005,6 +22023,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.card.appendChild(this.content);
             this.contentContainer = document.createElement('div');
             this.contentContainer.className = 'contentContainer';
+            // this.contentContainer.style.height = `${CSS_STYLE.height}px`;
             this.content.appendChild(this.contentContainer);
             const contentbg = document.createElement('div');
             contentbg.className = 'contentbg';
@@ -22184,7 +22203,24 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.loadCustomStyles();
         };
         this.calculatePositions = () => {
-            return; // temp
+            // return; // temp
+            // todo: figure out why interval is needed here and do it properly
+            const setLeftOffsetsInterval = setInterval(() => {
+                this.movieElems = this.getElementsByClassName('movieElem');
+                for (let i = 0; i < this.movieElems.length; i += 1) {
+                    if (this.movieElems[i].offsetLeft === 0) {
+                        break;
+                    }
+                    else {
+                        clearInterval(setLeftOffsetsInterval);
+                    }
+                    this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
+                    this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
+                    this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
+                    this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
+                    this.movieElems[i].style.position = 'absolute';
+                }
+            }, 100);
         };
         this.minimizeSeasons = () => {
             this.seasonsElemHidden = false;

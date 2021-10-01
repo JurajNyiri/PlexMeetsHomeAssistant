@@ -18,7 +18,8 @@ import {
 	getOldPlexServerErrorMessage,
 	getDetailsBottom,
 	clickHandler,
-	fetchEntityRegistry
+	fetchEntityRegistry,
+	getWidth
 } from './modules/utils';
 import style from './modules/style';
 
@@ -594,6 +595,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						count += 1;
 						if (count > this.renderedItems) {
 							this.contentContainer.appendChild(movieElem);
+							if (_.isEmpty(this.contentContainer.style.width)) {
+								console.log('1');
+								this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+							} else {
+								console.log('2');
+								this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
+									getWidth(movieElem) +
+									10}px`;
+							}
+
+							console.log(getWidth(movieElem));
 							this.renderedItems += 1;
 						}
 					}
@@ -715,6 +727,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.contentContainer = document.createElement('div');
 		this.contentContainer.className = 'contentContainer';
+		// this.contentContainer.style.height = `${CSS_STYLE.height}px`;
 		this.content.appendChild(this.contentContainer);
 
 		const contentbg = document.createElement('div');
@@ -915,7 +928,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	calculatePositions = (): void => {
-		return; // temp
+		// return; // temp
 		// todo: figure out why interval is needed here and do it properly
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
