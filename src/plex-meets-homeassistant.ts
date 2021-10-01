@@ -907,6 +907,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	calculatePositions = (): void => {
+		// return; // temp
 		// todo: figure out why interval is needed here and do it properly
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
@@ -920,6 +921,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
 				this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
 				this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
+				this.movieElems[i].style.position = 'absolute';
 			}
 		}, 100);
 	};

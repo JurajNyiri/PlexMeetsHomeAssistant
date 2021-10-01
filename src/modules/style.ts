@@ -384,7 +384,7 @@ style.textContent = css`
 		overflow: hidden;
 		border-radius: 5px;
 		transition: 0.5s;
-		position: absolute;
+		position: relative;
 		z-index: 1;
 	}
 	.plexMeetsContainer {
