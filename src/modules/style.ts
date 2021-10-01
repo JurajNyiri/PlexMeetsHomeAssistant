@@ -436,12 +436,14 @@ style.textContent = css`
 	.interactiveArea:hover {
 		background: rgba(0, 0, 0, 0.3);
 	}
-	button[name='playButton'].disabled,
-	button[name='playButton'].touchDevice {
+
+	.movieElem .interactiveArea button[name='playButton'].touchDevice,
+	.seasonElem .interactiveArea button[name='playButton'].touchDevice,
+	button[name='playButton'].disabled {
 		display: none !important;
 	}
-	.episodeElem > .interactiveArea > button[name='playButton'].touchDevice {
-		display: block !important;
+	.episodeElem .interactiveArea button[name='playButton'].touchDevice {
+		display: block;
 		outline: 0;
 		background: orange !important;
 		border: 2px solid orange !important;
