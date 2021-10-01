@@ -22925,22 +22925,28 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else {
                 const top = this.getTop();
-                this.showDetails(this.activeMovieElemData);
-                this.showBackground();
-                if (lodash.isEqual(movieElem.style.width, movieElem.style.height)) {
-                    movieElemLocal.style.width = `${this.minExpandedWidth}px`;
-                    movieElemLocal.style.height = `${this.minExpandedWidth}px`;
-                }
-                else {
-                    movieElemLocal.style.width = `${this.minExpandedWidth}px`;
-                    movieElemLocal.style.height = `${this.minExpandedHeight}px`;
-                }
+                movieElemLocal.style.transition = '0s';
+                movieElemLocal.style.left = `${movieElemLocal.offsetLeft - this.content.scrollLeft}px`;
+                movieElemLocal.style.top = `${movieElemLocal.offsetTop}px`;
                 movieElemLocal.style.position = 'absolute';
                 movieElemLocal.style.zIndex = '3';
-                movieElemLocal.style.left = '16px';
-                movieElemLocal.style.top = `${top + 16}px`;
-                movieElemLocal.dataset.clicked = 'true';
-                this.activeMovieElem = movieElemLocal;
+                setTimeout(() => {
+                    movieElemLocal.style.transition = '0.5s';
+                    this.showDetails(this.activeMovieElemData);
+                    this.showBackground();
+                    if (lodash.isEqual(movieElem.style.width, movieElem.style.height)) {
+                        movieElemLocal.style.width = `${this.minExpandedWidth}px`;
+                        movieElemLocal.style.height = `${this.minExpandedWidth}px`;
+                    }
+                    else {
+                        movieElemLocal.style.width = `${this.minExpandedWidth}px`;
+                        movieElemLocal.style.height = `${this.minExpandedHeight}px`;
+                    }
+                    movieElemLocal.style.left = '16px';
+                    movieElemLocal.style.top = `${top + 16}px`;
+                    movieElemLocal.dataset.clicked = 'true';
+                    this.activeMovieElem = movieElemLocal;
+                }, 1);
             }
         };
         this.getTop = () => {
