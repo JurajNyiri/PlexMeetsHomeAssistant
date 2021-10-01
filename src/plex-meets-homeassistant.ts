@@ -1093,6 +1093,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 			this.detailElem.style.transition = '0s';
 			this.detailElem.style.top = `${top - 1000}px`;
+			this.detailElem.style.left = `${this.minExpandedWidth + 30}px`;
 			clearInterval(this.showDetailsTimeout);
 			// eslint-disable-next-line @typescript-eslint/no-misused-promises
 			this.showDetailsTimeout = setTimeout(async () => {
@@ -1187,7 +1188,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 					this.detailElem.style.color = 'rgba(255,255,255,1)';
 					this.detailElem.style.zIndex = '4';
-					this.detailElem.style.left = `${this.minExpandedWidth + 30}px`;
 					this.detailElem.style.width = `calc(100% - ${this.minExpandedWidth + 30 + 20}px)`;
 					this.detailElem.style.maxHeight = `${this.minExpandedHeight + 20}px`;
 				}
