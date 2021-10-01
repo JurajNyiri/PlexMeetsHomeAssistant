@@ -28,6 +28,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	minWidth: any = document.createElement('paper-input');
 
+	minExpandedWidth: any = document.createElement('paper-input');
+
+	minExpandedHeight: any = document.createElement('paper-input');
+
+	fontSize1: any = document.createElement('paper-input');
+
+	fontSize2: any = document.createElement('paper-input');
+
 	cardTitle: any = document.createElement('paper-input');
 
 	libraryName: any = document.createElement('paper-dropdown-menu');
@@ -135,6 +143,30 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.minWidth = '';
 				} else {
 					this.config.minWidth = this.minWidth.value;
+				}
+
+				if (_.isEmpty(this.minExpandedWidth.value)) {
+					this.config.minExpandedWidth = '';
+				} else {
+					this.config.minExpandedWidth = this.minExpandedWidth.value;
+				}
+
+				if (_.isEmpty(this.fontSize1.value)) {
+					this.config.fontSize1 = '';
+				} else {
+					this.config.fontSize1 = this.fontSize1.value;
+				}
+
+				if (_.isEmpty(this.fontSize2.value)) {
+					this.config.fontSize2 = '';
+				} else {
+					this.config.fontSize2 = this.fontSize2.value;
+				}
+
+				if (_.isEmpty(this.minExpandedHeight.value)) {
+					this.config.minExpandedHeight = '';
+				} else {
+					this.config.minExpandedHeight = this.minExpandedHeight.value;
 				}
 
 				if (_.isEmpty(this.cardTitle.value)) {
@@ -560,6 +592,30 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.minWidth.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minWidth);
 
+		this.minExpandedWidth.label = 'Expanded width of the card';
+		this.minExpandedWidth.value = this.config.minExpandedWidth;
+		this.minExpandedWidth.type = 'number';
+		this.minExpandedWidth.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.minExpandedWidth);
+
+		this.minExpandedHeight.label = 'Expanded height of the card';
+		this.minExpandedHeight.value = this.config.minExpandedHeight;
+		this.minExpandedHeight.type = 'number';
+		this.minExpandedHeight.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.minExpandedHeight);
+
+		this.fontSize1.label = 'Font size used in titles under cards';
+		this.fontSize1.value = this.config.fontSize1;
+		this.fontSize1.type = 'number';
+		this.fontSize1.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.fontSize1);
+
+		this.fontSize2.label = 'Font size used in subtitles under cards';
+		this.fontSize2.value = this.config.fontSize2;
+		this.fontSize2.type = 'number';
+		this.fontSize2.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.fontSize2);
+
 		if (!_.isEmpty(this.livetv)) {
 			libraryItems.appendChild(addDropdownItem('Live TV', true));
 			_.forEach(_.keys(this.livetv), (livetv: string) => {
@@ -720,6 +776,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (_.isNumber(this.config.minWidth)) {
 			this.config.minWidth = `${this.config.minWidth}`;
+		}
+
+		if (_.isNumber(this.config.minExpandedWidth)) {
+			this.config.minExpandedWidth = `${this.config.minExpandedWidth}`;
+		}
+
+		if (_.isNumber(this.config.fontSize1)) {
+			this.config.fontSize1 = `${this.config.fontSize1}`;
+		}
+
+		if (_.isNumber(this.config.fontSize2)) {
+			this.config.fontSize2 = `${this.config.fontSize2}`;
+		}
+
+		if (_.isNumber(this.config.minExpandedHeight)) {
+			this.config.minExpandedHeight = `${this.config.minExpandedHeight}`;
 		}
 
 		this.render();
