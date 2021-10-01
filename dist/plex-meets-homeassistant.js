@@ -22092,8 +22092,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.content.innerHTML = this.loadCustomStyles();
             if (this.useHorizontalScroll) {
                 this.content.style.overflowX = 'auto';
-                this.content.style.zIndex = '1';
-                this.content.style.position = 'relative';
                 this.content.style.whiteSpace = 'nowrap';
             }
             if (this.error !== '') {
@@ -22368,6 +22366,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.minimizeAll = () => {
+            // this.content.style.position = 'relative';
             this.detailsShown = false;
             if (this.activeMovieElem) {
                 this.activeMovieElem.style.display = `block`;
@@ -22988,12 +22987,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const contentbg = this.getElementsByClassName('contentbg');
             contentbg[0].style.zIndex = '2';
             contentbg[0].style.backgroundColor = 'rgba(0,0,0,0.9)';
+            contentbg[0].style.display = 'block';
         };
         this.hideBackground = () => {
             const contentbg = this.getElementsByClassName('contentbg')[0];
             contentbg.classList.remove('no-transparency');
             contentbg.style.zIndex = '1';
             contentbg.style.backgroundColor = 'rgba(0,0,0,0)';
+            contentbg.style.display = 'none';
             const contentArt = this.getElementsByClassName('contentArt')[0];
             contentArt.style.display = 'none';
         };
