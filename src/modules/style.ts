@@ -393,7 +393,6 @@ style.textContent = css`
 	.plexMeetsContainer {
 		z-index: 1;
 		float: left;
-		margin-bottom: 20px;
 		margin-right: 10px;
 		transition: 0.5s;
 	}

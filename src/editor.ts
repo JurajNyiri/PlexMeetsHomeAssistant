@@ -26,6 +26,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	maxRows: any = document.createElement('paper-input');
 
+	displayTitleMain: any = document.createElement('paper-dropdown-menu');
+
+	displaySubtitleMain: any = document.createElement('paper-dropdown-menu');
+
 	useHorizontalScroll: any = document.createElement('paper-dropdown-menu');
 
 	minWidth: any = document.createElement('paper-input');
@@ -148,9 +152,21 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				}
 
 				if (_.isEmpty(this.useHorizontalScroll.value)) {
-					this.config.useHorizontalScroll = '';
+					this.config.useHorizontalScroll = 'No';
 				} else {
 					this.config.useHorizontalScroll = this.useHorizontalScroll.value;
+				}
+
+				if (_.isEmpty(this.displayTitleMain.value)) {
+					this.config.displayTitleMain = 'Yes';
+				} else {
+					this.config.displayTitleMain = this.displayTitleMain.value;
+				}
+
+				if (_.isEmpty(this.displaySubtitleMain.value)) {
+					this.config.displaySubtitleMain = 'Yes';
+				} else {
+					this.config.displaySubtitleMain = this.displaySubtitleMain.value;
 				}
 
 				if (_.isEmpty(this.minWidth.value)) {
@@ -658,11 +674,43 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.minEpisodeWidth.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minEpisodeWidth);
 
+		this.displayTitleMain.innerHTML = '';
+		const displayTitleMainItems: any = document.createElement('paper-listbox');
+		displayTitleMainItems.appendChild(addDropdownItem('Yes'));
+		displayTitleMainItems.appendChild(addDropdownItem('No'));
+		displayTitleMainItems.slot = 'dropdown-content';
+		this.displayTitleMain.label = 'Display title under poster';
+		this.displayTitleMain.appendChild(displayTitleMainItems);
+		this.displayTitleMain.style.width = '100%';
+		this.displayTitleMain.addEventListener('value-changed', this.valueUpdated);
+		if (_.isEmpty(this.config.displayTitleMain)) {
+			this.displayTitleMain.value = 'Yes';
+		} else {
+			this.displayTitleMain.value = this.config.displayTitleMain;
+		}
+		this.plexValidSection.appendChild(this.displayTitleMain);
+
 		this.fontSize1.label = 'Font size used in titles under cards (Optional)';
 		this.fontSize1.value = this.config.fontSize1;
 		this.fontSize1.type = 'number';
 		this.fontSize1.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize1);
+
+		this.displaySubtitleMain.innerHTML = '';
+		const displaySubtitleMainItems: any = document.createElement('paper-listbox');
+		displaySubtitleMainItems.appendChild(addDropdownItem('Yes'));
+		displaySubtitleMainItems.appendChild(addDropdownItem('No'));
+		displaySubtitleMainItems.slot = 'dropdown-content';
+		this.displaySubtitleMain.label = 'Display sub-title under poster';
+		this.displaySubtitleMain.appendChild(displaySubtitleMainItems);
+		this.displaySubtitleMain.style.width = '100%';
+		this.displaySubtitleMain.addEventListener('value-changed', this.valueUpdated);
+		if (_.isEmpty(this.config.displaySubtitleMain)) {
+			this.displaySubtitleMain.value = 'Yes';
+		} else {
+			this.displaySubtitleMain.value = this.config.displaySubtitleMain;
+		}
+		this.plexValidSection.appendChild(this.displaySubtitleMain);
 
 		this.fontSize2.label = 'Font size used in sub-titles under cards (Optional)';
 		this.fontSize2.value = this.config.fontSize2;
@@ -841,8 +889,16 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.config.maxRows = `${this.config.maxRows}`;
 		}
 
-		if (_.isNumber(this.config.useHorizontalScroll)) {
+		if (!_.isNil(this.config.useHorizontalScroll)) {
 			this.config.useHorizontalScroll = `${this.config.useHorizontalScroll}`;
+		}
+
+		if (!_.isNil(this.config.displayTitleMain)) {
+			this.config.displayTitleMain = `${this.config.displayTitleMain}`;
+		}
+
+		if (!_.isNil(this.config.displaySubtitleMain)) {
+			this.config.displaySubtitleMain = `${this.config.displaySubtitleMain}`;
 		}
 
 		if (_.isNumber(this.config.minWidth)) {

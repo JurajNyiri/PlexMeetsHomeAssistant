@@ -19962,6 +19962,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.port = document.createElement('paper-input');
         this.maxCount = document.createElement('paper-input');
         this.maxRows = document.createElement('paper-input');
+        this.displayTitleMain = document.createElement('paper-dropdown-menu');
+        this.displaySubtitleMain = document.createElement('paper-dropdown-menu');
         this.useHorizontalScroll = document.createElement('paper-dropdown-menu');
         this.minWidth = document.createElement('paper-input');
         this.minEpisodeWidth = document.createElement('paper-input');
@@ -20044,10 +20046,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         this.config.maxRows = this.maxRows.value;
                     }
                     if (lodash.isEmpty(this.useHorizontalScroll.value)) {
-                        this.config.useHorizontalScroll = '';
+                        this.config.useHorizontalScroll = 'No';
                     }
                     else {
                         this.config.useHorizontalScroll = this.useHorizontalScroll.value;
+                    }
+                    if (lodash.isEmpty(this.displayTitleMain.value)) {
+                        this.config.displayTitleMain = 'Yes';
+                    }
+                    else {
+                        this.config.displayTitleMain = this.displayTitleMain.value;
+                    }
+                    if (lodash.isEmpty(this.displaySubtitleMain.value)) {
+                        this.config.displaySubtitleMain = 'Yes';
+                    }
+                    else {
+                        this.config.displaySubtitleMain = this.displaySubtitleMain.value;
                     }
                     if (lodash.isEmpty(this.minWidth.value)) {
                         this.config.minWidth = '';
@@ -20522,11 +20536,43 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.minEpisodeWidth.type = 'number';
             this.minEpisodeWidth.addEventListener('change', this.valueUpdated);
             this.plexValidSection.appendChild(this.minEpisodeWidth);
+            this.displayTitleMain.innerHTML = '';
+            const displayTitleMainItems = document.createElement('paper-listbox');
+            displayTitleMainItems.appendChild(addDropdownItem('Yes'));
+            displayTitleMainItems.appendChild(addDropdownItem('No'));
+            displayTitleMainItems.slot = 'dropdown-content';
+            this.displayTitleMain.label = 'Display title under poster';
+            this.displayTitleMain.appendChild(displayTitleMainItems);
+            this.displayTitleMain.style.width = '100%';
+            this.displayTitleMain.addEventListener('value-changed', this.valueUpdated);
+            if (lodash.isEmpty(this.config.displayTitleMain)) {
+                this.displayTitleMain.value = 'Yes';
+            }
+            else {
+                this.displayTitleMain.value = this.config.displayTitleMain;
+            }
+            this.plexValidSection.appendChild(this.displayTitleMain);
             this.fontSize1.label = 'Font size used in titles under cards (Optional)';
             this.fontSize1.value = this.config.fontSize1;
             this.fontSize1.type = 'number';
             this.fontSize1.addEventListener('change', this.valueUpdated);
             this.plexValidSection.appendChild(this.fontSize1);
+            this.displaySubtitleMain.innerHTML = '';
+            const displaySubtitleMainItems = document.createElement('paper-listbox');
+            displaySubtitleMainItems.appendChild(addDropdownItem('Yes'));
+            displaySubtitleMainItems.appendChild(addDropdownItem('No'));
+            displaySubtitleMainItems.slot = 'dropdown-content';
+            this.displaySubtitleMain.label = 'Display sub-title under poster';
+            this.displaySubtitleMain.appendChild(displaySubtitleMainItems);
+            this.displaySubtitleMain.style.width = '100%';
+            this.displaySubtitleMain.addEventListener('value-changed', this.valueUpdated);
+            if (lodash.isEmpty(this.config.displaySubtitleMain)) {
+                this.displaySubtitleMain.value = 'Yes';
+            }
+            else {
+                this.displaySubtitleMain.value = this.config.displaySubtitleMain;
+            }
+            this.plexValidSection.appendChild(this.displaySubtitleMain);
             this.fontSize2.label = 'Font size used in sub-titles under cards (Optional)';
             this.fontSize2.value = this.config.fontSize2;
             this.fontSize2.type = 'number';
@@ -20695,8 +20741,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             if (lodash.isNumber(this.config.maxRows)) {
                 this.config.maxRows = `${this.config.maxRows}`;
             }
-            if (lodash.isNumber(this.config.useHorizontalScroll)) {
+            if (!lodash.isNil(this.config.useHorizontalScroll)) {
                 this.config.useHorizontalScroll = `${this.config.useHorizontalScroll}`;
+            }
+            if (!lodash.isNil(this.config.displayTitleMain)) {
+                this.config.displayTitleMain = `${this.config.displayTitleMain}`;
+            }
+            if (!lodash.isNil(this.config.displaySubtitleMain)) {
+                this.config.displaySubtitleMain = `${this.config.displaySubtitleMain}`;
             }
             if (lodash.isNumber(this.config.minWidth)) {
                 this.config.minWidth = `${this.config.minWidth}`;
@@ -21365,7 +21417,6 @@ style.textContent = css `
 	.plexMeetsContainer {
 		z-index: 1;
 		float: left;
-		margin-bottom: 20px;
 		margin-right: 10px;
 		transition: 0.5s;
 	}
@@ -21494,6 +21545,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.searchInputElem = document.createElement('input');
         this.plexProtocol = 'http';
         this.useHorizontalScroll = false;
+        this.displayTitleMain = true;
+        this.displaySubtitleMain = true;
         this.plexPort = false;
         this.epgData = {};
         this.detailsShown = false;
@@ -23006,15 +23059,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const container = document.createElement('div');
             container.className = 'plexMeetsContainer';
             container.style.width = `${CSS_STYLE.width}px`;
-            if (hasAdditionalData) {
-                container.style.height = `${CSS_STYLE.height +
-                    this.fontSize1 +
-                    2 * (this.fontSize1 / 4) +
-                    this.fontSize2 +
-                    2 * (this.fontSize2 / 4)}px`;
+            if (this.displayTitleMain || this.displaySubtitleMain) {
+                container.style.marginBottom = '10px';
             }
             else {
-                container.style.height = `${CSS_STYLE.height + this.fontSize1 + this.fontSize2}px`;
+                container.style.marginBottom = '5px';
             }
             if (!lodash.isNil(data.channelCallSign)) {
                 container.style.marginBottom = '50px';
@@ -23124,9 +23173,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 additionalElem.style.marginBottom = `${margin2}px`;
             }
             container.appendChild(movieElem);
-            container.appendChild(titleElem);
-            container.appendChild(yearElem);
-            container.appendChild(additionalElem);
+            if (this.displayTitleMain) {
+                container.appendChild(titleElem);
+            }
+            if (this.displaySubtitleMain) {
+                container.appendChild(yearElem);
+                container.appendChild(additionalElem);
+            }
             return container;
         };
         this.loadCustomStyles = () => {
@@ -23169,6 +23222,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             if (config.useHorizontalScroll && lodash.isEqual(config.useHorizontalScroll, 'Yes')) {
                 this.useHorizontalScroll = true;
+            }
+            if (config.displayTitleMain && lodash.isEqual(config.displayTitleMain, 'No')) {
+                this.displayTitleMain = false;
+            }
+            if (config.displaySubtitleMain && lodash.isEqual(config.displaySubtitleMain, 'No')) {
+                this.displaySubtitleMain = false;
             }
             if (config.port && !lodash.isEqual(config.port, '')) {
                 this.plexPort = config.port;

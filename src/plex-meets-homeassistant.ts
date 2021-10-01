@@ -36,6 +36,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	useHorizontalScroll = false;
 
+	displayTitleMain = true;
+
+	displaySubtitleMain = true;
+
 	plexPort: number | false = false;
 
 	epgData: Record<string, any> = {};
@@ -1787,14 +1791,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const container = document.createElement('div');
 		container.className = 'plexMeetsContainer';
 		container.style.width = `${CSS_STYLE.width}px`;
-		if (hasAdditionalData) {
-			container.style.height = `${CSS_STYLE.height +
-				this.fontSize1 +
-				2 * (this.fontSize1 / 4) +
-				this.fontSize2 +
-				2 * (this.fontSize2 / 4)}px`;
+
+		if (this.displayTitleMain || this.displaySubtitleMain) {
+			container.style.marginBottom = '10px';
 		} else {
-			container.style.height = `${CSS_STYLE.height + this.fontSize1 + this.fontSize2}px`;
+			container.style.marginBottom = '5px';
 		}
 		if (!_.isNil(data.channelCallSign)) {
 			container.style.marginBottom = '50px';
@@ -1921,9 +1922,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		container.appendChild(movieElem);
-		container.appendChild(titleElem);
-		container.appendChild(yearElem);
-		container.appendChild(additionalElem);
+		if (this.displayTitleMain) {
+			container.appendChild(titleElem);
+		}
+		if (this.displaySubtitleMain) {
+			container.appendChild(yearElem);
+			container.appendChild(additionalElem);
+		}
 
 		return container;
 	};
@@ -1968,6 +1973,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (config.useHorizontalScroll && _.isEqual(config.useHorizontalScroll, 'Yes')) {
 			this.useHorizontalScroll = true;
+		}
+		if (config.displayTitleMain && _.isEqual(config.displayTitleMain, 'No')) {
+			this.displayTitleMain = false;
+		}
+		if (config.displaySubtitleMain && _.isEqual(config.displaySubtitleMain, 'No')) {
+			this.displaySubtitleMain = false;
 		}
 		if (config.port && !_.isEqual(config.port, '')) {
 			this.plexPort = config.port;
