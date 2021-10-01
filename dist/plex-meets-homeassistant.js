@@ -21905,16 +21905,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             if (count > this.renderedItems) {
                                 this.contentContainer.appendChild(movieElem);
                                 if (lodash.isEmpty(this.contentContainer.style.width)) {
-                                    console.log('1');
                                     this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
                                 }
                                 else {
-                                    console.log('2');
                                     this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
                                         getWidth(movieElem) +
                                         10}px`;
                                 }
-                                console.log(getWidth(movieElem));
                                 this.renderedItems += 1;
                             }
                         }
@@ -22214,11 +22211,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     else {
                         clearInterval(setLeftOffsetsInterval);
                     }
+                    /*
                     this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
                     this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
                     this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
                     this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
                     this.movieElems[i].style.position = 'absolute';
+                    */
                 }
             }, 100);
         };
@@ -22297,9 +22296,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.movieElems[i].style.height = `${CSS_STYLE.height}px`;
                     }
                     this.movieElems[i].style['z-index'] = 1;
-                    this.movieElems[i].style.position = 'absolute';
-                    this.movieElems[i].style.left = `${this.movieElems[i].dataset.left}px`;
-                    this.movieElems[i].style.top = `${this.movieElems[i].dataset.top}px`;
+                    this.movieElems[i].style.position = 'relative';
+                    this.movieElems[i].style.left = `0px`;
+                    this.movieElems[i].style.top = `0px`;
                     this.movieElems[i].dataset.clicked = false;
                 }
             }
@@ -22916,8 +22915,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     movieElemLocal.style.height = `${CSS_STYLE.height}px`;
                 }
                 movieElemLocal.style.zIndex = '1';
-                movieElemLocal.style.top = `${movieElem.dataset.top}px`;
-                movieElemLocal.style.left = `${movieElem.dataset.left}px`;
+                movieElemLocal.style.position = 'relative';
+                movieElemLocal.style.top = `0px`;
+                movieElemLocal.style.left = `0px`;
                 setTimeout(() => {
                     movieElemLocal.dataset.clicked = 'false';
                 }, 500);
@@ -22935,6 +22935,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     movieElemLocal.style.width = `${this.minExpandedWidth}px`;
                     movieElemLocal.style.height = `${this.minExpandedHeight}px`;
                 }
+                movieElemLocal.style.position = 'absolute';
                 movieElemLocal.style.zIndex = '3';
                 movieElemLocal.style.left = '16px';
                 movieElemLocal.style.top = `${top + 16}px`;
@@ -23052,10 +23053,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             const margin2 = this.fontSize2 / 4;
             titleElem.className = 'titleElem';
             if (!lodash.isNil(data.channelCallSign)) {
-                titleElem.style.marginTop = `${CSS_STYLE.width}px`;
+                titleElem.style.marginTop = `0px`;
             }
             else {
-                titleElem.style.marginTop = `${CSS_STYLE.height + margin1}px`;
+                titleElem.style.marginTop = `${margin1}px`;
             }
             titleElem.style.fontSize = `${this.fontSize1}px`;
             titleElem.style.marginBottom = `${margin1}px`;
