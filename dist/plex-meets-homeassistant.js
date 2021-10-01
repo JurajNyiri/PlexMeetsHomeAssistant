@@ -22092,6 +22092,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.content.innerHTML = this.loadCustomStyles();
             if (this.useHorizontalScroll) {
                 this.content.style.overflowX = 'auto';
+                this.content.style.zIndex = '1';
+                this.content.style.position = 'relative';
                 this.content.style.whiteSpace = 'nowrap';
             }
             if (this.error !== '') {
