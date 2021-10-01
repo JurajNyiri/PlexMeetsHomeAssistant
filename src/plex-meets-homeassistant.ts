@@ -147,6 +147,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	content: any;
 
+	contentContainer: any;
+
 	hassObj: HomeAssistant | undefined;
 
 	contentBGHeight = 0;
@@ -591,7 +593,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					if (shouldRender) {
 						count += 1;
 						if (count > this.renderedItems) {
-							this.content.appendChild(movieElem);
+							this.contentContainer.appendChild(movieElem);
 							this.renderedItems += 1;
 						}
 					}
@@ -697,6 +699,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.content = document.createElement('div');
 		this.content.innerHTML = this.loadCustomStyles();
+		this.content.style.overflowX = 'auto';
+		this.content.style.whiteSpace = 'nowrap';
 
 		if (this.error !== '') {
 			this.content.innerHTML += `Error: ${this.error}`;
@@ -709,9 +713,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.card.appendChild(this.content);
 
+		this.contentContainer = document.createElement('div');
+		this.contentContainer.className = 'contentContainer';
+		this.content.appendChild(this.contentContainer);
+
 		const contentbg = document.createElement('div');
 		contentbg.className = 'contentbg';
-		this.content.appendChild(contentbg);
+		this.contentContainer.appendChild(contentbg);
 
 		const contentArt = document.createElement('div');
 		contentArt.className = 'contentArt';
@@ -724,7 +732,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		contentArtBG2.className = 'videobg2';
 		contentArt.appendChild(contentArtBG2);
 
-		this.content.appendChild(contentArt);
+		this.contentContainer.appendChild(contentArt);
 
 		this.detailElem = document.createElement('div');
 		this.detailElem.className = 'detail';
@@ -792,7 +800,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.minimizeAll();
 		});
 
-		this.content.appendChild(this.detailElem);
+		this.contentContainer.appendChild(this.detailElem);
 
 		const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0] as HTMLElement;
 		fullscreenTrailer.addEventListener('click', event => {
@@ -831,7 +839,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.hideBackground();
 			this.minimizeAll();
 		});
-		this.content.appendChild(this.seasonsElem);
+		this.contentContainer.appendChild(this.seasonsElem);
 
 		this.episodesElem = document.createElement('div');
 		this.episodesElem.className = 'episodes';
@@ -839,7 +847,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.hideBackground();
 			this.minimizeAll();
 		});
-		this.content.appendChild(this.episodesElem);
+		this.contentContainer.appendChild(this.episodesElem);
 
 		this.videoElem = document.createElement('div');
 		this.videoElem.className = 'video';
@@ -883,7 +891,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		videoPlayer.className = 'videoPlayer';
 		this.videoElem.appendChild(videoPlayer);
 
-		this.content.appendChild(this.videoElem);
+		this.contentContainer.appendChild(this.videoElem);
 
 		// todo: figure out why timeout is needed here and do it properly
 		setTimeout(() => {
@@ -899,7 +907,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		const endElem = document.createElement('div');
 		endElem.className = 'clear';
-		this.content.appendChild(endElem);
+		this.contentContainer.appendChild(endElem);
 
 		this.renderMovieElems();
 		this.calculatePositions();
@@ -907,7 +915,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	calculatePositions = (): void => {
-		// return; // temp
+		return; // temp
 		// todo: figure out why interval is needed here and do it properly
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
