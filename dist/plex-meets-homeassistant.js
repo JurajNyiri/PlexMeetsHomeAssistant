@@ -22099,22 +22099,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.loadCustomStyles();
         };
         this.calculatePositions = () => {
-            // todo: figure out why interval is needed here and do it properly
-            const setLeftOffsetsInterval = setInterval(() => {
-                this.movieElems = this.getElementsByClassName('movieElem');
-                for (let i = 0; i < this.movieElems.length; i += 1) {
-                    if (this.movieElems[i].offsetLeft === 0) {
-                        break;
-                    }
-                    else {
-                        clearInterval(setLeftOffsetsInterval);
-                    }
-                    this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
-                    this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
-                    this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
-                    this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
-                }
-            }, 100);
+            return; // temp
         };
         this.minimizeSeasons = () => {
             this.seasonsElemHidden = false;
@@ -22811,10 +22796,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             container.className = 'plexMeetsContainer';
             container.style.width = `${CSS_STYLE.width}px`;
             if (hasAdditionalData) {
-                container.style.height = `${CSS_STYLE.height + 50}px`;
+                container.style.height = `${CSS_STYLE.height +
+                    this.fontSize1 +
+                    2 * (this.fontSize1 / 4) +
+                    this.fontSize2 +
+                    2 * (this.fontSize2 / 4)}px`;
             }
             else {
-                container.style.height = `${CSS_STYLE.height + 30}px`;
+                container.style.height = `${CSS_STYLE.height + this.fontSize1 + this.fontSize2}px`;
             }
             if (!lodash.isNil(data.channelCallSign)) {
                 container.style.marginBottom = '50px';
@@ -22884,14 +22873,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             else {
                 titleElem.innerHTML = escapeHtml(data.title);
             }
+            const margin1 = this.fontSize1 / 4;
+            const margin2 = this.fontSize2 / 4;
             titleElem.className = 'titleElem';
             if (!lodash.isNil(data.channelCallSign)) {
                 titleElem.style.marginTop = `${CSS_STYLE.width}px`;
             }
             else {
-                titleElem.style.marginTop = `${CSS_STYLE.height}px`;
+                titleElem.style.marginTop = `${CSS_STYLE.height + margin1}px`;
             }
             titleElem.style.fontSize = `${this.fontSize1}px`;
+            titleElem.style.marginBottom = `${margin1}px`;
             titleElem.style.lineHeight = `${this.fontSize1}px`;
             const yearElem = document.createElement('div');
             if (lodash.isEqual(data.type, 'episode')) {
@@ -22906,10 +22898,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             yearElem.className = 'yearElem';
             yearElem.style.fontSize = `${this.fontSize2}px`;
             yearElem.style.lineHeight = `${this.fontSize2}px`;
+            yearElem.style.marginTop = `${margin2}px`;
+            yearElem.style.marginBottom = `${margin2}px`;
             const additionalElem = document.createElement('div');
             if (lodash.isEqual(data.type, 'episode')) {
                 additionalElem.innerHTML = escapeHtml(`S${data.parentIndex} E${data.index}`);
                 additionalElem.className = 'additionalElem';
+                additionalElem.style.fontSize = `${this.fontSize2}px`;
+                additionalElem.style.lineHeight = `${this.fontSize2}px`;
+                additionalElem.style.marginTop = `${margin2}px`;
+                additionalElem.style.marginBottom = `${margin2}px`;
             }
             container.appendChild(movieElem);
             container.appendChild(titleElem);
