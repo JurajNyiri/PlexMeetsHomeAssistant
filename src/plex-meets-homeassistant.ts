@@ -627,6 +627,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 				return false;
 			});
+			this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) + 5}px`;
 		}
 
 		const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
