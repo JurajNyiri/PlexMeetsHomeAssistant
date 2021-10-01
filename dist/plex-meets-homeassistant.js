@@ -21378,6 +21378,13 @@ style.textContent = css `
 	button[name='playButton'].touchDevice {
 		display: none !important;
 	}
+	.episodeElem > .interactiveArea > button[name='playButton'].touchDevice {
+		display: block !important;
+		outline: 0;
+		background: orange !important;
+		border: 2px solid orange !important;
+		box-shadow: 0 0 0 3px orange !important;
+	}
 	button[name='playButton'] {
 		width: 40px;
 		height: 40px;
@@ -21426,6 +21433,10 @@ style.textContent = css `
 
 	.interactiveArea button[name='playButton']:after {
 		border-color: transparent transparent transparent rgba(255, 255, 255, 0);
+	}
+
+	.episodeElem > .interactiveArea > button[name='playButton'].touchDevice:after {
+		border-color: transparent transparent transparent rgba(255, 255, 255, 1);
 	}
 
 	.interactiveArea:hover button[name='playButton']:after {
