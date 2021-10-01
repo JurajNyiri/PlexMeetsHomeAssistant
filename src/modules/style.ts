@@ -378,7 +378,10 @@ style.textContent = css`
 		transition: 0.5s;
 	}
 	.contentContainer {
-		overflow: hidden;
+		overflow-x: auto;
+		white-space: nowrap;
+		z-index: 1;
+		position: relative;
 	}
 	.movieElem {
 		margin-bottom: 5px;

@@ -150,6 +150,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	contentContainer: any;
 
+	contentContainerInner: any;
+
 	hassObj: HomeAssistant | undefined;
 
 	contentBGHeight = 0;
@@ -595,12 +597,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						count += 1;
 						if (count > this.renderedItems) {
 							this.contentContainer.appendChild(movieElem);
-							if (_.isEmpty(this.contentContainer.style.width)) {
-								console.log('1');
-								this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+							if (_.isEmpty(this.contentContainerInner.style.width)) {
+								this.contentContainerInner.style.width = `${getWidth(movieElem) + 10}px`;
 							} else {
-								console.log('2');
-								this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
+								this.contentContainerInner.style.width = `${parseFloat(this.contentContainerInner.style.width) +
 									getWidth(movieElem) +
 									10}px`;
 							}
@@ -711,8 +711,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.content = document.createElement('div');
 		this.content.innerHTML = this.loadCustomStyles();
-		this.content.style.overflowX = 'auto';
-		this.content.style.whiteSpace = 'nowrap';
 
 		if (this.error !== '') {
 			this.content.innerHTML += `Error: ${this.error}`;
@@ -727,12 +725,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.contentContainer = document.createElement('div');
 		this.contentContainer.className = 'contentContainer';
-		// this.contentContainer.style.height = `${CSS_STYLE.height}px`;
+
+		this.contentContainerInner = document.createElement('div');
+		this.contentContainerInner.className = 'contentContainerInner';
+
+		this.contentContainer.appendChild(this.contentContainerInner);
 		this.content.appendChild(this.contentContainer);
 
 		const contentbg = document.createElement('div');
 		contentbg.className = 'contentbg';
-		this.contentContainer.appendChild(contentbg);
+		this.content.appendChild(contentbg);
 
 		const contentArt = document.createElement('div');
 		contentArt.className = 'contentArt';
@@ -745,7 +747,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		contentArtBG2.className = 'videobg2';
 		contentArt.appendChild(contentArtBG2);
 
-		this.contentContainer.appendChild(contentArt);
+		this.content.appendChild(contentArt);
 
 		this.detailElem = document.createElement('div');
 		this.detailElem.className = 'detail';
@@ -813,7 +815,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.minimizeAll();
 		});
 
-		this.contentContainer.appendChild(this.detailElem);
+		this.content.appendChild(this.detailElem);
 
 		const fullscreenTrailer = this.getElementsByClassName('detailPlayTrailerAction')[0] as HTMLElement;
 		fullscreenTrailer.addEventListener('click', event => {
@@ -852,7 +854,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.hideBackground();
 			this.minimizeAll();
 		});
-		this.contentContainer.appendChild(this.seasonsElem);
+		this.content.appendChild(this.seasonsElem);
 
 		this.episodesElem = document.createElement('div');
 		this.episodesElem.className = 'episodes';
@@ -860,7 +862,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.hideBackground();
 			this.minimizeAll();
 		});
-		this.contentContainer.appendChild(this.episodesElem);
+		this.content.appendChild(this.episodesElem);
 
 		this.videoElem = document.createElement('div');
 		this.videoElem.className = 'video';
@@ -904,7 +906,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		videoPlayer.className = 'videoPlayer';
 		this.videoElem.appendChild(videoPlayer);
 
-		this.contentContainer.appendChild(this.videoElem);
+		this.content.appendChild(this.videoElem);
 
 		// todo: figure out why timeout is needed here and do it properly
 		setTimeout(() => {
@@ -920,7 +922,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		const endElem = document.createElement('div');
 		endElem.className = 'clear';
-		this.contentContainer.appendChild(endElem);
+		this.content.appendChild(endElem);
 
 		this.renderMovieElems();
 		this.calculatePositions();
