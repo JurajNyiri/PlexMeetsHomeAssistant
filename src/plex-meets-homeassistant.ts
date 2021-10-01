@@ -30,6 +30,8 @@ declare global {
 }
 
 class PlexMeetsHomeAssistant extends HTMLElement {
+	renderPageRetries = 0;
+
 	searchInputElem = document.createElement('input');
 
 	plexProtocol: 'http' | 'https' = 'http';
@@ -607,14 +609,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								} else {
 									this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
 										getWidth(movieElem) +
-										10}px`;
+										10.15}px`;
 								}
 							}
 
 							this.renderedItems += 1;
 						}
 					}
-					if (shouldRender && lastRowTop !== movieElem.getBoundingClientRect().top) {
+					if (shouldRender && lastRowTop !== movieElem.getBoundingClientRect().top && !this.useHorizontalScroll) {
 						this.renderedRows += 1;
 						if (lastRowTop !== 0 && this.columnsCount === 0) {
 							this.columnsCount = this.renderedItems - 1;
@@ -624,14 +626,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
 						}
 					}
-					if (this.maxRows && this.renderedRows > this.maxRows) {
+					if (this.maxRows && this.renderedRows > this.maxRows && !this.useHorizontalScroll) {
 						movieElem.remove();
 					}
 					return true;
 				}
 				return false;
 			});
-			this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) + 5}px`;
 		}
 
 		const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
@@ -658,8 +659,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 				CSS_STYLE.episodeWidth = Math.floor(areaSize / episodesInRow - marginRight);
 				CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
-			} else {
+			} else if (this.renderPageRetries < 10) {
+				// sometimes it loop forever, todo: properly fix!
 				setTimeout(() => {
+					this.renderPageRetries += 1;
 					this.renderPage();
 				}, 250);
 			}
