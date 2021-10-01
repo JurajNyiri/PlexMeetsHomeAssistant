@@ -22099,7 +22099,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.loadCustomStyles();
         };
         this.calculatePositions = () => {
-            return; // temp
+            // todo: figure out why interval is needed here and do it properly
+            const setLeftOffsetsInterval = setInterval(() => {
+                this.movieElems = this.getElementsByClassName('movieElem');
+                for (let i = 0; i < this.movieElems.length; i += 1) {
+                    if (this.movieElems[i].offsetLeft === 0) {
+                        break;
+                    }
+                    else {
+                        clearInterval(setLeftOffsetsInterval);
+                    }
+                    this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
+                    this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
+                    this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
+                    this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
+                }
+            }, 100);
         };
         this.minimizeSeasons = () => {
             this.seasonsElemHidden = false;

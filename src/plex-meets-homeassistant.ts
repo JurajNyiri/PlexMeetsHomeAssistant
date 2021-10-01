@@ -890,7 +890,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	calculatePositions = (): void => {
-		return; // temp
 		// todo: figure out why interval is needed here and do it properly
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
