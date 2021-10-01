@@ -22180,7 +22180,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             this.activeMovieElem = undefined;
             for (let i = 0; i < this.movieElems.length; i += 1) {
-                if (parseInt(this.movieElems[i].style.width, 10) > CSS_STYLE.width) {
+                if (lodash.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
+                    lodash.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedHeight)) {
                     if (lodash.isEqual(this.movieElems[i].style.width, this.movieElems[i].style.height)) {
                         this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
                         this.movieElems[i].style.height = `${CSS_STYLE.width}px`;
@@ -22579,7 +22580,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                 }
                                             }, 500);
                                             this.scrollDownInactiveSeasons();
-                                            seasonContainer.style.top = `${-CSS_STYLE.expandedHeight}px`;
+                                            seasonContainer.style.top = `${-this.minExpandedHeight}px`;
                                             seasonElem.style.width = `${this.minExpandedWidth}px`;
                                             seasonElem.style.height = `${this.minExpandedHeight - 6}px`;
                                             seasonElem.style.zIndex = '3';
