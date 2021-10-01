@@ -19962,6 +19962,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
         this.port = document.createElement('paper-input');
         this.maxCount = document.createElement('paper-input');
         this.maxRows = document.createElement('paper-input');
+        this.useHorizontalScroll = document.createElement('paper-dropdown-menu');
         this.minWidth = document.createElement('paper-input');
         this.minEpisodeWidth = document.createElement('paper-input');
         this.minExpandedWidth = document.createElement('paper-input');
@@ -20041,6 +20042,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     }
                     else {
                         this.config.maxRows = this.maxRows.value;
+                    }
+                    if (lodash.isEmpty(this.useHorizontalScroll.value)) {
+                        this.config.useHorizontalScroll = '';
+                    }
+                    else {
+                        this.config.useHorizontalScroll = this.useHorizontalScroll.value;
                     }
                     if (lodash.isEmpty(this.minWidth.value)) {
                         this.config.minWidth = '';
@@ -20360,6 +20367,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             this.maxCount.type = 'number';
             this.maxCount.addEventListener('change', this.valueUpdated);
             this.plexValidSection.appendChild(this.maxCount);
+            this.useHorizontalScroll.innerHTML = '';
+            const useHorizontalScrollItems = document.createElement('paper-listbox');
+            useHorizontalScrollItems.appendChild(addDropdownItem('Yes'));
+            useHorizontalScrollItems.appendChild(addDropdownItem('No'));
+            useHorizontalScrollItems.slot = 'dropdown-content';
+            this.useHorizontalScroll.label = 'Use horizontal scroll';
+            this.useHorizontalScroll.appendChild(useHorizontalScrollItems);
+            this.useHorizontalScroll.style.width = '100%';
+            this.useHorizontalScroll.addEventListener('value-changed', this.valueUpdated);
+            if (lodash.isEmpty(this.config.useHorizontalScroll)) {
+                this.useHorizontalScroll.value = 'No';
+            }
+            else {
+                this.useHorizontalScroll.value = this.config.useHorizontalScroll;
+            }
+            this.plexValidSection.appendChild(this.useHorizontalScroll);
             this.maxRows.label = 'Maximum number of rows to display (Optional)';
             this.maxRows.value = this.config.maxRows;
             this.maxRows.type = 'number';
@@ -20671,6 +20694,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
             }
             if (lodash.isNumber(this.config.maxRows)) {
                 this.config.maxRows = `${this.config.maxRows}`;
+            }
+            if (lodash.isNumber(this.config.useHorizontalScroll)) {
+                this.config.useHorizontalScroll = `${this.config.useHorizontalScroll}`;
             }
             if (lodash.isNumber(this.config.minWidth)) {
                 this.config.minWidth = `${this.config.minWidth}`;
@@ -21465,6 +21491,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         super(...arguments);
         this.searchInputElem = document.createElement('input');
         this.plexProtocol = 'http';
+        this.useHorizontalScroll = false;
         this.plexPort = false;
         this.epgData = {};
         this.detailsShown = false;
@@ -21904,13 +21931,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             count += 1;
                             if (count > this.renderedItems) {
                                 this.contentContainer.appendChild(movieElem);
-                                if (lodash.isEmpty(this.contentContainer.style.width)) {
-                                    this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
-                                }
-                                else {
-                                    this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-                                        getWidth(movieElem) +
-                                        10}px`;
+                                if (this.useHorizontalScroll) {
+                                    if (lodash.isEmpty(this.contentContainer.style.width)) {
+                                        this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+                                    }
+                                    else {
+                                        this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
+                                            getWidth(movieElem) +
+                                            10}px`;
+                                    }
                                 }
                                 this.renderedItems += 1;
                             }
@@ -22005,8 +22034,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             this.content = document.createElement('div');
             this.content.innerHTML = this.loadCustomStyles();
-            this.content.style.overflowX = 'auto';
-            this.content.style.whiteSpace = 'nowrap';
+            if (this.useHorizontalScroll) {
+                this.content.style.overflowX = 'auto';
+                this.content.style.whiteSpace = 'nowrap';
+            }
             if (this.error !== '') {
                 this.content.innerHTML += `Error: ${this.error}`;
             }
@@ -22914,19 +22945,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.minimizeAll();
                 this.activeMovieElem = undefined;
                 this.hideDetails();
-                /*
-                if (_.isEqual(movieElem.style.width, movieElem.style.height)) {
-                    movieElemLocal.style.width = `${CSS_STYLE.width}px`;
-                    movieElemLocal.style.height = `${CSS_STYLE.width}px`;
-                } else {
-                    movieElemLocal.style.width = `${CSS_STYLE.width}px`;
-                    movieElemLocal.style.height = `${CSS_STYLE.height}px`;
-                }
-                movieElemLocal.style.zIndex = '1';
-                movieElemLocal.style.position = 'relative';
-                movieElemLocal.style.top = `0px`;
-                movieElemLocal.style.left = `0px`;
-                */
                 setTimeout(() => {
                     movieElemLocal.dataset.clicked = 'false';
                 }, 500);
@@ -23145,6 +23163,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             this.config = config;
             if (config.protocol) {
                 this.plexProtocol = config.protocol;
+            }
+            if (config.useHorizontalScroll && lodash.isEqual(config.useHorizontalScroll, 'Yes')) {
+                this.useHorizontalScroll = true;
             }
             if (config.port && !lodash.isEqual(config.port, '')) {
                 this.plexPort = config.port;

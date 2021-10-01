@@ -34,6 +34,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	plexProtocol: 'http' | 'https' = 'http';
 
+	useHorizontalScroll = false;
+
 	plexPort: number | false = false;
 
 	epgData: Record<string, any> = {};
@@ -595,12 +597,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						count += 1;
 						if (count > this.renderedItems) {
 							this.contentContainer.appendChild(movieElem);
-							if (_.isEmpty(this.contentContainer.style.width)) {
-								this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
-							} else {
-								this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-									getWidth(movieElem) +
-									10}px`;
+							if (this.useHorizontalScroll) {
+								if (_.isEmpty(this.contentContainer.style.width)) {
+									this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+								} else {
+									this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
+										getWidth(movieElem) +
+										10}px`;
+								}
 							}
 
 							this.renderedItems += 1;
@@ -708,8 +712,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 		this.content = document.createElement('div');
 		this.content.innerHTML = this.loadCustomStyles();
-		this.content.style.overflowX = 'auto';
-		this.content.style.whiteSpace = 'nowrap';
+		if (this.useHorizontalScroll) {
+			this.content.style.overflowX = 'auto';
+			this.content.style.whiteSpace = 'nowrap';
+		}
 
 		if (this.error !== '') {
 			this.content.innerHTML += `Error: ${this.error}`;
@@ -1712,19 +1718,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.minimizeAll();
 			this.activeMovieElem = undefined;
 			this.hideDetails();
-			/*
-			if (_.isEqual(movieElem.style.width, movieElem.style.height)) {
-				movieElemLocal.style.width = `${CSS_STYLE.width}px`;
-				movieElemLocal.style.height = `${CSS_STYLE.width}px`;
-			} else {
-				movieElemLocal.style.width = `${CSS_STYLE.width}px`;
-				movieElemLocal.style.height = `${CSS_STYLE.height}px`;
-			}
-			movieElemLocal.style.zIndex = '1';
-			movieElemLocal.style.position = 'relative';
-			movieElemLocal.style.top = `0px`;
-			movieElemLocal.style.left = `0px`;
-			*/
 
 			setTimeout(() => {
 				movieElemLocal.dataset.clicked = 'false';
@@ -1971,6 +1964,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.config = config;
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
+		}
+		if (config.useHorizontalScroll && _.isEqual(config.useHorizontalScroll, 'Yes')) {
+			this.useHorizontalScroll = true;
 		}
 		if (config.port && !_.isEqual(config.port, '')) {
 			this.plexPort = config.port;

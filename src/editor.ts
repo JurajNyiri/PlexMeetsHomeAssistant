@@ -26,6 +26,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	maxRows: any = document.createElement('paper-input');
 
+	useHorizontalScroll: any = document.createElement('paper-dropdown-menu');
+
 	minWidth: any = document.createElement('paper-input');
 
 	minEpisodeWidth: any = document.createElement('paper-input');
@@ -143,6 +145,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.maxRows = '';
 				} else {
 					this.config.maxRows = this.maxRows.value;
+				}
+
+				if (_.isEmpty(this.useHorizontalScroll.value)) {
+					this.config.useHorizontalScroll = '';
+				} else {
+					this.config.useHorizontalScroll = this.useHorizontalScroll.value;
 				}
 
 				if (_.isEmpty(this.minWidth.value)) {
@@ -485,6 +493,22 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.maxCount.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.maxCount);
 
+		this.useHorizontalScroll.innerHTML = '';
+		const useHorizontalScrollItems: any = document.createElement('paper-listbox');
+		useHorizontalScrollItems.appendChild(addDropdownItem('Yes'));
+		useHorizontalScrollItems.appendChild(addDropdownItem('No'));
+		useHorizontalScrollItems.slot = 'dropdown-content';
+		this.useHorizontalScroll.label = 'Use horizontal scroll';
+		this.useHorizontalScroll.appendChild(useHorizontalScrollItems);
+		this.useHorizontalScroll.style.width = '100%';
+		this.useHorizontalScroll.addEventListener('value-changed', this.valueUpdated);
+		if (_.isEmpty(this.config.useHorizontalScroll)) {
+			this.useHorizontalScroll.value = 'No';
+		} else {
+			this.useHorizontalScroll.value = this.config.useHorizontalScroll;
+		}
+		this.plexValidSection.appendChild(this.useHorizontalScroll);
+
 		this.maxRows.label = 'Maximum number of rows to display (Optional)';
 		this.maxRows.value = this.config.maxRows;
 		this.maxRows.type = 'number';
@@ -815,6 +839,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (_.isNumber(this.config.maxRows)) {
 			this.config.maxRows = `${this.config.maxRows}`;
+		}
+
+		if (_.isNumber(this.config.useHorizontalScroll)) {
+			this.config.useHorizontalScroll = `${this.config.useHorizontalScroll}`;
 		}
 
 		if (_.isNumber(this.config.minWidth)) {
