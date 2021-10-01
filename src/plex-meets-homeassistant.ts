@@ -1027,12 +1027,20 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
 					this.movieElems[i].style.height = `${CSS_STYLE.height}px`;
 				}
+				this.movieElems[i].style.left = `${this.movieElems[i].dataset.left}px`;
+				this.movieElems[i].style.top = `${this.movieElems[i].dataset.top}px`;
 
-				this.movieElems[i].style['z-index'] = 1;
-				this.movieElems[i].style.position = 'relative';
-				this.movieElems[i].style.left = `0px`;
-				this.movieElems[i].style.top = `0px`;
-				this.movieElems[i].dataset.clicked = false;
+				setTimeout(() => {
+					this.movieElems[i].style.transition = '0s';
+					this.movieElems[i].style['z-index'] = 1;
+					this.movieElems[i].style.position = 'relative';
+					this.movieElems[i].style.left = `0px`;
+					this.movieElems[i].style.top = `0px`;
+					this.movieElems[i].dataset.clicked = false;
+					setTimeout(() => {
+						this.movieElems[i].style.transition = '0.5s';
+					}, 10);
+				}, 510);
 			}
 		}
 		this.hideSeasons();
@@ -1704,6 +1712,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.minimizeAll();
 			this.activeMovieElem = undefined;
 			this.hideDetails();
+			/*
 			if (_.isEqual(movieElem.style.width, movieElem.style.height)) {
 				movieElemLocal.style.width = `${CSS_STYLE.width}px`;
 				movieElemLocal.style.height = `${CSS_STYLE.width}px`;
@@ -1715,6 +1724,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			movieElemLocal.style.position = 'relative';
 			movieElemLocal.style.top = `0px`;
 			movieElemLocal.style.left = `0px`;
+			*/
 
 			setTimeout(() => {
 				movieElemLocal.dataset.clicked = 'false';
@@ -1728,6 +1738,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			movieElemLocal.style.left = `${movieElemLocal.offsetLeft - this.content.scrollLeft}px`;
 			movieElemLocal.style.top = `${movieElemLocal.offsetTop}px`;
 			movieElemLocal.style.position = 'absolute';
+			movieElemLocal.dataset.left = `${movieElemLocal.offsetLeft}`;
+			movieElemLocal.dataset.top = `${movieElemLocal.offsetTop}`;
 			movieElemLocal.style.zIndex = '3';
 			setTimeout(() => {
 				movieElemLocal.style.transition = '0.5s';
