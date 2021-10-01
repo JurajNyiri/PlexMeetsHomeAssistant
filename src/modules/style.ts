@@ -199,6 +199,7 @@ style.textContent = css`
 		left: 0;
 		top: 0;
 		background-size: cover;
+		display: none;
 	}
 	.stop-scrolling {
 		height: 100%;
