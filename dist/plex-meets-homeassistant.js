@@ -22812,7 +22812,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.seasonsElem.style.top = `${top + 2000}px`;
                     }
                     lodash.forEach(childrenData, childData => {
-                        console.log(childData);
                         if (this.seasonsElem && this.plex) {
                             this.seasonsElemHidden = false;
                             const seasonContainer = document.createElement('div');
@@ -22933,6 +22932,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                     this.episodesElemFreshlyLoaded = true;
                                                     const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
                                                     console.log(episodesData);
+                                                    console.log('todo: different look for tracks!');
                                                     if (this.episodesElem) {
                                                         this.episodesElemHidden = false;
                                                         this.episodesElem.style.display = 'block';
@@ -23024,7 +23024,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }, 200);
                 }
                 else {
-                    console.log('else');
                     this.episodesElemFreshlyLoaded = true;
                     if (this.episodesElem) {
                         this.episodesElemHidden = false;
