@@ -19128,10 +19128,6 @@ const getHeight = (el) => {
     const height = Math.max(el.scrollHeight, el.offsetHeight, el.clientHeight, el.scrollHeight, el.offsetHeight);
     return height;
 };
-const getWidth = (el) => {
-    const width = Math.max(el.scrollWidth, el.offsetWidth, el.clientWidth, el.scrollWidth, el.offsetWidth);
-    return width;
-};
 const getOffset = (el) => {
     let x = 0;
     let y = 0;
@@ -21989,13 +21985,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             if (count > this.renderedItems) {
                                 this.contentContainer.appendChild(movieElem);
                                 if (this.useHorizontalScroll) {
+                                    const marginRight = 10;
                                     if (lodash.isEmpty(this.contentContainer.style.width)) {
-                                        this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+                                        this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
                                     }
                                     else {
                                         this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-                                            getWidth(movieElem) +
-                                            10.15}px`;
+                                            parseFloat(movieElem.style.width) +
+                                            marginRight}px`;
                                     }
                                 }
                                 this.renderedItems += 1;

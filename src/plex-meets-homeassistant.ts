@@ -604,12 +604,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						if (count > this.renderedItems) {
 							this.contentContainer.appendChild(movieElem);
 							if (this.useHorizontalScroll) {
+								const marginRight = 10;
 								if (_.isEmpty(this.contentContainer.style.width)) {
-									this.contentContainer.style.width = `${getWidth(movieElem) + 10}px`;
+									this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
 								} else {
 									this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-										getWidth(movieElem) +
-										10.15}px`;
+										parseFloat(movieElem.style.width) +
+										marginRight}px`;
 								}
 							}
 
