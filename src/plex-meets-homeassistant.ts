@@ -1579,9 +1579,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 											(this.detailElem.children[1] as HTMLElement).innerHTML = childData.title;
 										}
 										(async (): Promise<void> => {
-											if (childData.leafCount > 0 && this.plex) {
+											if (this.plex && (childData.leafCount > 0 || _.isEqual(childData.type, 'album'))) {
 												this.episodesElemFreshlyLoaded = true;
 												const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
+												console.log(episodesData);
 												if (this.episodesElem) {
 													this.episodesElemHidden = false;
 													this.episodesElem.style.display = 'block';
@@ -1605,7 +1606,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													this.episodesLoadTimeout = setTimeout(() => {
 														if (this.episodesElem) {
 															this.episodesElem.style.transition = `0.7s`;
-															this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
+															if (this.activeMovieElem) {
+																this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+															} else {
+																this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
+															}
 
 															this.resizeBackground();
 														}
