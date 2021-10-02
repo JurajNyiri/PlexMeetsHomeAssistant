@@ -17207,7 +17207,7 @@ const supported = {
     kodi: ['movie', 'episode', 'epg'],
     androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
-    cast: ['movie', 'episode']
+    cast: ['movie', 'episode', 'artist', 'album', 'track']
 };
 
 var bind = function bind(fn, thisArg) {
@@ -19450,6 +19450,39 @@ class PlayController {
                             : processData.librarySectionTitle;
                         try {
                             switch (processData.type) {
+                                case 'artist':
+                                    await this.playViaCastPlex(entity.value, 'MUSIC', `plex://${JSON.stringify({
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        library_name: libraryName,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        artist_name: processData.title,
+                                        shuffle: 1
+                                    })}`);
+                                    break;
+                                case 'album':
+                                    await this.playViaCastPlex(entity.value, 'MUSIC', `plex://${JSON.stringify({
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        library_name: libraryName,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        artist_name: processData.parentTitle,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        album_name: processData.title,
+                                        shuffle: 1
+                                    })}`);
+                                    break;
+                                case 'track':
+                                    await this.playViaCastPlex(entity.value, 'MUSIC', `plex://${JSON.stringify({
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        library_name: libraryName,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        artist_name: processData.grandparentTitle,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        album_name: processData.parentTitle,
+                                        // eslint-disable-next-line @typescript-eslint/camelcase
+                                        track_name: processData.title,
+                                        shuffle: 1
+                                    })}`);
+                                    break;
                                 case 'movie':
                                     await this.playViaCastPlex(entity.value, 'movie', `plex://${JSON.stringify({
                                         // eslint-disable-next-line @typescript-eslint/camelcase
@@ -19470,7 +19503,12 @@ class PlayController {
                                     })}`);
                                     break;
                                 default:
-                                    this.playViaCast(entity.value, processData.Media[0].Part[0].key);
+                                    if (!lodash.isNil(processData.Media)) {
+                                        this.playViaCast(entity.value, processData.Media[0].Part[0].key);
+                                    }
+                                    else {
+                                        console.error('Casting this content directly is not possible. Consider using Plex integration.');
+                                    }
                             }
                         }
                         catch (err) {
