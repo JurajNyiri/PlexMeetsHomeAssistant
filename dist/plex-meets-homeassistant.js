@@ -22042,14 +22042,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
                 }
                 else if (this.renderPageRetries < 10) {
-                    {
-                        // sometimes it loop forever, todo: properly fix!
-                        setTimeout(() => {
-                            this.renderPageRetries += 1;
-                            console.log('retry');
-                            this.renderPage();
-                        }, 250);
-                    }
+                    // sometimes it loop forever, todo: properly fix!
+                    setTimeout(() => {
+                        this.renderPageRetries += 1;
+                        this.renderPage();
+                    }, 250);
                 }
             }
             this.renderedItems = 0;
@@ -22372,15 +22369,16 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
         };
         this.minimizeAll = () => {
-            // this.content.style.position = 'relative';
             this.detailsShown = false;
             if (this.activeMovieElem) {
                 this.activeMovieElem.style.display = `block`;
             }
             this.activeMovieElem = undefined;
             for (let i = 0; i < this.movieElems.length; i += 1) {
-                if (lodash.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
-                    lodash.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedHeight)) {
+                if ((lodash.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
+                    lodash.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedHeight)) ||
+                    (lodash.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
+                        lodash.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedWidth))) {
                     if (lodash.isEqual(this.movieElems[i].style.width, this.movieElems[i].style.height)) {
                         this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
                         this.movieElems[i].style.height = `${CSS_STYLE.width}px`;
@@ -23075,7 +23073,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 container.style.marginBottom = '5px';
             }
             if (!lodash.isNil(data.channelCallSign)) {
-                container.style.marginBottom = '50px';
+                container.style.marginBottom = '10px';
             }
             const movieElem = document.createElement('div');
             movieElem.className = 'movieElem';
@@ -23085,7 +23083,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 movieElem.style.backgroundSize = '80%';
                 movieElem.style.backgroundColor = 'rgba(0,0,0,0.2)';
                 movieElem.style.backgroundPosition = 'center';
-                container.style.height = container.style.width;
                 movieElem.style.height = `${CSS_STYLE.width}px`;
             }
             movieElem.style.backgroundImage = `url('${thumbURL}')`;
@@ -23166,6 +23163,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             }
             else if (!lodash.isNil(data.epg)) {
                 yearElem.innerHTML = escapeHtml(data.epg.title);
+            }
+            else {
+                yearElem.innerHTML = '&nbsp;';
             }
             yearElem.className = 'yearElem';
             yearElem.style.fontSize = `${this.fontSize2}px`;

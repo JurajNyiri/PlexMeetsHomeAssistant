@@ -1023,7 +1023,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	minimizeAll = (): void => {
-		// this.content.style.position = 'relative';
 		this.detailsShown = false;
 		if (this.activeMovieElem) {
 			this.activeMovieElem.style.display = `block`;
@@ -1032,8 +1031,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.activeMovieElem = undefined;
 		for (let i = 0; i < this.movieElems.length; i += 1) {
 			if (
-				_.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
-				_.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedHeight)
+				(_.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
+					_.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedHeight)) ||
+				(_.isEqual(parseInt(this.movieElems[i].style.width, 10), this.minExpandedWidth) &&
+					_.isEqual(parseInt(this.movieElems[i].style.height, 10), this.minExpandedWidth))
 			) {
 				if (_.isEqual(this.movieElems[i].style.width, this.movieElems[i].style.height)) {
 					this.movieElems[i].style.width = `${CSS_STYLE.width}px`;
@@ -1804,7 +1805,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			container.style.marginBottom = '5px';
 		}
 		if (!_.isNil(data.channelCallSign)) {
-			container.style.marginBottom = '50px';
+			container.style.marginBottom = '10px';
 		}
 
 		const movieElem = document.createElement('div');
@@ -1817,7 +1818,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			movieElem.style.backgroundSize = '80%';
 			movieElem.style.backgroundColor = 'rgba(0,0,0,0.2)';
 			movieElem.style.backgroundPosition = 'center';
-			container.style.height = container.style.width;
 			movieElem.style.height = `${CSS_STYLE.width}px`;
 		}
 
@@ -1910,6 +1910,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			yearElem.innerHTML = escapeHtml(data.year);
 		} else if (!_.isNil(data.epg)) {
 			yearElem.innerHTML = escapeHtml(data.epg.title);
+		} else {
+			yearElem.innerHTML = '&nbsp;';
 		}
 		yearElem.className = 'yearElem';
 		yearElem.style.fontSize = `${this.fontSize2}px`;
