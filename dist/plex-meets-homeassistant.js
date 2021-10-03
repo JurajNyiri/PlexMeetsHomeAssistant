@@ -19858,13 +19858,27 @@ class PlayController {
                 const entityVal = value;
                 if (lodash.isArray(entityVal)) {
                     for (const entity of entityVal) {
-                        // eslint-disable-next-line no-await-in-loop
-                        this.entityStates[entity] = await getState(this.hass, entity);
+                        if (!lodash.isNil(this.hass.states[entity])) {
+                            try {
+                                // eslint-disable-next-line no-await-in-loop
+                                this.entityStates[entity] = await getState(this.hass, entity);
+                            }
+                            catch (err) {
+                                // pass
+                            }
+                        }
                     }
                 }
                 else {
-                    // eslint-disable-next-line no-await-in-loop
-                    this.entityStates[entityVal] = await getState(this.hass, entityVal);
+                    try {
+                        if (!lodash.isNil(this.hass.states[entityVal])) {
+                            // eslint-disable-next-line no-await-in-loop
+                            this.entityStates[entityVal] = await getState(this.hass, entityVal);
+                        }
+                    }
+                    catch (err) {
+                        // pass
+                    }
                 }
             }
             try {
