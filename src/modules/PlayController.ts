@@ -635,6 +635,15 @@ class PlayController {
 				this.entityStates[entityVal] = await getState(this.hass, entityVal);
 			}
 		}
+		try {
+			this.entityStates['sensor.kodi_media_sensor_search'] = await getState(
+				this.hass,
+				'sensor.kodi_media_sensor_search'
+			);
+		} catch (err) {
+			// pass
+		}
+
 		return this.entityStates;
 	};
 
