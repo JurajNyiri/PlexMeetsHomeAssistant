@@ -19,7 +19,8 @@ import {
 	getDetailsBottom,
 	clickHandler,
 	fetchEntityRegistry,
-	getWidth
+	getWidth,
+	createTrackView
 } from './modules/utils';
 import style from './modules/style';
 
@@ -1588,17 +1589,40 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 													this.episodesElem.innerHTML = '';
 													this.episodesElem.style.transition = `0s`;
 													this.episodesElem.style.top = `${top + 2000}px`;
+													const tableView = document.createElement('table');
+													tableView.style.width = 'calc(100% - 10px)';
+													tableView.style.border = 'none';
+													tableView.cellSpacing = '0';
+													tableView.cellPadding = '0';
+													if (_.isEqual(childData.type, 'album')) {
+														this.episodesElem.append(tableView);
+													}
+													let isEven = false;
 													_.forEach(episodesData, episodeData => {
 														if (this.episodesElem && this.playController && this.plex) {
-															this.episodesElem.append(
-																createEpisodesView(
-																	this.playController,
-																	this.plex,
-																	episodeData,
-																	this.fontSize1,
-																	this.fontSize2
-																)
-															);
+															if (_.isEqual(episodeData.type, 'track')) {
+																tableView.append(
+																	createTrackView(
+																		this.playController,
+																		this.plex,
+																		episodeData,
+																		this.fontSize1,
+																		this.fontSize2,
+																		isEven
+																	)
+																);
+																isEven = !isEven;
+															} else {
+																this.episodesElem.append(
+																	createEpisodesView(
+																		this.playController,
+																		this.plex,
+																		episodeData,
+																		this.fontSize1,
+																		this.fontSize2
+																	)
+																);
+															}
 														}
 													});
 													clearInterval(this.episodesLoadTimeout);

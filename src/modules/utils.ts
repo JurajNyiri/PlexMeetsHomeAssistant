@@ -167,6 +167,15 @@ const getState = async (hass: HomeAssistant, entityID: string): Promise<Record<s
 	return hass.callApi('GET', `states/${entityID}`);
 };
 
+const padWithZeroes = (number: number, length: number): string => {
+	let myString = `${number}`;
+	while (myString.length < length) {
+		myString = `0${myString}`;
+	}
+
+	return myString;
+};
+
 const waitUntilState = async (hass: HomeAssistant, entityID: string, state: string): Promise<void> => {
 	let entityState = await getState(hass, entityID);
 
@@ -178,6 +187,103 @@ const waitUntilState = async (hass: HomeAssistant, entityID: string, state: stri
 	}
 };
 
+const createTrackView = (
+	playController: any,
+	plex: Plex,
+	data: Record<string, any>,
+	fontSize1: number,
+	fontSize2: number,
+	isEven: boolean
+): HTMLElement => {
+	const margin1 = fontSize1 / 4;
+	const margin2 = fontSize2 / 4;
+	const trackContainer = document.createElement('tr');
+	trackContainer.classList.add('trackContainer');
+	if (isEven) {
+		trackContainer.classList.add('even');
+	} else {
+		trackContainer.classList.add('odd');
+	}
+
+	const trackIndexElem = document.createElement('td');
+	trackIndexElem.className = 'trackIndexElem';
+	trackIndexElem.innerHTML = escapeHtml(data.index);
+
+	trackIndexElem.style.fontSize = `${fontSize1}px`;
+	trackIndexElem.style.lineHeight = `${fontSize1}px`;
+	trackIndexElem.style.marginBottom = `${margin1}px`;
+
+	trackContainer.append(trackIndexElem);
+
+	const trackTitleElem = document.createElement('td');
+	trackTitleElem.className = 'trackTitleElem';
+	trackTitleElem.innerHTML = escapeHtml(data.title);
+
+	trackTitleElem.style.fontSize = `${fontSize1}px`;
+	trackTitleElem.style.lineHeight = `${fontSize1}px`;
+	trackTitleElem.style.marginBottom = `${margin1}px`;
+
+	trackContainer.append(trackTitleElem);
+
+	const duration = _.get(data, 'Media[0].duration');
+	const trackLengthElem = document.createElement('td');
+	trackLengthElem.className = 'trackLengthElem';
+
+	trackLengthElem.style.fontSize = `${fontSize1}px`;
+	trackLengthElem.style.lineHeight = `${fontSize1}px`;
+	trackLengthElem.style.marginBottom = `${margin1}px`;
+
+	if (duration) {
+		const minutes = Math.floor(duration / 60 / 1000);
+		const seconds = Math.round((duration - minutes * 1000) / 6000);
+		trackLengthElem.innerHTML = escapeHtml(`${padWithZeroes(minutes, 2)}:${padWithZeroes(seconds, 2)}`);
+	}
+	trackContainer.append(trackLengthElem);
+
+	/*
+	const episodeInteractiveArea = document.createElement('div');
+	episodeInteractiveArea.className = 'interactiveArea';
+	if (playController) {
+		const episodePlayButton = playController.getPlayButton(data.type);
+		episodePlayButton.addEventListener('click', (episodeEvent: MouseEvent) => {
+			episodeEvent.stopPropagation();
+			playController.play(data, true);
+		});
+		if (playController.isPlaySupported(data)) {
+			episodePlayButton.classList.remove('disabled');
+		}
+		episodeInteractiveArea.append(episodePlayButton);
+	}
+	*/
+
+	/*
+
+	const trackIndexElem = document.createElement('div');
+	trackIndexElem.className = 'trackIndexElem';
+	trackIndexElem.innerHTML = escapeHtml(data.index);
+
+	trackIndexElem.style.fontSize = `${fontSize1}px`;
+	trackIndexElem.style.lineHeight = `${fontSize1}px`;
+	trackIndexElem.style.marginBottom = `${margin1}px`;
+
+	trackContainer.append(trackIndexElem);
+
+	const trackTitleElem = document.createElement('div');
+	trackTitleElem.className = 'trackTitleElem';
+	trackTitleElem.innerHTML = escapeHtml(data.title);
+
+	trackTitleElem.style.fontSize = `${fontSize1}px`;
+	trackTitleElem.style.lineHeight = `${fontSize1}px`;
+	trackTitleElem.style.marginBottom = `${margin1}px`;
+
+	trackContainer.append(trackTitleElem);
+	*/
+
+	trackContainer.addEventListener('click', episodeEvent => {
+		episodeEvent.stopPropagation();
+	});
+	return trackContainer;
+};
 const createEpisodesView = (
 	playController: any,
 	plex: Plex,
@@ -301,5 +407,6 @@ export {
 	clickHandler,
 	fetchEntityRegistry,
 	waitUntilState,
-	getState
+	getState,
+	createTrackView
 };

@@ -19240,6 +19240,13 @@ const sleep = async (ms) => {
 const getState = async (hass, entityID) => {
     return hass.callApi('GET', `states/${entityID}`);
 };
+const padWithZeroes = (number, length) => {
+    let myString = `${number}`;
+    while (myString.length < length) {
+        myString = `0${myString}`;
+    }
+    return myString;
+};
 const waitUntilState = async (hass, entityID, state) => {
     let entityState = await getState(hass, entityID);
     while (entityState.state !== state) {
@@ -19248,6 +19255,84 @@ const waitUntilState = async (hass, entityID, state) => {
         // eslint-disable-next-line no-await-in-loop
         await sleep(1000);
     }
+};
+const createTrackView = (playController, plex, data, fontSize1, fontSize2, isEven) => {
+    const margin1 = fontSize1 / 4;
+    const trackContainer = document.createElement('tr');
+    trackContainer.classList.add('trackContainer');
+    if (isEven) {
+        trackContainer.classList.add('even');
+    }
+    else {
+        trackContainer.classList.add('odd');
+    }
+    const trackIndexElem = document.createElement('td');
+    trackIndexElem.className = 'trackIndexElem';
+    trackIndexElem.innerHTML = escapeHtml(data.index);
+    trackIndexElem.style.fontSize = `${fontSize1}px`;
+    trackIndexElem.style.lineHeight = `${fontSize1}px`;
+    trackIndexElem.style.marginBottom = `${margin1}px`;
+    trackContainer.append(trackIndexElem);
+    const trackTitleElem = document.createElement('td');
+    trackTitleElem.className = 'trackTitleElem';
+    trackTitleElem.innerHTML = escapeHtml(data.title);
+    trackTitleElem.style.fontSize = `${fontSize1}px`;
+    trackTitleElem.style.lineHeight = `${fontSize1}px`;
+    trackTitleElem.style.marginBottom = `${margin1}px`;
+    trackContainer.append(trackTitleElem);
+    const duration = lodash.get(data, 'Media[0].duration');
+    const trackLengthElem = document.createElement('td');
+    trackLengthElem.className = 'trackLengthElem';
+    trackLengthElem.style.fontSize = `${fontSize1}px`;
+    trackLengthElem.style.lineHeight = `${fontSize1}px`;
+    trackLengthElem.style.marginBottom = `${margin1}px`;
+    if (duration) {
+        const minutes = Math.floor(duration / 60 / 1000);
+        const seconds = Math.round((duration - minutes * 1000) / 6000);
+        trackLengthElem.innerHTML = escapeHtml(`${padWithZeroes(minutes, 2)}:${padWithZeroes(seconds, 2)}`);
+    }
+    trackContainer.append(trackLengthElem);
+    /*
+    const episodeInteractiveArea = document.createElement('div');
+    episodeInteractiveArea.className = 'interactiveArea';
+    if (playController) {
+        const episodePlayButton = playController.getPlayButton(data.type);
+        episodePlayButton.addEventListener('click', (episodeEvent: MouseEvent) => {
+            episodeEvent.stopPropagation();
+            playController.play(data, true);
+        });
+        if (playController.isPlaySupported(data)) {
+            episodePlayButton.classList.remove('disabled');
+        }
+        episodeInteractiveArea.append(episodePlayButton);
+    }
+    */
+    /*
+
+    const trackIndexElem = document.createElement('div');
+    trackIndexElem.className = 'trackIndexElem';
+    trackIndexElem.innerHTML = escapeHtml(data.index);
+
+    trackIndexElem.style.fontSize = `${fontSize1}px`;
+    trackIndexElem.style.lineHeight = `${fontSize1}px`;
+    trackIndexElem.style.marginBottom = `${margin1}px`;
+
+    trackContainer.append(trackIndexElem);
+
+    const trackTitleElem = document.createElement('div');
+    trackTitleElem.className = 'trackTitleElem';
+    trackTitleElem.innerHTML = escapeHtml(data.title);
+
+    trackTitleElem.style.fontSize = `${fontSize1}px`;
+    trackTitleElem.style.lineHeight = `${fontSize1}px`;
+    trackTitleElem.style.marginBottom = `${margin1}px`;
+
+    trackContainer.append(trackTitleElem);
+    */
+    trackContainer.addEventListener('click', episodeEvent => {
+        episodeEvent.stopPropagation();
+    });
+    return trackContainer;
 };
 const createEpisodesView = (playController, plex, data, fontSize1, fontSize2) => {
     const episodeContainer = document.createElement('div');
@@ -21259,6 +21344,31 @@ style.textContent = css `
 			transform: rotate(360deg);
 		}
 	}
+	.trackContainer {
+		width: 100%;
+	}
+	.trackContainer.odd:hover,
+	.trackContainer.even:hover {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+	.trackContainer.odd {
+		background-color: rgba(255, 255, 255, 0.08);
+	}
+	.trackContainer.even {
+		background-color: rgba(255, 255, 255, 0.04);
+	}
+	.trackLengthElem {
+		position: relative;
+		padding: 10px 10px 10px 20px;
+	}
+	.trackIndexElem {
+		position: relative;
+		padding: 10px 20px 10px 10px;
+	}
+
+	.trackTitleElem {
+		width: 100%;
+	}
 	.detail {
 		position: absolute;
 		left: 247px;
@@ -22945,9 +23055,24 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                         this.episodesElem.innerHTML = '';
                                                         this.episodesElem.style.transition = `0s`;
                                                         this.episodesElem.style.top = `${top + 2000}px`;
+                                                        const tableView = document.createElement('table');
+                                                        tableView.style.width = 'calc(100% - 10px)';
+                                                        tableView.style.border = 'none';
+                                                        tableView.cellSpacing = '0';
+                                                        tableView.cellPadding = '0';
+                                                        if (lodash.isEqual(childData.type, 'album')) {
+                                                            this.episodesElem.append(tableView);
+                                                        }
+                                                        let isEven = false;
                                                         lodash.forEach(episodesData, episodeData => {
                                                             if (this.episodesElem && this.playController && this.plex) {
-                                                                this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData, this.fontSize1, this.fontSize2));
+                                                                if (lodash.isEqual(episodeData.type, 'track')) {
+                                                                    tableView.append(createTrackView(this.playController, this.plex, episodeData, this.fontSize1, this.fontSize2, isEven));
+                                                                    isEven = !isEven;
+                                                                }
+                                                                else {
+                                                                    this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData, this.fontSize1, this.fontSize2));
+                                                                }
                                                             }
                                                         });
                                                         clearInterval(this.episodesLoadTimeout);

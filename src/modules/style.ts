@@ -181,6 +181,31 @@ style.textContent = css`
 			transform: rotate(360deg);
 		}
 	}
+	.trackContainer {
+		width: 100%;
+	}
+	.trackContainer.odd:hover,
+	.trackContainer.even:hover {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+	.trackContainer.odd {
+		background-color: rgba(255, 255, 255, 0.08);
+	}
+	.trackContainer.even {
+		background-color: rgba(255, 255, 255, 0.04);
+	}
+	.trackLengthElem {
+		position: relative;
+		padding: 10px 10px 10px 20px;
+	}
+	.trackIndexElem {
+		position: relative;
+		padding: 10px 20px 10px 10px;
+	}
+
+	.trackTitleElem {
+		width: 100%;
+	}
 	.detail {
 		position: absolute;
 		left: 247px;
