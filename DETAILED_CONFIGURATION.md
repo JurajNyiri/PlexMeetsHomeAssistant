@@ -241,7 +241,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ❌ Show
 
-Season
+❌ Season
 
 ✅ Episodes
 
