@@ -207,11 +207,26 @@ const createTrackView = (
 
 	const trackIndexElem = document.createElement('td');
 	trackIndexElem.className = 'trackIndexElem';
-	trackIndexElem.innerHTML = escapeHtml(data.index);
+	trackIndexElem.innerHTML = `<span class="trackIndex">${escapeHtml(data.index)}</span>`;
 
 	trackIndexElem.style.fontSize = `${fontSize1}px`;
 	trackIndexElem.style.lineHeight = `${fontSize1}px`;
 	trackIndexElem.style.marginBottom = `${margin1}px`;
+
+	const trackInteractiveArea = document.createElement('div');
+	trackInteractiveArea.className = 'trackInteractiveArea';
+	if (playController) {
+		const trackPlayButton = playController.getPlayButton(data.type);
+		trackPlayButton.addEventListener('click', (trackEvent: MouseEvent) => {
+			trackEvent.stopPropagation();
+			playController.play(data, true);
+		});
+		if (playController.isPlaySupported(data)) {
+			trackPlayButton.classList.remove('disabled');
+		}
+		trackInteractiveArea.append(trackPlayButton);
+	}
+	trackIndexElem.append(trackInteractiveArea);
 
 	trackContainer.append(trackIndexElem);
 
@@ -239,45 +254,6 @@ const createTrackView = (
 		trackLengthElem.innerHTML = escapeHtml(`${padWithZeroes(minutes, 2)}:${padWithZeroes(seconds, 2)}`);
 	}
 	trackContainer.append(trackLengthElem);
-
-	/*
-	const episodeInteractiveArea = document.createElement('div');
-	episodeInteractiveArea.className = 'interactiveArea';
-	if (playController) {
-		const episodePlayButton = playController.getPlayButton(data.type);
-		episodePlayButton.addEventListener('click', (episodeEvent: MouseEvent) => {
-			episodeEvent.stopPropagation();
-			playController.play(data, true);
-		});
-		if (playController.isPlaySupported(data)) {
-			episodePlayButton.classList.remove('disabled');
-		}
-		episodeInteractiveArea.append(episodePlayButton);
-	}
-	*/
-
-	/*
-
-	const trackIndexElem = document.createElement('div');
-	trackIndexElem.className = 'trackIndexElem';
-	trackIndexElem.innerHTML = escapeHtml(data.index);
-
-	trackIndexElem.style.fontSize = `${fontSize1}px`;
-	trackIndexElem.style.lineHeight = `${fontSize1}px`;
-	trackIndexElem.style.marginBottom = `${margin1}px`;
-
-	trackContainer.append(trackIndexElem);
-
-	const trackTitleElem = document.createElement('div');
-	trackTitleElem.className = 'trackTitleElem';
-	trackTitleElem.innerHTML = escapeHtml(data.title);
-
-	trackTitleElem.style.fontSize = `${fontSize1}px`;
-	trackTitleElem.style.lineHeight = `${fontSize1}px`;
-	trackTitleElem.style.marginBottom = `${margin1}px`;
-
-	trackContainer.append(trackTitleElem);
-	*/
 
 	trackContainer.addEventListener('click', episodeEvent => {
 		episodeEvent.stopPropagation();

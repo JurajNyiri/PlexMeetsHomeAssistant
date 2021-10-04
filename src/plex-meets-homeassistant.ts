@@ -1581,8 +1581,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 											if (this.plex && (childData.leafCount > 0 || _.isEqual(childData.type, 'album'))) {
 												this.episodesElemFreshlyLoaded = true;
 												const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
-												console.log(episodesData);
-												console.log('todo: different look for tracks!');
 												if (this.episodesElem) {
 													this.episodesElemHidden = false;
 													this.episodesElem.style.display = 'block';

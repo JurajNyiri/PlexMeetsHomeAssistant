@@ -19268,10 +19268,24 @@ const createTrackView = (playController, plex, data, fontSize1, fontSize2, isEve
     }
     const trackIndexElem = document.createElement('td');
     trackIndexElem.className = 'trackIndexElem';
-    trackIndexElem.innerHTML = escapeHtml(data.index);
+    trackIndexElem.innerHTML = `<span class="trackIndex">${escapeHtml(data.index)}</span>`;
     trackIndexElem.style.fontSize = `${fontSize1}px`;
     trackIndexElem.style.lineHeight = `${fontSize1}px`;
     trackIndexElem.style.marginBottom = `${margin1}px`;
+    const trackInteractiveArea = document.createElement('div');
+    trackInteractiveArea.className = 'trackInteractiveArea';
+    if (playController) {
+        const trackPlayButton = playController.getPlayButton(data.type);
+        trackPlayButton.addEventListener('click', (trackEvent) => {
+            trackEvent.stopPropagation();
+            playController.play(data, true);
+        });
+        if (playController.isPlaySupported(data)) {
+            trackPlayButton.classList.remove('disabled');
+        }
+        trackInteractiveArea.append(trackPlayButton);
+    }
+    trackIndexElem.append(trackInteractiveArea);
     trackContainer.append(trackIndexElem);
     const trackTitleElem = document.createElement('td');
     trackTitleElem.className = 'trackTitleElem';
@@ -19292,43 +19306,6 @@ const createTrackView = (playController, plex, data, fontSize1, fontSize2, isEve
         trackLengthElem.innerHTML = escapeHtml(`${padWithZeroes(minutes, 2)}:${padWithZeroes(seconds, 2)}`);
     }
     trackContainer.append(trackLengthElem);
-    /*
-    const episodeInteractiveArea = document.createElement('div');
-    episodeInteractiveArea.className = 'interactiveArea';
-    if (playController) {
-        const episodePlayButton = playController.getPlayButton(data.type);
-        episodePlayButton.addEventListener('click', (episodeEvent: MouseEvent) => {
-            episodeEvent.stopPropagation();
-            playController.play(data, true);
-        });
-        if (playController.isPlaySupported(data)) {
-            episodePlayButton.classList.remove('disabled');
-        }
-        episodeInteractiveArea.append(episodePlayButton);
-    }
-    */
-    /*
-
-    const trackIndexElem = document.createElement('div');
-    trackIndexElem.className = 'trackIndexElem';
-    trackIndexElem.innerHTML = escapeHtml(data.index);
-
-    trackIndexElem.style.fontSize = `${fontSize1}px`;
-    trackIndexElem.style.lineHeight = `${fontSize1}px`;
-    trackIndexElem.style.marginBottom = `${margin1}px`;
-
-    trackContainer.append(trackIndexElem);
-
-    const trackTitleElem = document.createElement('div');
-    trackTitleElem.className = 'trackTitleElem';
-    trackTitleElem.innerHTML = escapeHtml(data.title);
-
-    trackTitleElem.style.fontSize = `${fontSize1}px`;
-    trackTitleElem.style.lineHeight = `${fontSize1}px`;
-    trackTitleElem.style.marginBottom = `${margin1}px`;
-
-    trackContainer.append(trackTitleElem);
-    */
     trackContainer.addEventListener('click', episodeEvent => {
         episodeEvent.stopPropagation();
     });
@@ -21351,6 +21328,30 @@ style.textContent = css `
 	.trackContainer.even:hover {
 		background-color: rgba(255, 255, 255, 0.2);
 	}
+	.trackInteractiveArea {
+		width: 14px;
+		height: 14px;
+	}
+	.trackInteractiveArea button[name='playButton'] {
+		width: 30px;
+		height: 30px;
+		top: inherit;
+		left: inherit;
+		margin-top: -7px;
+		margin-left: -3px;
+	}
+	.trackContainer.odd:hover .trackIndexElem .trackIndex,
+	.trackContainer.even:hover .trackIndexElem .trackIndex {
+		display: none;
+	}
+	.trackContainer.odd:hover .trackIndexElem .trackInteractiveArea,
+	.trackContainer.even:hover .trackIndexElem .trackInteractiveArea {
+		display: block;
+	}
+	.trackContainer.odd .trackIndexElem .trackInteractiveArea,
+	.trackContainer.even .trackIndexElem .trackInteractiveArea {
+		display: none;
+	}
 	.trackContainer.odd {
 		background-color: rgba(255, 255, 255, 0.08);
 	}
@@ -21359,11 +21360,11 @@ style.textContent = css `
 	}
 	.trackLengthElem {
 		position: relative;
-		padding: 10px 10px 10px 20px;
+		padding: 15px 20px 15px 10px;
 	}
 	.trackIndexElem {
 		position: relative;
-		padding: 10px 20px 10px 10px;
+		padding: 15px 20px 15px 10px;
 	}
 
 	.trackTitleElem {
@@ -23047,8 +23048,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                 if (this.plex && (childData.leafCount > 0 || lodash.isEqual(childData.type, 'album'))) {
                                                     this.episodesElemFreshlyLoaded = true;
                                                     const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
-                                                    console.log(episodesData);
-                                                    console.log('todo: different look for tracks!');
                                                     if (this.episodesElem) {
                                                         this.episodesElemHidden = false;
                                                         this.episodesElem.style.display = 'block';
