@@ -181,6 +181,55 @@ style.textContent = css`
 			transform: rotate(360deg);
 		}
 	}
+	.trackContainer {
+		width: 100%;
+	}
+	.trackContainer.odd:hover,
+	.trackContainer.even:hover {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+	.trackInteractiveArea {
+		width: 14px;
+		height: 14px;
+	}
+	.trackInteractiveArea button[name='playButton'] {
+		width: 30px;
+		height: 30px;
+		top: inherit;
+		left: inherit;
+		margin-top: -7px;
+		margin-left: -3px;
+	}
+	.trackContainer.odd:hover .trackIndexElem .trackIndex,
+	.trackContainer.even:hover .trackIndexElem .trackIndex {
+		display: none;
+	}
+	.trackContainer.odd:hover .trackIndexElem .trackInteractiveArea,
+	.trackContainer.even:hover .trackIndexElem .trackInteractiveArea {
+		display: block;
+	}
+	.trackContainer.odd .trackIndexElem .trackInteractiveArea,
+	.trackContainer.even .trackIndexElem .trackInteractiveArea {
+		display: none;
+	}
+	.trackContainer.odd {
+		background-color: rgba(255, 255, 255, 0.08);
+	}
+	.trackContainer.even {
+		background-color: rgba(255, 255, 255, 0.04);
+	}
+	.trackLengthElem {
+		position: relative;
+		padding: 15px 20px 15px 10px;
+	}
+	.trackIndexElem {
+		position: relative;
+		padding: 15px 20px 15px 10px;
+	}
+
+	.trackTitleElem {
+		width: 100%;
+	}
 	.detail {
 		position: absolute;
 		left: 247px;
