@@ -46,6 +46,30 @@ You can also use Live TV library by specifying its name, usually "Live TV & DVR"
 
 **playTrailer**: _Optional_ Specify whether to play trailer if available. Possible values: true, false, muted. Default: true
 
+**title**: _Optional_ Title of the card
+
+**useHorizontalScroll:** _Optional_ Specify whether to use horizontal infinite scroll. Possible values: On, Off. Default: Off
+
+**displayTitleMain:** _Optional_ Specify whether to display title under poster. Possible values: On, Off. Default: Off
+
+**displaySubtitleMain:** _Optional_ Specify whether to display subtitle under poster. Possible values: On, Off. Default: Off
+
+**fontSize1**: _Optional_ Font size for titles under posters
+
+**fontSize2**: _Optional_ Font size for subtitles under posters
+
+**fontSize3**: _Optional_ Font size for title in opened content
+
+**fontSize4**: _Optional_ Font size for sub-titles, to-view count and description in opened content
+
+**minWidth:** _Optional_ Minimum width of poster image
+
+**minExpandedWidth:** _Optional_ Minimum expanded width of poster when opened
+
+**minExpandedHeight:** _Optional_ Minimum expanded height of poster when opened
+
+**minEpisodeWidth**: _Optional_ Minimum width of image preview of episode
+
 Example of the simplest possible configuration:
 
 ```
