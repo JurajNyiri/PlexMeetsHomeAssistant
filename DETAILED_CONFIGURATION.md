@@ -171,6 +171,12 @@ Play button is only visible if all the conditions inside Availability section of
 
 ✅ Episodes
 
+✅ Artists
+
+✅ Albums
+
+✅ Tracks
+
 ❌ Live TV
 
 ### Kodi
@@ -211,9 +217,15 @@ Play button is only visible if all the conditions inside Availability section of
 
 ❌ Show
 
-❌ Season
+Season
 
 ✅ Episodes
+
+❌ Artists
+
+❌ Albums
+
+❌ Tracks
 
 ✅ Live TV
 
@@ -242,6 +254,12 @@ Play button is only visible if all the conditions inside Availability section of
 ❌ Season
 
 ✅ Episodes
+
+✅ Artists
+
+✅ Albums
+
+✅ Tracks
 
 ❌ Live TV
 
@@ -305,6 +323,12 @@ entity:
 ✅ Season
 
 ✅ Episodes
+
+✅ Artists
+
+✅ Albums
+
+✅ Tracks
 
 ❌ Live TV
 
