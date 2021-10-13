@@ -697,10 +697,12 @@ class PlayController {
 			}
 		}
 		try {
-			this.entityStates['sensor.kodi_media_sensor_search'] = await getState(
-				this.hass,
-				'sensor.kodi_media_sensor_search'
-			);
+			if (this.hass.states['sensor.kodi_media_sensor_search']) {
+				this.entityStates['sensor.kodi_media_sensor_search'] = await getState(
+					this.hass,
+					'sensor.kodi_media_sensor_search'
+				);
+			}
 		} catch (err) {
 			// pass
 		}
