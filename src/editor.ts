@@ -278,7 +278,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					if (
 						_.isEqual(entityRegistry.platform, 'cast') ||
 						_.isEqual(entityRegistry.platform, 'kodi') ||
-						_.isEqual(entityRegistry.platform, 'androidtv')
+						_.isEqual(entityRegistry.platform, 'androidtv') ||
+						_.isEqual(entityRegistry.platform, 'input_select') ||
+						_.isEqual(entityRegistry.platform, 'input_text')
 					) {
 						const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
 						entities.appendChild(addDropdownItem(entityName));
