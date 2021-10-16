@@ -592,7 +592,7 @@ class PlayController {
 			if (_.isArray(entityID)) {
 				for (let i = 0; i < entityID.length; i += 1) {
 					const realEntityID = _.get(this.entityStates[entityID[i]], 'state');
-					let realEntityKey = 'unknown';
+					let realEntityKey = 'plexPlayer';
 					_.forEach(this.entityRegistry, entityInRegister => {
 						if (_.isEqual(entityInRegister.entity_id, realEntityID)) {
 							realEntityKey = entityInRegister.platform;
@@ -605,7 +605,7 @@ class PlayController {
 				}
 			} else {
 				const realEntityID = _.get(this.entityStates[entityID], 'state');
-				let realEntityKey = 'unknown';
+				let realEntityKey = 'plexPlayer';
 				_.forEach(this.entityRegistry, entityInRegister => {
 					if (_.isEqual(entityInRegister.entity_id, realEntityID)) {
 						realEntityKey = entityInRegister.platform;
@@ -769,14 +769,18 @@ class PlayController {
 	};
 
 	private getPlexPlayerMachineIdentifier = (entity: string | Record<string, any>): string => {
+		if (_.isString(entity) && _.isEqual(entity.split(' | ').length, 4)) {
+			// eslint-disable-next-line no-param-reassign
+			[, , , entity] = entity.split(' | ');
+		}
 		let machineIdentifier = '';
 
 		let { plex } = this;
 		let entityName = '';
 		if (_.isString(entity)) {
-			entityName = entity;
+			entityName = entity.trim();
 		} else if (_.isObjectLike(entity) && !_.isNil(entity.identifier)) {
-			entityName = entity.identifier;
+			entityName = entity.identifier.trim();
 			if (!_.isNil(entity.plex) && entity.plex) {
 				plex = entity.plex;
 			}

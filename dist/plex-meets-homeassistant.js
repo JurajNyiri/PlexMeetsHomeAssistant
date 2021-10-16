@@ -19887,7 +19887,7 @@ class PlayController {
                 if (lodash.isArray(entityID)) {
                     for (let i = 0; i < entityID.length; i += 1) {
                         const realEntityID = lodash.get(this.entityStates[entityID[i]], 'state');
-                        let realEntityKey = 'unknown';
+                        let realEntityKey = 'plexPlayer';
                         lodash.forEach(this.entityRegistry, entityInRegister => {
                             if (lodash.isEqual(entityInRegister.entity_id, realEntityID)) {
                                 realEntityKey = entityInRegister.platform;
@@ -19901,7 +19901,7 @@ class PlayController {
                 }
                 else {
                     const realEntityID = lodash.get(this.entityStates[entityID], 'state');
-                    let realEntityKey = 'unknown';
+                    let realEntityKey = 'plexPlayer';
                     lodash.forEach(this.entityRegistry, entityInRegister => {
                         if (lodash.isEqual(entityInRegister.entity_id, realEntityID)) {
                             realEntityKey = entityInRegister.platform;
@@ -20049,14 +20049,18 @@ class PlayController {
             return this.entityStates;
         };
         this.getPlexPlayerMachineIdentifier = (entity) => {
+            if (lodash.isString(entity) && lodash.isEqual(entity.split(' | ').length, 4)) {
+                // eslint-disable-next-line no-param-reassign
+                [, , , entity] = entity.split(' | ');
+            }
             let machineIdentifier = '';
             let { plex } = this;
             let entityName = '';
             if (lodash.isString(entity)) {
-                entityName = entity;
+                entityName = entity.trim();
             }
             else if (lodash.isObjectLike(entity) && !lodash.isNil(entity.identifier)) {
-                entityName = entity.identifier;
+                entityName = entity.identifier.trim();
                 if (!lodash.isNil(entity.plex) && entity.plex) {
                     plex = entity.plex;
                 }
