@@ -38,6 +38,8 @@ class PlayController {
 
 	card: any;
 
+	entityRegistry: Array<Record<string, any>> = [];
+
 	constructor(
 		card: any,
 		hass: HomeAssistant,
@@ -45,8 +47,10 @@ class PlayController {
 		entity: Record<string, any>,
 		runBefore: string,
 		runAfter: string,
-		libraryName: string
+		libraryName: string,
+		entityRegistry: Array<Record<string, any>>
 	) {
+		this.entityRegistry = entityRegistry;
 		this.card = card;
 		this.hass = hass;
 		this.plex = plex;
@@ -581,6 +585,53 @@ class PlayController {
 		}
 	};
 
+	private exportEntity = (entityID: Array<any> | string, key: string): Array<Record<string, any>> => {
+		const entities: Array<Record<string, any>> = [];
+		if (_.isEqual(key, 'inputSelect')) {
+			// special processing for templates
+			if (_.isArray(entityID)) {
+				for (let i = 0; i < entityID.length; i += 1) {
+					const realEntityID = _.get(this.entityStates[entityID[i]], 'state');
+					let realEntityKey = 'unknown';
+					_.forEach(this.entityRegistry, entityInRegister => {
+						if (_.isEqual(entityInRegister.entity_id, realEntityID)) {
+							realEntityKey = entityInRegister.platform;
+						}
+					});
+					entities.push({
+						value: realEntityID,
+						key: realEntityKey
+					});
+				}
+			} else {
+				const realEntityID = _.get(this.entityStates[entityID], 'state');
+				let realEntityKey = 'unknown';
+				_.forEach(this.entityRegistry, entityInRegister => {
+					if (_.isEqual(entityInRegister.entity_id, realEntityID)) {
+						realEntityKey = entityInRegister.platform;
+					}
+				});
+				entities.push({
+					value: realEntityID,
+					key: realEntityKey
+				});
+			}
+		} else if (_.isArray(entityID)) {
+			_.forEach(entityID, entity => {
+				entities.push({
+					value: entity,
+					key
+				});
+			});
+		} else {
+			entities.push({
+				value: entityID,
+				key
+			});
+		}
+		return entities;
+	};
+
 	private getPlayService = (data: Record<string, any>, forceRefresh = false): Record<string, string> => {
 		if (!_.isNil(this.readyPlayersForType[data.type]) && forceRefresh === false) {
 			return this.readyPlayersForType[data.type];
@@ -588,32 +639,22 @@ class PlayController {
 		let service: Record<string, string> = {};
 		_.forEach(this.entity, (value, key) => {
 			if (_.isEmpty(service)) {
-				const entityVal = value;
-				if (_.isArray(entityVal)) {
-					_.forEach(entityVal, entity => {
-						if (_.includes(this.supported[key], data.type)) {
-							if (
-								(key === 'kodi' && this.isKodiSupported(entity)) ||
-								(key === 'androidtv' && this.isAndroidTVSupported(entity)) ||
-								(key === 'plexPlayer' && this.isPlexPlayerSupported(entity)) ||
-								(key === 'cast' && this.isCastSupported(entity))
-							) {
-								service = { key, value: entity };
-								return false;
-							}
+				const entities = this.exportEntity(value, key);
+
+				_.forEach(entities, entity => {
+					if (_.includes(this.supported[entity.key], data.type)) {
+						// todo: load info in this.entityStates otherwise this will never work for input selects and templates
+						if (
+							(entity.key === 'kodi' && this.isKodiSupported(entity.value)) ||
+							(entity.key === 'androidtv' && this.isAndroidTVSupported(entity.value)) ||
+							(entity.key === 'plexPlayer' && this.isPlexPlayerSupported(entity.value)) ||
+							(entity.key === 'cast' && this.isCastSupported(entity.value))
+						) {
+							service = { key: entity.key, value: entity.value };
+							return false;
 						}
-					});
-				} else if (_.includes(this.supported[key], data.type)) {
-					if (
-						(key === 'kodi' && this.isKodiSupported(entityVal)) ||
-						(key === 'androidtv' && this.isAndroidTVSupported(entityVal)) ||
-						(key === 'plexPlayer' && this.isPlexPlayerSupported(entityVal)) ||
-						(key === 'cast' && this.isCastSupported(entityVal))
-					) {
-						service = { key, value: entityVal };
-						return false;
 					}
-				}
+				});
 			}
 		});
 		this.readyPlayersForType[data.type] = service;
@@ -705,6 +746,23 @@ class PlayController {
 			}
 		} catch (err) {
 			// pass
+		}
+
+		// get values for template entities
+		for (const [key, value] of Object.entries(this.entity)) {
+			if (_.isEqual(key, 'inputSelect')) {
+				const entities = this.exportEntity(value, key);
+				for (const entity of entities) {
+					if (!_.isNil(this.hass.states[entity.value])) {
+						try {
+							// eslint-disable-next-line no-await-in-loop
+							this.entityStates[entity.value] = await getState(this.hass, entity.value);
+						} catch (err) {
+							// pass
+						}
+					}
+				}
+			}
 		}
 
 		return this.entityStates;

@@ -295,6 +295,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				// eslint-disable-next-line prefer-destructuring
 				realEntityString = entityString.split(' | ')[1];
 				isPlexPlayer = false;
+			} else if (_.startsWith(entityString, 'input_select | ')) {
+				// eslint-disable-next-line prefer-destructuring
+				realEntityString = entityString.split(' | ')[1];
+				isPlexPlayer = false;
 			}
 			if (isPlexPlayer) {
 				if (_.isNil(entityObj.plexPlayer)) {
@@ -327,6 +331,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								}
 								entityObj.kodi.push(entityInRegister.entity_id);
 								break;
+							case 'input_select':
+								if (_.isNil(entityObj.inputSelect)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.inputSelect = [];
+								}
+								entityObj.inputSelect.push(entityInRegister.entity_id);
+								break;
 							default:
 							// pass
 						}
@@ -356,7 +367,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					entity,
 					this.runBefore,
 					this.runAfter,
-					this.config.libraryName
+					this.config.libraryName,
+					this.entityRegistry
 				);
 				if (this.playController) {
 					await this.playController.init();
