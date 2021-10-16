@@ -25,8 +25,8 @@ You can also use Live TV library by specifying its name, usually "Live TV & DVR"
 - **kodi**: Entity id of your media_player configured via [Kodi](https://www.home-assistant.io/integrations/kodi/). See [detailed instructions](#kodi). It is also possible to use short declaration with kodi.
 - **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](#all-other-plex-clients). It is required to use detailed declaration with "plexPlayer:" property.
 - **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](#google-cast). It is also possible to use short declaration with cast.
-- **input_select**: Entity id of input select you wish to use for selecting media player to play on. State of this entity needs to be entity ID of media player of `androidtv`, `kodi` or `cast`. It is currently not possible to combine this with `plexPlayer`.
-- **input_text**: Entity id of input text you wish to use for selecting media player to play on. State of this entity needs to be entity ID of media player of `androidtv`, `kodi` or `cast`. It is currently not possible to combine this with `plexPlayer`.
+- **input_select**: Entity id of input select you wish to use for selecting media player to play on. State of this entity needs to be entity ID of media player of `androidtv`, `kodi` or `cast`. You can also use this with `plexPlayer`, in that case, provide name or machine ID of your plex client. You can also provide the same string as displayed in entities selection in UI editor for the card (beginning with `plexPlayer |`).
+- **input_text**: Entity id of input text you wish to use for selecting media player to play on. State of this entity needs to be entity ID of media player of `androidtv`, `kodi` or `cast`. You can also use this with `plexPlayer`, in that case, provide name or machine ID of your plex client. You can also provide the same string as displayed in entities selection in UI editor for the card (beginning with `plexPlayer |`).
 
 **port**: _Optional_ Port of your plex sever.
 
