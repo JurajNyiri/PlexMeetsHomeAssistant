@@ -587,7 +587,7 @@ class PlayController {
 
 	private exportEntity = (entityID: Array<any> | string, key: string): Array<Record<string, any>> => {
 		const entities: Array<Record<string, any>> = [];
-		if (_.isEqual(key, 'inputSelect')) {
+		if (_.isEqual(key, 'inputSelect') || _.isEqual(key, 'inputText')) {
 			// special processing for templates
 			if (_.isArray(entityID)) {
 				for (let i = 0; i < entityID.length; i += 1) {
@@ -750,7 +750,7 @@ class PlayController {
 
 		// get values for template entities
 		for (const [key, value] of Object.entries(this.entity)) {
-			if (_.isEqual(key, 'inputSelect')) {
+			if (_.isEqual(key, 'inputSelect') || _.isEqual(key, 'inputText')) {
 				const entities = this.exportEntity(value, key);
 				for (const entity of entities) {
 					if (!_.isNil(this.hass.states[entity.value])) {

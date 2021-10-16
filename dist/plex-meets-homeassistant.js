@@ -19882,7 +19882,7 @@ class PlayController {
         };
         this.exportEntity = (entityID, key) => {
             const entities = [];
-            if (lodash.isEqual(key, 'inputSelect')) {
+            if (lodash.isEqual(key, 'inputSelect') || lodash.isEqual(key, 'inputText')) {
                 // special processing for templates
                 if (lodash.isArray(entityID)) {
                     for (let i = 0; i < entityID.length; i += 1) {
@@ -20031,7 +20031,7 @@ class PlayController {
             }
             // get values for template entities
             for (const [key, value] of Object.entries(this.entity)) {
-                if (lodash.isEqual(key, 'inputSelect')) {
+                if (lodash.isEqual(key, 'inputSelect') || lodash.isEqual(key, 'inputText')) {
                     const entities = this.exportEntity(value, key);
                     for (const entity of entities) {
                         if (!lodash.isNil(this.hass.states[entity.value])) {
@@ -20350,7 +20350,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         if (lodash.isEqual(entityRegistry.platform, 'cast') ||
                             lodash.isEqual(entityRegistry.platform, 'kodi') ||
                             lodash.isEqual(entityRegistry.platform, 'androidtv') ||
-                            lodash.isEqual(entityRegistry.platform, 'input_select')) {
+                            lodash.isEqual(entityRegistry.platform, 'input_select') ||
+                            lodash.isEqual(entityRegistry.platform, 'input_text')) {
                             const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
                             entities.appendChild(addDropdownItem(entityName));
                             addedEntityStrings.push(entityName);
@@ -21918,12 +21919,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 else if (lodash.startsWith(entityString, 'androidtv | ') ||
                     lodash.startsWith(entityString, 'kodi | ') ||
-                    lodash.startsWith(entityString, 'cast | ')) {
-                    // eslint-disable-next-line prefer-destructuring
-                    realEntityString = entityString.split(' | ')[1];
-                    isPlexPlayer = false;
-                }
-                else if (lodash.startsWith(entityString, 'input_select | ')) {
+                    lodash.startsWith(entityString, 'cast | ') ||
+                    lodash.startsWith(entityString, 'input_select | ') ||
+                    lodash.startsWith(entityString, 'input_text | ')) {
                     // eslint-disable-next-line prefer-destructuring
                     realEntityString = entityString.split(' | ')[1];
                     isPlexPlayer = false;
@@ -21966,6 +21964,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         entityObj.inputSelect = [];
                                     }
                                     entityObj.inputSelect.push(entityInRegister.entity_id);
+                                    break;
+                                case 'input_text':
+                                    if (lodash.isNil(entityObj.inputText)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.inputText = [];
+                                    }
+                                    entityObj.inputText.push(entityInRegister.entity_id);
                                     break;
                                 // pass
                             }

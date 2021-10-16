@@ -290,12 +290,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			} else if (
 				_.startsWith(entityString, 'androidtv | ') ||
 				_.startsWith(entityString, 'kodi | ') ||
-				_.startsWith(entityString, 'cast | ')
+				_.startsWith(entityString, 'cast | ') ||
+				_.startsWith(entityString, 'input_select | ') ||
+				_.startsWith(entityString, 'input_text | ')
 			) {
-				// eslint-disable-next-line prefer-destructuring
-				realEntityString = entityString.split(' | ')[1];
-				isPlexPlayer = false;
-			} else if (_.startsWith(entityString, 'input_select | ')) {
 				// eslint-disable-next-line prefer-destructuring
 				realEntityString = entityString.split(' | ')[1];
 				isPlexPlayer = false;
@@ -337,6 +335,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									entityObj.inputSelect = [];
 								}
 								entityObj.inputSelect.push(entityInRegister.entity_id);
+								break;
+							case 'input_text':
+								if (_.isNil(entityObj.inputText)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.inputText = [];
+								}
+								entityObj.inputText.push(entityInRegister.entity_id);
 								break;
 							default:
 							// pass
