@@ -197,8 +197,8 @@ class Plex {
 		return _.isNil(collectionsData.data.MediaContainer.Metadata) ? [] : collectionsData.data.MediaContainer.Metadata;
 	};
 
-	getSectionData = async (sectionID: number): Promise<any> => {
-		return this.exportSectionsData([await this.getSectionDataWithoutProcessing(sectionID)]);
+	getSectionData = async (sectionID: string, type: string | false = false): Promise<any> => {
+		return this.exportSectionsData([await this.getSectionDataWithoutProcessing(sectionID, type)]);
 	};
 
 	private getChildren = async (childrenURL: string): Promise<any> => {
@@ -257,10 +257,14 @@ class Plex {
 		return this.getChildren(playlistKey);
 	};
 
-	private getSectionDataWithoutProcessing = async (sectionID: number): Promise<any> => {
+	private getSectionDataWithoutProcessing = async (sectionID: string, type: string | false = false): Promise<any> => {
 		const bulkItems = 50;
 		let url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/all`);
 		url += `&sort=${this.sort}`;
+		if (type) {
+			url += `&type=${type}`;
+		}
+		url += `&includeCollections=1&includeExternalMedia=1&includeAdvanced=1&includeMeta=1`;
 		let result: Record<string, any> = {};
 		try {
 			result = await axios.get(url, {

@@ -37,6 +37,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	plexProtocol: 'http' | 'https' = 'http';
 
+	displayType: string | false = false;
+
 	useHorizontalScroll = false;
 
 	displayTitleMain = true;
@@ -469,7 +471,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				};
 
-				let sectionKey: number | false = 0;
+				let sectionKey: string | false = false;
 				_.forEach(plexAllSections, (section: Record<string, any>) => {
 					if (_.isEqual(section.title, this.config.libraryName)) {
 						sectionKey = section.key;
@@ -479,7 +481,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				});
 				const loadDataRequests = [];
 				if (sectionKey) {
-					loadDataRequests.push(this.plex.getSectionData(sectionKey));
+					loadDataRequests.push(this.plex.getSectionData(sectionKey, this.displayType));
 				}
 				if (_.isEqual(this.config.libraryName, 'Deck')) {
 					loadDataRequests.push(getOnDeck());
@@ -1338,7 +1340,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			let childrenData: Record<string, any> = {};
 			if (_.isEqual(data.type, 'episode')) {
 				childrenData = await this.plex.getLibraryData(data.grandparentKey.split('/')[3]);
-			} else if (data.childCount > 0 || _.isEqual(data.type, 'artist')) {
+			} else if (data.childCount > 0 || _.isEqual(data.type, 'artist') || _.isEqual(data.type, 'album')) {
 				childrenData = await this.plex.getLibraryData(data.key.split('/')[3]);
 			}
 			let dataDetails: Record<string, any> = {};
@@ -1460,268 +1462,319 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.seasonsElem.style.top = `${top + 2000}px`;
 				}
 
-				_.forEach(childrenData, childData => {
-					if (this.seasonsElem && this.plex) {
-						this.seasonsElemHidden = false;
-						const seasonContainer = document.createElement('div');
-						seasonContainer.className = 'seasonContainer';
-						seasonContainer.style.width = `${CSS_STYLE.width}px`;
-						const thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${this.minExpandedWidth}&height=${
-							this.minExpandedHeight
-						}&minSize=1&upscale=1&url=${childData.thumb}&X-Plex-Token=${this.config.token}`;
-
-						const seasonElem = document.createElement('div');
-						seasonElem.className = 'seasonElem';
-						seasonElem.style.width = `${CSS_STYLE.width}px`;
-						if (_.isEqual(childData.type, 'album')) {
-							seasonElem.style.height = `${CSS_STYLE.width}px`;
-						} else {
-							seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
+				if (_.isEqual(_.get(childrenData[0], 'type'), 'track')) {
+					if (this.episodesElem) {
+						this.episodesElemHidden = false;
+						this.episodesElem.style.display = 'block';
+						this.episodesElem.innerHTML = '';
+						this.episodesElem.style.transition = `0s`;
+						this.episodesElem.style.top = `${top + 2000}px`;
+						const tableView = document.createElement('table');
+						tableView.style.width = 'calc(100% - 10px)';
+						tableView.style.border = 'none';
+						tableView.cellSpacing = '0';
+						tableView.cellPadding = '0';
+						if (_.isEqual(data.type, 'album')) {
+							this.episodesElem.append(tableView);
 						}
-
-						seasonElem.style.backgroundImage = `url('${thumbURL}')`;
-						seasonElem.dataset.clicked = 'false';
-
-						if (this.playController && !this.playController.isPlaySupported(childData)) {
-							seasonElem.style.cursor = 'pointer';
-						}
-
-						const interactiveArea = document.createElement('div');
-						interactiveArea.className = 'interactiveArea';
-						if (childData.leafCount - childData.viewedLeafCount > 0) {
-							const toViewElem = document.createElement('div');
-							toViewElem.className = 'toViewSeason';
-							toViewElem.innerHTML = (childData.leafCount - childData.viewedLeafCount).toString();
-
-							toViewElem.style.fontSize = `${this.fontSize4}px`;
-							toViewElem.style.lineHeight = `${this.fontSize4}px`;
-							toViewElem.style.padding = `${this.fontSize4 / 2}px`;
-
-							interactiveArea.appendChild(toViewElem);
-						}
-
-						if (this.playController) {
-							const playButton = this.playController.getPlayButton(childData.type);
-							if (this.playController.isPlaySupported(childData)) {
-								playButton.classList.remove('disabled');
-							}
-							playButton.addEventListener('click', event => {
-								event.stopPropagation();
-								if (this.plex && this.playController) {
-									this.playController.play(childData, true);
+						let isEven = false;
+						_.forEach(childrenData, childData => {
+							if (this.episodesElem && this.playController && this.plex) {
+								if (_.isEqual(childData.type, 'track')) {
+									tableView.append(
+										createTrackView(this.playController, this.plex, childData, this.fontSize1, this.fontSize2, isEven)
+									);
+									isEven = !isEven;
+								} else {
+									this.episodesElem.append(
+										createEpisodesView(this.playController, this.plex, childData, this.fontSize1, this.fontSize2)
+									);
 								}
-							});
-
-							interactiveArea.append(playButton);
-						}
-
-						seasonElem.append(interactiveArea);
-						seasonContainer.append(seasonElem);
-
-						const seasonTitleElem = document.createElement('div');
-						seasonTitleElem.className = 'seasonTitleElem';
-						seasonTitleElem.innerHTML = escapeHtml(childData.title);
-						seasonTitleElem.style.fontSize = `${this.fontSize1}px`;
-						seasonTitleElem.style.lineHeight = `${this.fontSize1}px`;
-						seasonContainer.append(seasonTitleElem);
-
-						const seasonEpisodesCount = document.createElement('div');
-						seasonEpisodesCount.className = 'seasonEpisodesCount';
-						if (childData.leafCount > 0) {
-							seasonEpisodesCount.innerHTML = `${escapeHtml(childData.leafCount)} episodes`;
-						} else if (!_.isNil(childData.year)) {
-							seasonEpisodesCount.innerHTML = `${escapeHtml(childData.year)} `;
-						}
-
-						seasonEpisodesCount.style.fontSize = `${this.fontSize2}px`;
-						seasonEpisodesCount.style.lineHeight = `${this.fontSize2}px`;
-						seasonContainer.append(seasonEpisodesCount);
-
-						seasonContainer.addEventListener('click', event => {
-							event.stopPropagation();
-							if (this.seasonContainerClickEnabled) {
-								this.seasonContainerClickEnabled = false;
-								setTimeout(() => {
-									this.seasonContainerClickEnabled = true;
-								}, 500);
+							}
+						});
+						clearInterval(this.episodesLoadTimeout);
+						this.episodesLoadTimeout = setTimeout(() => {
+							if (this.episodesElem) {
+								this.episodesElem.style.transition = `0.7s`;
 								if (this.activeMovieElem) {
-									if (seasonElem.dataset.clicked === 'false') {
-										if (this.playController) {
-											this.playController.setPlayActionButtonType(childData.type);
-											this.playController.setPlayButtonClickFunction((thisEvent: MouseEvent) => {
-												thisEvent.preventDefault();
-												thisEvent.stopPropagation();
-												if (this.playController) {
-													this.playController.play(childData, true);
-												}
-											});
-										}
-										if (typeof seasonElem.children[0].children[0] !== 'undefined') {
-											(seasonElem.children[0].children[0] as HTMLElement).style.display = 'none';
-										}
+									this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+								} else {
+									this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
+								}
 
-										seasonElem.dataset.clicked = 'true';
-										this.activeMovieElem.style.top = `${top - 1000}px`;
-										setTimeout(() => {
-											if (this.activeMovieElem) {
-												this.activeMovieElem.style.display = 'none';
-											}
-										}, 500);
+								this.resizeBackground();
+							}
+						}, 200);
+						clearInterval(this.episodesElemFreshlyLoadedTimeout);
+						this.episodesElemFreshlyLoadedTimeout = setTimeout(() => {
+							this.episodesElemFreshlyLoaded = false;
+						}, 700);
+					}
+				} else {
+					_.forEach(childrenData, childData => {
+						if (this.seasonsElem && this.plex) {
+							console.log(childData);
+							this.seasonsElemHidden = false;
+							const seasonContainer = document.createElement('div');
+							seasonContainer.className = 'seasonContainer';
+							seasonContainer.style.width = `${CSS_STYLE.width}px`;
+							const thumbURL = `${this.plex.getBasicURL()}/photo/:/transcode?width=${this.minExpandedWidth}&height=${
+								this.minExpandedHeight
+							}&minSize=1&upscale=1&url=${childData.thumb}&X-Plex-Token=${this.config.token}`;
 
-										this.scrollDownInactiveSeasons();
+							const seasonElem = document.createElement('div');
+							seasonElem.className = 'seasonElem';
+							seasonElem.style.width = `${CSS_STYLE.width}px`;
+							if (_.isEqual(childData.type, 'album')) {
+								seasonElem.style.height = `${CSS_STYLE.width}px`;
+							} else {
+								seasonElem.style.height = `${CSS_STYLE.height - 3}px`;
+							}
 
-										if (this.activeMovieElem) {
-											seasonContainer.style.top = `${-getHeight(this.activeMovieElem)}px`;
-										} else {
-											seasonContainer.style.top = `${-this.minExpandedHeight}px`;
-										}
+							seasonElem.style.backgroundImage = `url('${thumbURL}')`;
+							seasonElem.dataset.clicked = 'false';
 
-										seasonElem.dataset.type = childData.type;
-										seasonElem.style.width = `${this.minExpandedWidth}px`;
-										if (_.isEqual(childData.type, 'album')) {
-											seasonElem.style.height = `${this.minExpandedWidth}px`;
-										} else {
-											seasonElem.style.height = `${this.minExpandedHeight - 6}px`;
-										}
-										seasonElem.style.zIndex = '3';
+							if (this.playController && !this.playController.isPlaySupported(childData)) {
+								seasonElem.style.cursor = 'pointer';
+							}
 
-										seasonElem.style.marginLeft = `-${getOffset(seasonElem).left -
-											getOffset(this.activeMovieElem).left}px`;
+							const interactiveArea = document.createElement('div');
+							interactiveArea.className = 'interactiveArea';
+							if (childData.leafCount - childData.viewedLeafCount > 0) {
+								const toViewElem = document.createElement('div');
+								toViewElem.className = 'toViewSeason';
+								toViewElem.innerHTML = (childData.leafCount - childData.viewedLeafCount).toString();
 
-										seasonTitleElem.style.color = 'rgba(255,255,255,0)';
-										seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
+								toViewElem.style.fontSize = `${this.fontSize4}px`;
+								toViewElem.style.lineHeight = `${this.fontSize4}px`;
+								toViewElem.style.padding = `${this.fontSize4 / 2}px`;
 
-										if (this.detailElem) {
-											(this.detailElem.children[1] as HTMLElement).innerHTML = childData.title;
-										}
-										(async (): Promise<void> => {
-											if (this.plex && (childData.leafCount > 0 || _.isEqual(childData.type, 'album'))) {
-												this.episodesElemFreshlyLoaded = true;
-												const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
-												if (this.episodesElem) {
-													this.episodesElemHidden = false;
-													this.episodesElem.style.display = 'block';
-													this.episodesElem.innerHTML = '';
-													this.episodesElem.style.transition = `0s`;
-													this.episodesElem.style.top = `${top + 2000}px`;
-													const tableView = document.createElement('table');
-													tableView.style.width = 'calc(100% - 10px)';
-													tableView.style.border = 'none';
-													tableView.cellSpacing = '0';
-													tableView.cellPadding = '0';
-													if (_.isEqual(childData.type, 'album')) {
-														this.episodesElem.append(tableView);
+								interactiveArea.appendChild(toViewElem);
+							}
+
+							if (this.playController) {
+								const playButton = this.playController.getPlayButton(childData.type);
+								if (this.playController.isPlaySupported(childData)) {
+									playButton.classList.remove('disabled');
+								}
+								playButton.addEventListener('click', event => {
+									event.stopPropagation();
+									if (this.plex && this.playController) {
+										this.playController.play(childData, true);
+									}
+								});
+
+								interactiveArea.append(playButton);
+							}
+
+							seasonElem.append(interactiveArea);
+							seasonContainer.append(seasonElem);
+
+							const seasonTitleElem = document.createElement('div');
+							seasonTitleElem.className = 'seasonTitleElem';
+							seasonTitleElem.innerHTML = escapeHtml(childData.title);
+							seasonTitleElem.style.fontSize = `${this.fontSize1}px`;
+							seasonTitleElem.style.lineHeight = `${this.fontSize1}px`;
+							seasonContainer.append(seasonTitleElem);
+
+							const seasonEpisodesCount = document.createElement('div');
+							seasonEpisodesCount.className = 'seasonEpisodesCount';
+							if (childData.leafCount > 0) {
+								seasonEpisodesCount.innerHTML = `${escapeHtml(childData.leafCount)} episodes`;
+							} else if (!_.isNil(childData.year)) {
+								seasonEpisodesCount.innerHTML = `${escapeHtml(childData.year)} `;
+							}
+
+							seasonEpisodesCount.style.fontSize = `${this.fontSize2}px`;
+							seasonEpisodesCount.style.lineHeight = `${this.fontSize2}px`;
+							seasonContainer.append(seasonEpisodesCount);
+
+							seasonContainer.addEventListener('click', event => {
+								event.stopPropagation();
+								if (this.seasonContainerClickEnabled) {
+									this.seasonContainerClickEnabled = false;
+									setTimeout(() => {
+										this.seasonContainerClickEnabled = true;
+									}, 500);
+									if (this.activeMovieElem) {
+										if (seasonElem.dataset.clicked === 'false') {
+											if (this.playController) {
+												this.playController.setPlayActionButtonType(childData.type);
+												this.playController.setPlayButtonClickFunction((thisEvent: MouseEvent) => {
+													thisEvent.preventDefault();
+													thisEvent.stopPropagation();
+													if (this.playController) {
+														this.playController.play(childData, true);
 													}
-													let isEven = false;
-													_.forEach(episodesData, episodeData => {
-														if (this.episodesElem && this.playController && this.plex) {
-															if (_.isEqual(episodeData.type, 'track')) {
-																tableView.append(
-																	createTrackView(
-																		this.playController,
-																		this.plex,
-																		episodeData,
-																		this.fontSize1,
-																		this.fontSize2,
-																		isEven
-																	)
-																);
-																isEven = !isEven;
-															} else {
-																this.episodesElem.append(
-																	createEpisodesView(
-																		this.playController,
-																		this.plex,
-																		episodeData,
-																		this.fontSize1,
-																		this.fontSize2
-																	)
-																);
-															}
-														}
-													});
-													clearInterval(this.episodesLoadTimeout);
-													this.episodesLoadTimeout = setTimeout(() => {
-														if (this.episodesElem) {
-															this.episodesElem.style.transition = `0.7s`;
-															if (this.activeMovieElem) {
-																this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
-															} else {
-																this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
-															}
+												});
+											}
+											if (typeof seasonElem.children[0].children[0] !== 'undefined') {
+												(seasonElem.children[0].children[0] as HTMLElement).style.display = 'none';
+											}
 
-															this.resizeBackground();
-														}
-													}, 200);
-													clearInterval(this.episodesElemFreshlyLoadedTimeout);
-													this.episodesElemFreshlyLoadedTimeout = setTimeout(() => {
-														this.episodesElemFreshlyLoaded = false;
-													}, 700);
+											seasonElem.dataset.clicked = 'true';
+											this.activeMovieElem.style.top = `${top - 1000}px`;
+											setTimeout(() => {
+												if (this.activeMovieElem) {
+													this.activeMovieElem.style.display = 'none';
 												}
-											}
-										})();
-									} else {
-										// todo: change title from season and change media type of play button back
-										if (this.playController) {
-											this.playController.setPlayActionButtonType(childData.type);
-										}
-										seasonContainer.style.top = `${seasonContainer.dataset.top}px`;
-										this.minimizeSeasons();
-										this.hideEpisodes();
-										this.activeMovieElem.style.display = `block`;
-										setTimeout(() => {
-											if (this.activeMovieElem) {
-												this.activeMovieElem.style.top = `${top + 16}px`;
-											}
-										}, 10);
+											}, 500);
 
-										if (this.detailElem && (this.detailElem.children[1] as HTMLElement)) {
-											const { year } = (this.detailElem.children[1] as HTMLElement).dataset;
-											if (year) {
-												(this.detailElem.children[1] as HTMLElement).innerHTML = year;
+											this.scrollDownInactiveSeasons();
+
+											if (this.activeMovieElem) {
+												seasonContainer.style.top = `${-getHeight(this.activeMovieElem)}px`;
+											} else {
+												seasonContainer.style.top = `${-this.minExpandedHeight}px`;
+											}
+
+											seasonElem.dataset.type = childData.type;
+											seasonElem.style.width = `${this.minExpandedWidth}px`;
+											if (_.isEqual(childData.type, 'album')) {
+												seasonElem.style.height = `${this.minExpandedWidth}px`;
+											} else {
+												seasonElem.style.height = `${this.minExpandedHeight - 6}px`;
+											}
+											seasonElem.style.zIndex = '3';
+
+											seasonElem.style.marginLeft = `-${getOffset(seasonElem).left -
+												getOffset(this.activeMovieElem).left}px`;
+
+											seasonTitleElem.style.color = 'rgba(255,255,255,0)';
+											seasonEpisodesCount.style.color = 'rgba(255,255,255,0)';
+
+											if (this.detailElem) {
+												(this.detailElem.children[1] as HTMLElement).innerHTML = childData.title;
+											}
+											(async (): Promise<void> => {
+												if (this.plex && (childData.leafCount > 0 || _.isEqual(childData.type, 'album'))) {
+													this.episodesElemFreshlyLoaded = true;
+													const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
+													if (this.episodesElem) {
+														this.episodesElemHidden = false;
+														this.episodesElem.style.display = 'block';
+														this.episodesElem.innerHTML = '';
+														this.episodesElem.style.transition = `0s`;
+														this.episodesElem.style.top = `${top + 2000}px`;
+														const tableView = document.createElement('table');
+														tableView.style.width = 'calc(100% - 10px)';
+														tableView.style.border = 'none';
+														tableView.cellSpacing = '0';
+														tableView.cellPadding = '0';
+														if (_.isEqual(childData.type, 'album')) {
+															this.episodesElem.append(tableView);
+														}
+														let isEven = false;
+														_.forEach(episodesData, episodeData => {
+															if (this.episodesElem && this.playController && this.plex) {
+																if (_.isEqual(episodeData.type, 'track')) {
+																	tableView.append(
+																		createTrackView(
+																			this.playController,
+																			this.plex,
+																			episodeData,
+																			this.fontSize1,
+																			this.fontSize2,
+																			isEven
+																		)
+																	);
+																	isEven = !isEven;
+																} else {
+																	this.episodesElem.append(
+																		createEpisodesView(
+																			this.playController,
+																			this.plex,
+																			episodeData,
+																			this.fontSize1,
+																			this.fontSize2
+																		)
+																	);
+																}
+															}
+														});
+														clearInterval(this.episodesLoadTimeout);
+														this.episodesLoadTimeout = setTimeout(() => {
+															if (this.episodesElem) {
+																this.episodesElem.style.transition = `0.7s`;
+																if (this.activeMovieElem) {
+																	this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+																} else {
+																	this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
+																}
+
+																this.resizeBackground();
+															}
+														}, 200);
+														clearInterval(this.episodesElemFreshlyLoadedTimeout);
+														this.episodesElemFreshlyLoadedTimeout = setTimeout(() => {
+															this.episodesElemFreshlyLoaded = false;
+														}, 700);
+													}
+												}
+											})();
+										} else {
+											// todo: change title from season and change media type of play button back
+											if (this.playController) {
+												this.playController.setPlayActionButtonType(childData.type);
+											}
+											seasonContainer.style.top = `${seasonContainer.dataset.top}px`;
+											this.minimizeSeasons();
+											this.hideEpisodes();
+											this.activeMovieElem.style.display = `block`;
+											setTimeout(() => {
+												if (this.activeMovieElem) {
+													this.activeMovieElem.style.top = `${top + 16}px`;
+												}
+											}, 10);
+
+											if (this.detailElem && (this.detailElem.children[1] as HTMLElement)) {
+												const { year } = (this.detailElem.children[1] as HTMLElement).dataset;
+												if (year) {
+													(this.detailElem.children[1] as HTMLElement).innerHTML = year;
+												}
 											}
 										}
 									}
 								}
-							}
-						});
+							});
 
-						this.seasonsElem.append(seasonContainer);
-					}
-				});
-
-				_.forEach((this.seasonsElem as HTMLElement).children, elem => {
-					const seasonElem = elem as HTMLElement;
-					const left = seasonElem.offsetLeft;
-					const topElem = seasonElem.offsetTop;
-					seasonElem.style.left = `${left}px`;
-					seasonElem.dataset.left = `${left}`;
-					seasonElem.style.top = `${topElem}px`;
-					seasonElem.dataset.top = `${topElem}`;
-				});
-				_.forEach((this.seasonsElem as HTMLElement).children, elem => {
-					const seasonElem = elem as HTMLElement;
-					seasonElem.style.position = 'absolute';
-				});
-
-				clearInterval(this.seasonElemFreshlyLoadedTimeout);
-				this.seasonElemFreshlyLoadedTimeout = setTimeout(() => {
-					this.seasonElemFreshlyLoaded = false;
-				}, 700);
-
-				clearInterval(this.showSeasonElemTimeout);
-				this.showSeasonElemTimeout = setTimeout(() => {
-					if (this.seasonsElem) {
-						this.seasonsElem.style.transition = `0.7s`;
-						if (this.activeMovieElem) {
-							this.seasonsElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
-						} else {
-							this.seasonsElem.style.top = `${top + this.minExpandedHeight + 16}px`;
+							this.seasonsElem.append(seasonContainer);
 						}
+					});
 
-						this.resizeBackground();
-					}
-				}, 200);
+					_.forEach((this.seasonsElem as HTMLElement).children, elem => {
+						const seasonElem = elem as HTMLElement;
+						const left = seasonElem.offsetLeft;
+						const topElem = seasonElem.offsetTop;
+						seasonElem.style.left = `${left}px`;
+						seasonElem.dataset.left = `${left}`;
+						seasonElem.style.top = `${topElem}px`;
+						seasonElem.dataset.top = `${topElem}`;
+					});
+					_.forEach((this.seasonsElem as HTMLElement).children, elem => {
+						const seasonElem = elem as HTMLElement;
+						seasonElem.style.position = 'absolute';
+					});
+
+					clearInterval(this.seasonElemFreshlyLoadedTimeout);
+					this.seasonElemFreshlyLoadedTimeout = setTimeout(() => {
+						this.seasonElemFreshlyLoaded = false;
+					}, 700);
+
+					clearInterval(this.showSeasonElemTimeout);
+					this.showSeasonElemTimeout = setTimeout(() => {
+						if (this.seasonsElem) {
+							this.seasonsElem.style.transition = `0.7s`;
+							if (this.activeMovieElem) {
+								this.seasonsElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+							} else {
+								this.seasonsElem.style.top = `${top + this.minExpandedHeight + 16}px`;
+							}
+
+							this.resizeBackground();
+						}
+					}, 200);
+				}
 			} else {
 				this.episodesElemFreshlyLoaded = true;
 				if (this.episodesElem) {
@@ -1893,8 +1946,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		movieElem.style.width = `${CSS_STYLE.width}px`;
 		movieElem.style.height = `${CSS_STYLE.height}px`;
 
-		if (!_.isNil(data.channelCallSign) || _.isEqual(data.type, 'artist')) {
-			if (!_.isEqual(data.type, 'artist')) {
+		if (!_.isNil(data.channelCallSign) || _.isEqual(data.type, 'artist') || _.isEqual(data.type, 'album')) {
+			if (!_.isEqual(data.type, 'artist') && !_.isEqual(data.type, 'album')) {
 				movieElem.style.backgroundSize = '80%';
 			}
 			movieElem.style.backgroundColor = 'rgba(0,0,0,0.2)';
@@ -2059,6 +2112,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		this.config = config;
 		if (config.protocol) {
 			this.plexProtocol = config.protocol;
+		}
+		if (config.displayType && !_.isEmpty(config.displayType)) {
+			this.displayType = config.displayType;
 		}
 		if (config.useHorizontalScroll && _.isEqual(config.useHorizontalScroll, 'Yes')) {
 			this.useHorizontalScroll = true;
