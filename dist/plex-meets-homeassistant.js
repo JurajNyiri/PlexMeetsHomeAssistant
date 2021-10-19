@@ -19101,8 +19101,8 @@ class Plex {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Metadata[0];
         };
-        this.getLibraryData = async (id) => {
-            const url = this.authorizeURL(`${this.getBasicURL()}/library/metadata/${id}/children`);
+        this.getLibraryData = async (path) => {
+            const url = this.authorizeURL(`${this.getBasicURL()}${path}`);
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Metadata;
@@ -19303,7 +19303,12 @@ const createTrackView = (playController, plex, data, fontSize1, fontSize2, isEve
     trackContainer.append(trackIndexElem);
     const trackTitleElem = document.createElement('td');
     trackTitleElem.className = 'trackTitleElem';
-    trackTitleElem.innerHTML = escapeHtml(data.title);
+    if (!lodash.isEmpty(data.title)) {
+        trackTitleElem.innerHTML = escapeHtml(data.title);
+    }
+    else if (!lodash.isEmpty(data.titleSort)) {
+        trackTitleElem.innerHTML = escapeHtml(data.titleSort);
+    }
     trackTitleElem.style.fontSize = `${fontSize1}px`;
     trackTitleElem.style.lineHeight = `${fontSize1}px`;
     trackTitleElem.style.marginBottom = `${margin1}px`;
@@ -22960,14 +22965,19 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.plex) {
                 let childrenData = {};
                 if (lodash.isEqual(data.type, 'episode')) {
-                    childrenData = await this.plex.getLibraryData(data.grandparentKey.split('/')[3]);
+                    childrenData = await this.plex.getLibraryData(data.grandparentKey);
                 }
-                else if (data.childCount > 0 || lodash.isEqual(data.type, 'artist') || lodash.isEqual(data.type, 'album')) {
-                    childrenData = await this.plex.getLibraryData(data.key.split('/')[3]);
+                else if (data.childCount > 0 ||
+                    lodash.isEqual(data.type, 'artist') ||
+                    lodash.isEqual(data.type, 'album') ||
+                    lodash.includes(data.key, 'folder')) {
+                    childrenData = await this.plex.getLibraryData(data.key);
                 }
                 let dataDetails = {};
                 if (!lodash.isNil(data.key)) {
-                    dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+                    if (!lodash.includes(data.key, 'folder')) {
+                        dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+                    }
                     if (this.videoElem) {
                         const art = this.plex.authorizeURL(this.plex.getBasicURL() + data.art);
                         const trailerURL = findTrailerURL(dataDetails);
@@ -23087,9 +23097,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             tableView.style.border = 'none';
                             tableView.cellSpacing = '0';
                             tableView.cellPadding = '0';
-                            if (lodash.isEqual(data.type, 'album')) {
-                                this.episodesElem.append(tableView);
-                            }
+                            this.episodesElem.append(tableView);
                             let isEven = false;
                             lodash.forEach(childrenData, childData => {
                                 if (this.episodesElem && this.playController && this.plex) {
@@ -23124,7 +23132,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     else {
                         lodash.forEach(childrenData, childData => {
                             if (this.seasonsElem && this.plex) {
-                                console.log(childData);
                                 this.seasonsElemHidden = false;
                                 const seasonContainer = document.createElement('div');
                                 seasonContainer.className = 'seasonContainer';
@@ -23242,7 +23249,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                 (async () => {
                                                     if (this.plex && (childData.leafCount > 0 || lodash.isEqual(childData.type, 'album'))) {
                                                         this.episodesElemFreshlyLoaded = true;
-                                                        const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
+                                                        const episodesData = await this.plex.getLibraryData(childData.key);
                                                         if (this.episodesElem) {
                                                             this.episodesElemHidden = false;
                                                             this.episodesElem.style.display = 'block';
@@ -23358,7 +23365,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.episodesElem.style.transition = `0s`;
                         this.episodesElem.style.top = `${top + 2000}px`;
                         if (lodash.isEqual(data.type, 'season')) {
-                            const episodesData = await this.plex.getLibraryData(data.key.split('/')[3]);
+                            const episodesData = await this.plex.getLibraryData(data.key);
                             lodash.forEach(episodesData, episodeData => {
                                 if (this.episodesElem && this.playController && this.plex) {
                                     this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData, this.fontSize1, this.fontSize2));
@@ -23498,8 +23505,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             movieElem.className = 'movieElem';
             movieElem.style.width = `${CSS_STYLE.width}px`;
             movieElem.style.height = `${CSS_STYLE.height}px`;
-            if (!lodash.isNil(data.channelCallSign) || lodash.isEqual(data.type, 'artist') || lodash.isEqual(data.type, 'album')) {
-                if (!lodash.isEqual(data.type, 'artist') && !lodash.isEqual(data.type, 'album')) {
+            if (!lodash.isNil(data.channelCallSign) ||
+                lodash.isEqual(data.type, 'artist') ||
+                lodash.isEqual(data.type, 'album') ||
+                lodash.includes(data.key, 'folder')) {
+                if (!lodash.isEqual(data.type, 'artist') && !lodash.isEqual(data.type, 'album') && !lodash.includes(data.key, 'folder')) {
                     movieElem.style.backgroundSize = '80%';
                 }
                 movieElem.style.backgroundColor = 'rgba(0,0,0,0.2)';

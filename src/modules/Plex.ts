@@ -551,8 +551,8 @@ class Plex {
 		).data.MediaContainer.Metadata[0];
 	};
 
-	getLibraryData = async (id: number): Promise<any> => {
-		const url = this.authorizeURL(`${this.getBasicURL()}/library/metadata/${id}/children`);
+	getLibraryData = async (path: string): Promise<any> => {
+		const url = this.authorizeURL(`${this.getBasicURL()}${path}`);
 		return (
 			await axios.get(url, {
 				timeout: this.requestTimeout
