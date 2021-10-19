@@ -18863,11 +18863,21 @@ class Plex {
         };
         this.getSectionDataWithoutProcessing = async (sectionID, type = false) => {
             const bulkItems = 50;
-            let url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/all`);
-            url += `&sort=${this.sort}`;
+            let url = `${this.getBasicURL()}/library/sections/${sectionID}`;
             if (type) {
-                url += `&type=${type}`;
+                if (lodash.isEqual(type, 'folder')) {
+                    url += `/folder`;
+                }
+                else {
+                    url += `/all`;
+                    url += `?type=${type}`;
+                }
             }
+            else {
+                url += `/all`;
+            }
+            url = this.authorizeURL(url);
+            url += `&sort=${this.sort}`;
             url += `&includeCollections=1&includeExternalMedia=1&includeAdvanced=1&includeMeta=1`;
             let result = {};
             try {
@@ -19091,8 +19101,8 @@ class Plex {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Metadata[0];
         };
-        this.getLibraryData = async (id) => {
-            const url = this.authorizeURL(`${this.getBasicURL()}/library/metadata/${id}/children`);
+        this.getLibraryData = async (path) => {
+            const url = this.authorizeURL(`${this.getBasicURL()}${path}`);
             return (await axios.get(url, {
                 timeout: this.requestTimeout
             })).data.MediaContainer.Metadata;
@@ -19293,7 +19303,12 @@ const createTrackView = (playController, plex, data, fontSize1, fontSize2, isEve
     trackContainer.append(trackIndexElem);
     const trackTitleElem = document.createElement('td');
     trackTitleElem.className = 'trackTitleElem';
-    trackTitleElem.innerHTML = escapeHtml(data.title);
+    if (!lodash.isEmpty(data.title)) {
+        trackTitleElem.innerHTML = escapeHtml(data.title);
+    }
+    else if (!lodash.isEmpty(data.titleSort)) {
+        trackTitleElem.innerHTML = escapeHtml(data.titleSort);
+    }
     trackTitleElem.style.fontSize = `${fontSize1}px`;
     trackTitleElem.style.lineHeight = `${fontSize1}px`;
     trackTitleElem.style.marginBottom = `${margin1}px`;
@@ -19810,6 +19825,10 @@ class PlayController {
             playButton.setAttribute('data-mediaType', mediaType);
             this.playButtons.push(playButton);
             return playButton;
+        };
+        this.setPlayActionDisplay = (displayValue) => {
+            const playActionButton = this.updateDetailPlayAction();
+            playActionButton.style.display = displayValue;
         };
         this.setPlayActionButtonType = (mediaType) => {
             const playActionButton = this.updateDetailPlayAction();
@@ -20833,8 +20852,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         typeItems.appendChild(addDropdownItem('', ''));
                         let typeAvailable = false;
                         lodash.forEach(types, (sectionType) => {
-                            if (sectionType.type !== 'folder' && sectionType.type !== 'track' && sectionType.type !== 'episode') {
-                                const key = sectionType.key.split('type=')[1];
+                            if (sectionType.type !== 'track' &&
+                                sectionType.type !== 'episode' &&
+                                (sectionType.type !== 'folder' ||
+                                    (sectionType.type === 'folder' && lodash.isEqual(lodash.get(libraryData, '[0].viewGroup'), 'artist')))) {
+                                let key = sectionType.key.split('type=')[1];
+                                if (sectionType.type === 'folder') {
+                                    key = 'folder';
+                                }
                                 if (lodash.isEqual(key, this.config.displayType)) {
                                     typeAvailable = true;
                                 }
@@ -20872,7 +20897,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         });
                     }
                     const sortFields = lodash.get(libraryData, `[0].Meta.Type[${displayTypeIndex}].Sort`);
-                    if (!lodash.isNil(sortFields) && sortFields.length > 0) {
+                    if (!lodash.isNil(sortFields) && sortFields.length > 0 && this.config.displayType !== 'folder') {
                         lodash.forEach(sortFields, (sortField) => {
                             sortItems.appendChild(addDropdownItem(sortField.key));
                         });
@@ -21885,6 +21910,26 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.calculatePositions();
             }
         };
+        this.resizeHandler = () => {
+            if (this.isVisible) {
+                if (!this.detailsShown) {
+                    const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
+                    let isFullScreen = false;
+                    if (videoPlayer.children.length > 0) {
+                        isFullScreen = isVideoFullScreen(this);
+                    }
+                    if (this.card && this.movieElems.length > 0 && !isFullScreen) {
+                        if (this.previousPageWidth !== this.card.offsetWidth) {
+                            this.previousPageWidth = this.card.offsetWidth;
+                            this.renderPage();
+                            const contentbg = this.getElementsByClassName('contentbg');
+                            this.contentBGHeight = getHeight(contentbg[0]);
+                        }
+                    }
+                }
+                this.renderNewElementsIfNeeded();
+            }
+        };
         this.loadInitialData = async () => {
             this.initialDataLoaded = true;
             setInterval(() => {
@@ -21939,24 +21984,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.renderNewElementsIfNeeded();
             });
             window.addEventListener('resize', () => {
-                if (this.isVisible) {
-                    if (!this.detailsShown) {
-                        const videoPlayer = this.getElementsByClassName('videoPlayer')[0];
-                        let isFullScreen = false;
-                        if (videoPlayer.children.length > 0) {
-                            isFullScreen = isVideoFullScreen(this);
-                        }
-                        if (this.card && this.movieElems.length > 0 && !isFullScreen) {
-                            if (this.previousPageWidth !== this.card.offsetWidth) {
-                                this.previousPageWidth = this.card.offsetWidth;
-                                this.renderPage();
-                                const contentbg = this.getElementsByClassName('contentbg');
-                                this.contentBGHeight = getHeight(contentbg[0]);
-                            }
-                        }
-                    }
-                    this.renderNewElementsIfNeeded();
-                }
+                this.resizeHandler();
             });
             if (this.card) {
                 this.previousPageWidth = this.card.offsetWidth;
@@ -22599,15 +22627,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         break;
                     }
                     else {
+                        this.resizeHandler();
                         clearInterval(setLeftOffsetsInterval);
                     }
-                    /*
-                    this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
-                    this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
-                    this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
-                    this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
-                    this.movieElems[i].style.position = 'absolute';
-                    */
                 }
             }, 100);
         };
@@ -22801,7 +22823,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
-                this.detailElem.style.left = `${this.minExpandedWidth + 30}px`;
+                if (!lodash.isEmpty(lodash.get(data, 'thumb'))) {
+                    this.detailElem.style.left = `${this.minExpandedWidth + 30}px`;
+                }
+                else {
+                    this.detailElem.style.left = `16px`;
+                }
                 clearInterval(this.showDetailsTimeout);
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 this.showDetailsTimeout = setTimeout(async () => {
@@ -22947,14 +22974,27 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.plex) {
                 let childrenData = {};
                 if (lodash.isEqual(data.type, 'episode')) {
-                    childrenData = await this.plex.getLibraryData(data.grandparentKey.split('/')[3]);
+                    childrenData = await this.plex.getLibraryData(`${data.grandparentKey}/children`);
                 }
-                else if (data.childCount > 0 || lodash.isEqual(data.type, 'artist') || lodash.isEqual(data.type, 'album')) {
-                    childrenData = await this.plex.getLibraryData(data.key.split('/')[3]);
+                else if (data.childCount > 0 ||
+                    lodash.isEqual(data.type, 'artist') ||
+                    lodash.isEqual(data.type, 'album') ||
+                    lodash.includes(data.key, 'folder')) {
+                    childrenData = await this.plex.getLibraryData(data.key);
+                }
+                if (this.playController) {
+                    if (lodash.includes(data.key, 'folder')) {
+                        this.playController.setPlayActionDisplay('none');
+                    }
+                    else {
+                        this.playController.setPlayActionDisplay('block');
+                    }
                 }
                 let dataDetails = {};
                 if (!lodash.isNil(data.key)) {
-                    dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+                    if (!lodash.includes(data.key, 'folder')) {
+                        dataDetails = await this.plex.getDetails(data.key.split('/')[3]);
+                    }
                     if (this.videoElem) {
                         const art = this.plex.authorizeURL(this.plex.getBasicURL() + data.art);
                         const trailerURL = findTrailerURL(dataDetails);
@@ -23074,9 +23114,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             tableView.style.border = 'none';
                             tableView.cellSpacing = '0';
                             tableView.cellPadding = '0';
-                            if (lodash.isEqual(data.type, 'album')) {
-                                this.episodesElem.append(tableView);
-                            }
+                            this.episodesElem.append(tableView);
                             let isEven = false;
                             lodash.forEach(childrenData, childData => {
                                 if (this.episodesElem && this.playController && this.plex) {
@@ -23094,7 +23132,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 if (this.episodesElem) {
                                     this.episodesElem.style.transition = `0.7s`;
                                     if (this.activeMovieElem) {
-                                        this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+                                        if (!lodash.isEmpty(lodash.get(data, 'thumb'))) {
+                                            this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+                                        }
+                                        else if (this.detailElem) {
+                                            this.episodesElem.style.top = `${top + getHeight(this.detailElem)}px`;
+                                        }
+                                        else {
+                                            this.episodesElem.style.top = `${top}px`;
+                                        }
                                     }
                                     else {
                                         this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
@@ -23111,7 +23157,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     else {
                         lodash.forEach(childrenData, childData => {
                             if (this.seasonsElem && this.plex) {
-                                console.log(childData);
                                 this.seasonsElemHidden = false;
                                 const seasonContainer = document.createElement('div');
                                 seasonContainer.className = 'seasonContainer';
@@ -23229,7 +23274,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                                 (async () => {
                                                     if (this.plex && (childData.leafCount > 0 || lodash.isEqual(childData.type, 'album'))) {
                                                         this.episodesElemFreshlyLoaded = true;
-                                                        const episodesData = await this.plex.getLibraryData(childData.key.split('/')[3]);
+                                                        const episodesData = await this.plex.getLibraryData(childData.key);
                                                         if (this.episodesElem) {
                                                             this.episodesElemHidden = false;
                                                             this.episodesElem.style.display = 'block';
@@ -23345,7 +23390,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         this.episodesElem.style.transition = `0s`;
                         this.episodesElem.style.top = `${top + 2000}px`;
                         if (lodash.isEqual(data.type, 'season')) {
-                            const episodesData = await this.plex.getLibraryData(data.key.split('/')[3]);
+                            const episodesData = await this.plex.getLibraryData(data.key);
                             lodash.forEach(episodesData, episodeData => {
                                 if (this.episodesElem && this.playController && this.plex) {
                                     this.episodesElem.append(createEpisodesView(this.playController, this.plex, episodeData, this.fontSize1, this.fontSize2));
@@ -23485,8 +23530,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             movieElem.className = 'movieElem';
             movieElem.style.width = `${CSS_STYLE.width}px`;
             movieElem.style.height = `${CSS_STYLE.height}px`;
-            if (!lodash.isNil(data.channelCallSign) || lodash.isEqual(data.type, 'artist') || lodash.isEqual(data.type, 'album')) {
-                if (!lodash.isEqual(data.type, 'artist') && !lodash.isEqual(data.type, 'album')) {
+            if (!lodash.isNil(data.channelCallSign) ||
+                lodash.isEqual(data.type, 'artist') ||
+                lodash.isEqual(data.type, 'album') ||
+                lodash.includes(data.key, 'folder')) {
+                if (!lodash.isEqual(data.type, 'artist') && !lodash.isEqual(data.type, 'album') && !lodash.includes(data.key, 'folder')) {
                     movieElem.style.backgroundSize = '80%';
                 }
                 movieElem.style.backgroundColor = 'rgba(0,0,0,0.2)';

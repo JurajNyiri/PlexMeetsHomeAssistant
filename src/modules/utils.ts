@@ -232,7 +232,11 @@ const createTrackView = (
 
 	const trackTitleElem = document.createElement('td');
 	trackTitleElem.className = 'trackTitleElem';
-	trackTitleElem.innerHTML = escapeHtml(data.title);
+	if (!_.isEmpty(data.title)) {
+		trackTitleElem.innerHTML = escapeHtml(data.title);
+	} else if (!_.isEmpty(data.titleSort)) {
+		trackTitleElem.innerHTML = escapeHtml(data.titleSort);
+	}
 
 	trackTitleElem.style.fontSize = `${fontSize1}px`;
 	trackTitleElem.style.lineHeight = `${fontSize1}px`;

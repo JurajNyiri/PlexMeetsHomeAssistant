@@ -507,6 +507,11 @@ class PlayController {
 		return playButton;
 	};
 
+	setPlayActionDisplay = (displayValue: string): void => {
+		const playActionButton = this.updateDetailPlayAction();
+		playActionButton.style.display = displayValue;
+	};
+
 	setPlayActionButtonType = (mediaType: string): void => {
 		const playActionButton = this.updateDetailPlayAction();
 		playActionButton.setAttribute('data-mediaType', mediaType);

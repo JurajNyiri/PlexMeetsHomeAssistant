@@ -797,8 +797,16 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					typeItems.appendChild(addDropdownItem('', ''));
 					let typeAvailable = false;
 					_.forEach(types, (sectionType: Record<string, any>) => {
-						if (sectionType.type !== 'folder' && sectionType.type !== 'track' && sectionType.type !== 'episode') {
-							const key = sectionType.key.split('type=')[1];
+						if (
+							sectionType.type !== 'track' &&
+							sectionType.type !== 'episode' &&
+							(sectionType.type !== 'folder' ||
+								(sectionType.type === 'folder' && _.isEqual(_.get(libraryData, '[0].viewGroup'), 'artist')))
+						) {
+							let key = sectionType.key.split('type=')[1];
+							if (sectionType.type === 'folder') {
+								key = 'folder';
+							}
 							if (_.isEqual(key, this.config.displayType)) {
 								typeAvailable = true;
 							}
@@ -835,7 +843,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					});
 				}
 				const sortFields = _.get(libraryData, `[0].Meta.Type[${displayTypeIndex}].Sort`);
-				if (!_.isNil(sortFields) && sortFields.length > 0) {
+				if (!_.isNil(sortFields) && sortFields.length > 0 && this.config.displayType !== 'folder') {
 					_.forEach(sortFields, (sortField: Record<string, any>) => {
 						sortItems.appendChild(addDropdownItem(sortField.key));
 					});
