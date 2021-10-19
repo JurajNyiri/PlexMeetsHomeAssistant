@@ -405,15 +405,6 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		warningLibrary.style.color = 'red';
 		this.content.appendChild(this.libraryName);
 
-		this.displayType.innerHTML = '';
-		const typeItems: any = document.createElement('paper-listbox');
-		typeItems.slot = 'dropdown-content';
-		this.displayType.label = 'Display Type (Optional)';
-		this.displayType.appendChild(typeItems);
-		this.displayType.style.width = '100%';
-		this.displayType.addEventListener('value-changed', this.valueUpdated);
-		this.content.appendChild(this.displayType);
-
 		this.content.appendChild(warningLibrary);
 
 		this.appendChild(this.content);
@@ -517,6 +508,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		viewTitle.style.marginBottom = '0px';
 		viewTitle.style.marginTop = '20px';
 		this.plexValidSection.appendChild(viewTitle);
+
+		this.displayType.innerHTML = '';
+		const typeItems: any = document.createElement('paper-listbox');
+		typeItems.slot = 'dropdown-content';
+		this.displayType.label = 'Display Type (Optional)';
+		this.displayType.appendChild(typeItems);
+		this.displayType.style.width = '100%';
+		this.displayType.addEventListener('value-changed', this.valueUpdated);
+		this.plexValidSection.appendChild(this.displayType);
 
 		this.cardTitle.label = 'Card title (Optional)';
 		this.cardTitle.value = this.config.title;
