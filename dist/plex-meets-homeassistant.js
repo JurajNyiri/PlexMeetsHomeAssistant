@@ -19826,6 +19826,10 @@ class PlayController {
             this.playButtons.push(playButton);
             return playButton;
         };
+        this.setPlayActionDisplay = (displayValue) => {
+            const playActionButton = this.updateDetailPlayAction();
+            playActionButton.style.display = displayValue;
+        };
         this.setPlayActionButtonType = (mediaType) => {
             const playActionButton = this.updateDetailPlayAction();
             playActionButton.setAttribute('data-mediaType', mediaType);
@@ -22980,6 +22984,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     lodash.isEqual(data.type, 'album') ||
                     lodash.includes(data.key, 'folder')) {
                     childrenData = await this.plex.getLibraryData(data.key);
+                }
+                if (this.playController) {
+                    if (lodash.includes(data.key, 'folder')) {
+                        this.playController.setPlayActionDisplay('none');
+                    }
+                    else {
+                        this.playController.setPlayActionDisplay('block');
+                    }
                 }
                 let dataDetails = {};
                 if (!lodash.isNil(data.key)) {

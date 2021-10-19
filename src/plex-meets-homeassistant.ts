@@ -1353,6 +1353,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			) {
 				childrenData = await this.plex.getLibraryData(data.key);
 			}
+			if (this.playController) {
+				if (_.includes(data.key, 'folder')) {
+					this.playController.setPlayActionDisplay('none');
+				} else {
+					this.playController.setPlayActionDisplay('block');
+				}
+			}
 			let dataDetails: Record<string, any> = {};
 			if (!_.isNil(data.key)) {
 				if (!_.includes(data.key, 'folder')) {
