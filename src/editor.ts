@@ -838,7 +838,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					});
 				}
 				const sortFields = _.get(libraryData, `[0].Meta.Type[${displayTypeIndex}].Sort`);
-				if (!_.isNil(sortFields) && sortFields.length > 0) {
+				if (!_.isNil(sortFields) && sortFields.length > 0 && this.config.displayType !== 'folder') {
 					_.forEach(sortFields, (sortField: Record<string, any>) => {
 						sortItems.appendChild(addDropdownItem(sortField.key));
 					});
