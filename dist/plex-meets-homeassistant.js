@@ -20889,6 +20889,9 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                     this.displayType.style.display = 'none';
                     this.config.displayType = '';
                     this.displayType.value = '';
+                    this.sort.style.display = 'none';
+                    this.sortOrder.style.display = 'none';
+                    this.config.sort = '';
                 }
                 if (lodash.isEmpty(this.config.sort)) {
                     this.sort.value = '';
