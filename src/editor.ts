@@ -58,6 +58,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	sort: any = document.createElement('paper-dropdown-menu');
 
+	displayType: any = document.createElement('paper-dropdown-menu');
+
 	sortOrder: any = document.createElement('paper-dropdown-menu');
 
 	playTrailer: any = document.createElement('paper-dropdown-menu');
@@ -138,6 +140,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				} else {
 					this.config.sort = ``;
 				}
+
+				this.config.displayType = this.displayType.value;
 
 				if (_.isEmpty(this.maxCount.value)) {
 					this.config.maxCount = '';
@@ -258,10 +262,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	};
 
 	render = async (): Promise<void> => {
-		const addDropdownItem = (text: string, disabled = false): HTMLElement => {
+		const addDropdownItem = (value: string, text = '', disabled = false): HTMLElement => {
+			if (_.isEmpty(text)) {
+				// eslint-disable-next-line no-param-reassign
+				text = value;
+			}
 			const libraryItem: any = document.createElement('paper-item');
 			libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
-			libraryItem.label = text;
+			libraryItem.label = value;
 			if (disabled) {
 				libraryItem.disabled = true;
 			}
@@ -381,7 +389,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.libraryName.innerHTML = '';
 		const libraryItems: any = document.createElement('paper-listbox');
 
-		libraryItems.appendChild(addDropdownItem('Smart Libraries', true));
+		libraryItems.appendChild(addDropdownItem('Smart Libraries', '', true));
 		libraryItems.appendChild(addDropdownItem('Continue Watching'));
 		libraryItems.appendChild(addDropdownItem('Deck'));
 		libraryItems.appendChild(addDropdownItem('Recently Added'));
@@ -396,6 +404,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		const warningLibrary = document.createElement('div');
 		warningLibrary.style.color = 'red';
 		this.content.appendChild(this.libraryName);
+
 		this.content.appendChild(warningLibrary);
 
 		this.appendChild(this.content);
@@ -499,6 +508,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		viewTitle.style.marginBottom = '0px';
 		viewTitle.style.marginTop = '20px';
 		this.plexValidSection.appendChild(viewTitle);
+
+		this.displayType.innerHTML = '';
+		const typeItems: any = document.createElement('paper-listbox');
+		typeItems.slot = 'dropdown-content';
+		this.displayType.label = 'Display Type (Optional)';
+		this.displayType.appendChild(typeItems);
+		this.displayType.style.width = '100%';
+		this.displayType.addEventListener('value-changed', this.valueUpdated);
+		this.plexValidSection.appendChild(this.displayType);
 
 		this.cardTitle.label = 'Card title (Optional)';
 		this.cardTitle.value = this.config.title;
@@ -734,7 +752,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.fontSize4);
 
 		if (!_.isEmpty(this.livetv)) {
-			libraryItems.appendChild(addDropdownItem('Live TV', true));
+			libraryItems.appendChild(addDropdownItem('Live TV', '', true));
 			_.forEach(_.keys(this.livetv), (livetv: string) => {
 				if (_.isEqual(this.config.libraryName, livetv)) {
 					warningLibrary.innerHTML = `Warning: ${this.config.libraryName} play action currently only supported with Kodi.<br/>You might also need custom build of kodi-media-sensors, see <a href="https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md#kodi" target="_blank">detailed configuration</a> for more information.`;
@@ -743,18 +761,18 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			});
 		}
 		if (!_.isEmpty(this.sections)) {
-			libraryItems.appendChild(addDropdownItem('Libraries', true));
+			libraryItems.appendChild(addDropdownItem('Libraries', '', true));
 			_.forEach(this.sections, (section: Record<string, any>) => {
 				libraryItems.appendChild(addDropdownItem(section.title));
 			});
 			if (!_.isEmpty(this.collections)) {
-				libraryItems.appendChild(addDropdownItem('Collections', true));
+				libraryItems.appendChild(addDropdownItem('Collections', '', true));
 				_.forEach(this.collections, (collection: Record<string, any>) => {
 					libraryItems.appendChild(addDropdownItem(collection.title));
 				});
 			}
 			if (!_.isEmpty(this.playlists)) {
-				libraryItems.appendChild(addDropdownItem('Playlists', true));
+				libraryItems.appendChild(addDropdownItem('Playlists', '', true));
 				_.forEach(this.playlists, (playlist: Record<string, any>) => {
 					libraryItems.appendChild(addDropdownItem(playlist.title));
 				});
@@ -763,46 +781,75 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.libraryName.disabled = false;
 			this.libraryName.value = this.config.libraryName;
 
-			let libraryType = '';
+			let libraryKey = '';
 			// eslint-disable-next-line consistent-return
 			_.forEach(this.sections, section => {
 				if (_.isEqual(section.title, this.libraryName.value)) {
-					libraryType = section.type;
+					libraryKey = section.key;
 					return false;
 				}
 			});
-			if (_.isEqual(libraryType, 'show')) {
-				sortItems.appendChild(addDropdownItem('titleSort'));
-				sortItems.appendChild(addDropdownItem('title'));
-				sortItems.appendChild(addDropdownItem('year'));
-				sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
-				sortItems.appendChild(addDropdownItem('rating'));
-				sortItems.appendChild(addDropdownItem('audienceRating'));
-				sortItems.appendChild(addDropdownItem('userRating'));
-				sortItems.appendChild(addDropdownItem('contentRating'));
-				sortItems.appendChild(addDropdownItem('unviewedLeafCount'));
-				sortItems.appendChild(addDropdownItem('episode.addedAt'));
-				sortItems.appendChild(addDropdownItem('addedAt'));
-				sortItems.appendChild(addDropdownItem('lastViewedAt'));
-				this.sort.style.display = 'block';
-				this.sortOrder.style.display = 'block';
-			} else if (_.isEqual(libraryType, 'movie')) {
-				sortItems.appendChild(addDropdownItem('titleSort'));
-				sortItems.appendChild(addDropdownItem('title'));
-				sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
-				sortItems.appendChild(addDropdownItem('rating'));
-				sortItems.appendChild(addDropdownItem('audienceRating'));
-				sortItems.appendChild(addDropdownItem('userRating'));
-				sortItems.appendChild(addDropdownItem('duration'));
-				sortItems.appendChild(addDropdownItem('viewOffset'));
-				sortItems.appendChild(addDropdownItem('viewCount'));
-				sortItems.appendChild(addDropdownItem('addedAt'));
-				sortItems.appendChild(addDropdownItem('lastViewedAt'));
-				sortItems.appendChild(addDropdownItem('mediaHeight'));
-				sortItems.appendChild(addDropdownItem('mediaBitrate'));
-				this.sort.style.display = 'block';
-				this.sortOrder.style.display = 'block';
+			if (!_.isEmpty(libraryKey)) {
+				const libraryData = await this.plex.getSectionData(libraryKey);
+				const types = _.get(libraryData, '[0].Meta.Type');
+				if (!_.isNil(types) && types.length > 1) {
+					let addedTypes = 0;
+					typeItems.appendChild(addDropdownItem('', ''));
+					let typeAvailable = false;
+					_.forEach(types, (sectionType: Record<string, any>) => {
+						if (sectionType.type !== 'folder' && sectionType.type !== 'track' && sectionType.type !== 'episode') {
+							const key = sectionType.key.split('type=')[1];
+							if (_.isEqual(key, this.config.displayType)) {
+								typeAvailable = true;
+							}
+							typeItems.appendChild(addDropdownItem(key, sectionType.title));
+							addedTypes += 1;
+						}
+					});
+					if (addedTypes > 1) {
+						this.displayType.style.display = 'block';
+
+						if (_.isEmpty(this.config.displayType) || !typeAvailable) {
+							this.displayType.value = '';
+						} else {
+							this.displayType.value = this.config.displayType;
+						}
+					} else {
+						this.displayType.style.display = 'none';
+						this.config.displayType = '';
+						this.displayType.value = '';
+					}
+				} else {
+					this.displayType.style.display = 'none';
+					this.config.displayType = '';
+					this.displayType.value = '';
+				}
+
+				let displayTypeIndex = 0;
+				if (this.config.displayType) {
+					_.forEach(types, (sectionType: Record<string, any>, sectionKey) => {
+						const key = sectionType.key.split('type=')[1];
+						if (key === parseInt(this.config.displayType, 10)) {
+							displayTypeIndex = parseInt(sectionKey, 10);
+						}
+					});
+				}
+				const sortFields = _.get(libraryData, `[0].Meta.Type[${displayTypeIndex}].Sort`);
+				if (!_.isNil(sortFields) && sortFields.length > 0) {
+					_.forEach(sortFields, (sortField: Record<string, any>) => {
+						sortItems.appendChild(addDropdownItem(sortField.key));
+					});
+					this.sort.style.display = 'block';
+					this.sortOrder.style.display = 'block';
+				} else {
+					this.sort.style.display = 'none';
+					this.sortOrder.style.display = 'none';
+					this.config.sort = '';
+				}
 			} else {
+				this.displayType.style.display = 'none';
+				this.config.displayType = '';
+				this.displayType.value = '';
 				this.sort.style.display = 'none';
 				this.sortOrder.style.display = 'none';
 				this.config.sort = '';
@@ -851,6 +898,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (!config.sort) {
 			this.config.sort = 'titleSort:asc';
+		}
+
+		if (!config.displayType) {
+			this.config.displayType = '';
 		}
 
 		if (!_.isNil(config.playTrailer)) {
