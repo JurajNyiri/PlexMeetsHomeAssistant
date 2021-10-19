@@ -1508,7 +1508,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							if (this.episodesElem) {
 								this.episodesElem.style.transition = `0.7s`;
 								if (this.activeMovieElem) {
-									this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+									if (!_.isEmpty(_.get(data, 'thumb'))) {
+										this.episodesElem.style.top = `${top + getHeight(this.activeMovieElem) + 16 * 2}px`;
+									} else if (this.detailElem) {
+										this.episodesElem.style.top = `${top + getHeight(this.detailElem)}px`;
+									} else {
+										this.episodesElem.style.top = `${top}px`;
+									}
 								} else {
 									this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
 								}
