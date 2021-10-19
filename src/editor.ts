@@ -781,12 +781,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.libraryName.disabled = false;
 			this.libraryName.value = this.config.libraryName;
 
-			let libraryType = '';
 			let libraryKey = '';
 			// eslint-disable-next-line consistent-return
 			_.forEach(this.sections, section => {
 				if (_.isEqual(section.title, this.libraryName.value)) {
-					libraryType = section.type;
 					libraryKey = section.key;
 					return false;
 				}
@@ -826,47 +824,32 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.displayType = '';
 					this.displayType.value = '';
 				}
+
+				let displayTypeIndex = 0;
+				if (this.config.displayType) {
+					_.forEach(types, (sectionType: Record<string, any>, sectionKey) => {
+						const key = sectionType.key.split('type=')[1];
+						if (key === parseInt(this.config.displayType, 10)) {
+							displayTypeIndex = parseInt(sectionKey, 10);
+						}
+					});
+				}
+				const sortFields = _.get(libraryData, `[0].Meta.Type[${displayTypeIndex}].Sort`);
+				if (!_.isNil(sortFields) && sortFields.length > 0) {
+					_.forEach(sortFields, (sortField: Record<string, any>) => {
+						sortItems.appendChild(addDropdownItem(sortField.key));
+					});
+					this.sort.style.display = 'block';
+					this.sortOrder.style.display = 'block';
+				} else {
+					this.sort.style.display = 'none';
+					this.sortOrder.style.display = 'none';
+					this.config.sort = '';
+				}
 			} else {
 				this.displayType.style.display = 'none';
 				this.config.displayType = '';
 				this.displayType.value = '';
-			}
-
-			if (_.isEqual(libraryType, 'show')) {
-				sortItems.appendChild(addDropdownItem('titleSort'));
-				sortItems.appendChild(addDropdownItem('title'));
-				sortItems.appendChild(addDropdownItem('year'));
-				sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
-				sortItems.appendChild(addDropdownItem('rating'));
-				sortItems.appendChild(addDropdownItem('audienceRating'));
-				sortItems.appendChild(addDropdownItem('userRating'));
-				sortItems.appendChild(addDropdownItem('contentRating'));
-				sortItems.appendChild(addDropdownItem('unviewedLeafCount'));
-				sortItems.appendChild(addDropdownItem('episode.addedAt'));
-				sortItems.appendChild(addDropdownItem('addedAt'));
-				sortItems.appendChild(addDropdownItem('lastViewedAt'));
-				this.sort.style.display = 'block';
-				this.sortOrder.style.display = 'block';
-			} else if (_.isEqual(libraryType, 'movie')) {
-				sortItems.appendChild(addDropdownItem('titleSort'));
-				sortItems.appendChild(addDropdownItem('title'));
-				sortItems.appendChild(addDropdownItem('originallyAvailableAt'));
-				sortItems.appendChild(addDropdownItem('rating'));
-				sortItems.appendChild(addDropdownItem('audienceRating'));
-				sortItems.appendChild(addDropdownItem('userRating'));
-				sortItems.appendChild(addDropdownItem('duration'));
-				sortItems.appendChild(addDropdownItem('viewOffset'));
-				sortItems.appendChild(addDropdownItem('viewCount'));
-				sortItems.appendChild(addDropdownItem('addedAt'));
-				sortItems.appendChild(addDropdownItem('lastViewedAt'));
-				sortItems.appendChild(addDropdownItem('mediaHeight'));
-				sortItems.appendChild(addDropdownItem('mediaBitrate'));
-				this.sort.style.display = 'block';
-				this.sortOrder.style.display = 'block';
-			} else {
-				this.sort.style.display = 'none';
-				this.sortOrder.style.display = 'none';
-				this.config.sort = '';
 			}
 
 			if (_.isEmpty(this.config.sort)) {
