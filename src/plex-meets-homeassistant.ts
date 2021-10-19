@@ -197,6 +197,28 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 	};
 
+	resizeHandler = (): void => {
+		if (this.isVisible) {
+			if (!this.detailsShown) {
+				const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
+				let isFullScreen = false;
+				if (videoPlayer.children.length > 0) {
+					isFullScreen = isVideoFullScreen(this);
+				}
+
+				if (this.card && this.movieElems.length > 0 && !isFullScreen) {
+					if (this.previousPageWidth !== this.card.offsetWidth) {
+						this.previousPageWidth = this.card.offsetWidth;
+						this.renderPage();
+						const contentbg = this.getElementsByClassName('contentbg');
+						this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
+					}
+				}
+			}
+			this.renderNewElementsIfNeeded();
+		}
+	};
+
 	loadInitialData = async (): Promise<void> => {
 		this.initialDataLoaded = true;
 		setInterval(() => {
@@ -252,25 +274,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {
-			if (this.isVisible) {
-				if (!this.detailsShown) {
-					const videoPlayer = this.getElementsByClassName('videoPlayer')[0] as HTMLElement;
-					let isFullScreen = false;
-					if (videoPlayer.children.length > 0) {
-						isFullScreen = isVideoFullScreen(this);
-					}
-
-					if (this.card && this.movieElems.length > 0 && !isFullScreen) {
-						if (this.previousPageWidth !== this.card.offsetWidth) {
-							this.previousPageWidth = this.card.offsetWidth;
-							this.renderPage();
-							const contentbg = this.getElementsByClassName('contentbg');
-							this.contentBGHeight = getHeight(contentbg[0] as HTMLElement);
-						}
-					}
-				}
-				this.renderNewElementsIfNeeded();
-			}
+			this.resizeHandler();
 		});
 
 		if (this.card) {
@@ -968,15 +972,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				if (this.movieElems[i].offsetLeft === 0) {
 					break;
 				} else {
+					this.resizeHandler();
 					clearInterval(setLeftOffsetsInterval);
 				}
-				/*
-				this.movieElems[i].style.left = `${this.movieElems[i].offsetLeft}px`;
-				this.movieElems[i].dataset.left = this.movieElems[i].offsetLeft;
-				this.movieElems[i].style.top = `${this.movieElems[i].offsetTop}px`;
-				this.movieElems[i].dataset.top = this.movieElems[i].offsetTop;
-				this.movieElems[i].style.position = 'absolute';
-				*/
 			}
 		}, 100);
 	};
