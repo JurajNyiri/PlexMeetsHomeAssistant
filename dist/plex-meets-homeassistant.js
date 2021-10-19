@@ -20848,7 +20848,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                         typeItems.appendChild(addDropdownItem('', ''));
                         let typeAvailable = false;
                         lodash.forEach(types, (sectionType) => {
-                            if (sectionType.type !== 'track' && sectionType.type !== 'episode') {
+                            if (sectionType.type !== 'track' &&
+                                sectionType.type !== 'episode' &&
+                                (sectionType.type !== 'folder' ||
+                                    (sectionType.type === 'folder' && lodash.isEqual(lodash.get(libraryData, '[0].viewGroup'), 'artist')))) {
                                 let key = sectionType.key.split('type=')[1];
                                 if (sectionType.type === 'folder') {
                                     key = 'folder';
