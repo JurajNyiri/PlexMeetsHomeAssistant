@@ -408,7 +408,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.displayType.innerHTML = '';
 		const typeItems: any = document.createElement('paper-listbox');
 		typeItems.slot = 'dropdown-content';
-		this.displayType.label = 'Display Type';
+		this.displayType.label = 'Display Type (Optional)';
 		this.displayType.appendChild(typeItems);
 		this.displayType.style.width = '100%';
 		this.displayType.addEventListener('value-changed', this.valueUpdated);
