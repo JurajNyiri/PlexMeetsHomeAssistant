@@ -22819,7 +22819,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
                 this.detailElem.style.transition = '0s';
                 this.detailElem.style.top = `${top - 1000}px`;
-                this.detailElem.style.left = `${this.minExpandedWidth + 30}px`;
+                if (!lodash.isEmpty(lodash.get(data, 'thumb'))) {
+                    this.detailElem.style.left = `${this.minExpandedWidth + 30}px`;
+                }
+                else {
+                    this.detailElem.style.left = `16px`;
+                }
                 clearInterval(this.showDetailsTimeout);
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 this.showDetailsTimeout = setTimeout(async () => {
