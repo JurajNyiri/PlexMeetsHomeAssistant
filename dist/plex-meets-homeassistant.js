@@ -18863,11 +18863,21 @@ class Plex {
         };
         this.getSectionDataWithoutProcessing = async (sectionID, type = false) => {
             const bulkItems = 50;
-            let url = this.authorizeURL(`${this.getBasicURL()}/library/sections/${sectionID}/all`);
-            url += `&sort=${this.sort}`;
+            let url = `${this.getBasicURL()}/library/sections/${sectionID}`;
             if (type) {
-                url += `&type=${type}`;
+                if (lodash.isEqual(type, 'folder')) {
+                    url += `/folder`;
+                }
+                else {
+                    url += `/all`;
+                    url += `?type=${type}`;
+                }
             }
+            else {
+                url += `/all`;
+            }
+            url = this.authorizeURL(url);
+            url += `&sort=${this.sort}`;
             url += `&includeCollections=1&includeExternalMedia=1&includeAdvanced=1&includeMeta=1`;
             let result = {};
             try {
