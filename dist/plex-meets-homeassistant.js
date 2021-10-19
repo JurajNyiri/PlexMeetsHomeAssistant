@@ -22970,7 +22970,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.plex) {
                 let childrenData = {};
                 if (lodash.isEqual(data.type, 'episode')) {
-                    childrenData = await this.plex.getLibraryData(data.grandparentKey);
+                    childrenData = await this.plex.getLibraryData(`${data.grandparentKey}/children`);
                 }
                 else if (data.childCount > 0 ||
                     lodash.isEqual(data.type, 'artist') ||
@@ -23131,7 +23131,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         }
                                     }
                                     else {
-                                        console.log('2');
                                         this.episodesElem.style.top = `${top + this.minExpandedHeight + 16}px`;
                                     }
                                     this.resizeBackground();

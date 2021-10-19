@@ -1344,7 +1344,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (this.plex) {
 			let childrenData: Record<string, any> = {};
 			if (_.isEqual(data.type, 'episode')) {
-				childrenData = await this.plex.getLibraryData(data.grandparentKey);
+				childrenData = await this.plex.getLibraryData(`${data.grandparentKey}/children`);
 			} else if (
 				data.childCount > 0 ||
 				_.isEqual(data.type, 'artist') ||
