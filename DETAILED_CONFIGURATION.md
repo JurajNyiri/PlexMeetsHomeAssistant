@@ -52,6 +52,8 @@ You can also use Live TV library by specifying its name, usually "Live TV & DVR"
 
 **useHorizontalScroll:** _Optional_ Specify whether to use horizontal infinite scroll. Possible values: On, Off. Default: Off
 
+**useShuffle:** _Optional_ Specify whether to use shuffle on music. Possible values: On, Off. Default: Off
+
 **displayTitleMain:** _Optional_ Specify whether to display title under poster. Possible values: On, Off. Default: Off
 
 **displaySubtitleMain:** _Optional_ Specify whether to display subtitle under poster. Possible values: On, Off. Default: Off
