@@ -32,6 +32,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	useHorizontalScroll: any = document.createElement('paper-dropdown-menu');
 
+	useShuffle: any = document.createElement('paper-dropdown-menu');
+
 	minWidth: any = document.createElement('paper-input');
 
 	minEpisodeWidth: any = document.createElement('paper-input');
@@ -159,6 +161,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.useHorizontalScroll = 'No';
 				} else {
 					this.config.useHorizontalScroll = this.useHorizontalScroll.value;
+				}
+
+				if (_.isEmpty(this.useShuffle.value)) {
+					this.config.useShuffle = 'No';
+				} else {
+					this.config.useShuffle = this.useShuffle.value;
 				}
 
 				if (_.isEmpty(this.displayTitleMain.value)) {
@@ -418,6 +426,26 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		);
 
 		this.sections = await this.plex.getSections();
+		_.forEach(this.sections, section => {
+			if (_.isEqual(section.title, this.config.libraryName) && _.isEqual(section.type, 'artist')) {
+				this.useShuffle.innerHTML = '';
+				const useShuffleItems: any = document.createElement('paper-listbox');
+				useShuffleItems.appendChild(addDropdownItem('Yes'));
+				useShuffleItems.appendChild(addDropdownItem('No'));
+				useShuffleItems.slot = 'dropdown-content';
+				this.useShuffle.label = 'Use shuffle when playing';
+				this.useShuffle.appendChild(useShuffleItems);
+				this.useShuffle.style.width = '100%';
+				this.useShuffle.addEventListener('value-changed', this.valueUpdated);
+				if (_.isEmpty(this.config.useShuffle)) {
+					this.useShuffle.value = 'No';
+				} else {
+					this.useShuffle.value = this.config.useShuffle;
+				}
+				this.content.appendChild(this.useShuffle);
+				return false;
+			}
+		});
 		this.livetv = await this.plex.getLiveTV();
 		this.collections = await this.plex.getCollections();
 		this.playlists = await this.plex.getPlaylists();
@@ -952,6 +980,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		if (!_.isNil(this.config.useHorizontalScroll)) {
 			this.config.useHorizontalScroll = `${this.config.useHorizontalScroll}`;
+		}
+
+		if (!_.isNil(this.config.useShuffle)) {
+			this.config.useShuffle = `${this.config.useShuffle}`;
 		}
 
 		if (!_.isNil(this.config.displayTitleMain)) {

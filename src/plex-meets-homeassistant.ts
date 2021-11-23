@@ -41,6 +41,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	useHorizontalScroll = false;
 
+	useShuffle = false;
+
 	displayTitleMain = true;
 
 	displaySubtitleMain = true;
@@ -379,7 +381,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					this.runBefore,
 					this.runAfter,
 					this.config.libraryName,
-					this.entityRegistry
+					this.entityRegistry,
+					this.useShuffle
 				);
 				if (this.playController) {
 					await this.playController.init();
@@ -2144,6 +2147,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 		if (config.useHorizontalScroll && _.isEqual(config.useHorizontalScroll, 'Yes')) {
 			this.useHorizontalScroll = true;
+		}
+		if (config.useShuffle && _.isEqual(config.useShuffle, 'Yes')) {
+			this.useShuffle = true;
 		}
 		if (config.displayTitleMain && _.isEqual(config.displayTitleMain, 'No')) {
 			this.displayTitleMain = false;

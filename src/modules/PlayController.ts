@@ -40,6 +40,8 @@ class PlayController {
 
 	entityRegistry: Array<Record<string, any>> = [];
 
+	shuffle = false;
+
 	constructor(
 		card: any,
 		hass: HomeAssistant,
@@ -48,13 +50,15 @@ class PlayController {
 		runBefore: string,
 		runAfter: string,
 		libraryName: string,
-		entityRegistry: Array<Record<string, any>>
+		entityRegistry: Array<Record<string, any>>,
+		shuffle: boolean
 	) {
 		this.entityRegistry = entityRegistry;
 		this.card = card;
 		this.hass = hass;
 		this.plex = plex;
 		this.entity = entity;
+		this.shuffle = shuffle;
 		this.libraryName = libraryName;
 		if (!_.isEmpty(runBefore) && this.hass.states[runBefore]) {
 			this.runBefore = runBefore.split('.');
@@ -186,7 +190,7 @@ class PlayController {
 										library_name: libraryName,
 										// eslint-disable-next-line @typescript-eslint/camelcase
 										artist_name: processData.title,
-										shuffle: 1
+										shuffle: this.shuffle ? 1 : 0
 									})}`
 								);
 								break;
@@ -201,7 +205,7 @@ class PlayController {
 										artist_name: processData.parentTitle,
 										// eslint-disable-next-line @typescript-eslint/camelcase
 										album_name: processData.title,
-										shuffle: 1
+										shuffle: this.shuffle ? 1 : 0
 									})}`
 								);
 								break;
@@ -218,7 +222,7 @@ class PlayController {
 										album_name: processData.parentTitle,
 										// eslint-disable-next-line @typescript-eslint/camelcase
 										track_name: processData.title,
-										shuffle: 1
+										shuffle: this.shuffle ? 1 : 0
 									})}`
 								);
 								break;
@@ -260,8 +264,10 @@ class PlayController {
 						console.log(err);
 						this.playViaCast(entity.value, processData.Media[0].Part[0].key);
 					}
+				} else if (!_.isNil(_.get(processData, 'Media[0].Part[0].key'))) {
+					this.playViaCast(entity.value, _.get(processData, 'Media[0].Part[0].key'));
 				} else {
-					this.playViaCast(entity.value, processData.Media[0].Part[0].key);
+					throw Error(`No service available to play ${processData.title}!`);
 				}
 				break;
 			default:
