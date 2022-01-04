@@ -295,12 +295,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				// eslint-disable-next-line prefer-destructuring
 				realEntityString = entityString.split(' | ')[3];
 				isPlexPlayer = true;
+			} else if (_.isPlainObject(entityString)) {
+				realEntityString = entityString[(Object.keys(entityString) as Record<string, any>)[0]];
 			} else if (
 				_.startsWith(entityString, 'androidtv | ') ||
 				_.startsWith(entityString, 'kodi | ') ||
 				_.startsWith(entityString, 'cast | ') ||
 				_.startsWith(entityString, 'input_select | ') ||
-				_.startsWith(entityString, 'input_text | ')
+				_.startsWith(entityString, 'input_text | ') ||
+				_.startsWith(entityString, 'vlc_telnet | ')
 			) {
 				// eslint-disable-next-line prefer-destructuring
 				realEntityString = entityString.split(' | ')[1];
@@ -351,8 +354,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								}
 								entityObj.inputText.push(entityInRegister.entity_id);
 								break;
+							case 'vlc_telnet':
+								if (_.isNil(entityObj.vlcTelnet)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.vlcTelnet = [];
+								}
+								entityObj.vlcTelnet.push(entityInRegister.entity_id);
+								break;
 							default:
-							// pass
+								console.error(`Entity ${entityInRegister.entity_id} is not supported.`);
 						}
 					}
 				});

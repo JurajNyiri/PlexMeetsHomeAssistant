@@ -12,7 +12,8 @@ const supported: any = {
 	kodi: ['movie', 'episode', 'epg'],
 	androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
 	plexPlayer: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
-	cast: ['movie', 'episode', 'artist', 'album', 'track']
+	cast: ['movie', 'episode', 'artist', 'album', 'track'],
+	vlcTelnet: ['track']
 };
 
 const LOREM_IPSUM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec semper risus vitae aliquet interdum. Nulla facilisi. Pellentesque viverra sagittis lorem eget aliquet. Cras vehicula, purus vel consectetur mattis, ipsum arcu ullamcorper mi, id viverra purus ex eu dolor. Integer vehicula lacinia sem convallis iaculis. Nulla fermentum erat interdum, efficitur felis in, mollis neque. Vivamus luctus metus eget nisl pellentesque, placerat elementum magna eleifend.

@@ -156,6 +156,9 @@ class PlayController {
 			case 'kodi':
 				await this.playViaKodi(entity.value, data, data.type);
 				break;
+			case 'vlcTelnet':
+				await this.playViaVLCTelnet(entity.value, data, data.type);
+				break;
 			case 'androidtv':
 				if (_.isEqual(data.type, 'epg')) {
 					const session = `${Math.floor(Date.now() / 1000)}`;
@@ -278,8 +281,19 @@ class PlayController {
 		}
 	};
 
-	private plexPlayerCreateQueue = async (movieID: number, plex: Plex): Promise<Record<string, number>> => {
-		const url = `${plex.getBasicURL()}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
+	private plexPlayerCreateQueue = async (
+		key: string,
+		plex: Plex,
+		type: string,
+		shuffle = false,
+		repeat = false,
+		continuous = false
+	): Promise<Record<string, number>> => {
+		const url = `${plex.getBasicURL()}/playQueues?type=${type}&shuffle=${shuffle ? '1' : '0'}&repeat=${
+			repeat ? '1' : '0'
+		}&continuous=${
+			continuous ? '1' : '0'
+		}&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library${key}`;
 
 		const plexResponse = await axios({
 			method: 'post',
@@ -305,7 +319,11 @@ class PlayController {
 		if (_.isObject(entity) && !_.isNil(entity.plex)) {
 			plex = entity.plex;
 		}
-		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID, this.plex);
+		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(
+			`/library/metadata/${movieID}`,
+			this.plex,
+			'video'
+		);
 
 		let url = plex.getBasicURL();
 		url += `/player/playback/playMedia`;
@@ -419,6 +437,23 @@ class PlayController {
 			});
 		} else {
 			throw Error(`Plex type ${type} is not supported in Kodi.`);
+		}
+	};
+
+	private playViaVLCTelnet = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
+		switch (type) {
+			case 'track':
+				this.hass.callService('media_player', 'play_media', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: entityName,
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					media_content_type: 'music',
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${data.Media[0].Part[0].key}`)
+				});
+				break;
+			default:
+				console.error(`Type ${type} is not supported on entity ${entityName}.`);
 		}
 	};
 
@@ -654,12 +689,12 @@ class PlayController {
 
 				_.forEach(entities, entity => {
 					if (_.includes(this.supported[entity.key], data.type)) {
-						// todo: load info in this.entityStates otherwise this will never work for input selects and templates
 						if (
 							(entity.key === 'kodi' && this.isKodiSupported(entity.value)) ||
 							(entity.key === 'androidtv' && this.isAndroidTVSupported(entity.value)) ||
 							(entity.key === 'plexPlayer' && this.isPlexPlayerSupported(entity.value)) ||
-							(entity.key === 'cast' && this.isCastSupported(entity.value))
+							(entity.key === 'cast' && this.isCastSupported(entity.value)) ||
+							(entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value))
 						) {
 							service = { key: entity.key, value: entity.value };
 							return false;
@@ -839,6 +874,15 @@ class PlayController {
 			);
 		}
 		return false;
+	};
+
+	private isVLCTelnetSupported = (entityName: string): boolean => {
+		return (
+			(this.entityStates[entityName] &&
+				!_.isNil(this.entityStates[entityName].attributes) &&
+				this.entityStates[entityName].state !== 'unavailable') ||
+			!_.isEqual(this.runBefore, false)
+		);
 	};
 
 	private isCastSupported = (entityName: string): boolean => {

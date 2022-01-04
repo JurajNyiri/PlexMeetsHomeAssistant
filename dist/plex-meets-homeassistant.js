@@ -17207,7 +17207,8 @@ const supported = {
     kodi: ['movie', 'episode', 'epg'],
     androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
-    cast: ['movie', 'episode', 'artist', 'album', 'track']
+    cast: ['movie', 'episode', 'artist', 'album', 'track'],
+    vlcTelnet: ['track']
 };
 
 var bind = function bind(fn, thisArg) {
@@ -19508,6 +19509,9 @@ class PlayController {
                 case 'kodi':
                     await this.playViaKodi(entity.value, data, data.type);
                     break;
+                case 'vlcTelnet':
+                    await this.playViaVLCTelnet(entity.value, data, data.type);
+                    break;
                 case 'androidtv':
                     if (lodash.isEqual(data.type, 'epg')) {
                         const session = `${Math.floor(Date.now() / 1000)}`;
@@ -19613,8 +19617,8 @@ class PlayController {
                 await this.hass.callService(this.runAfter[0], this.runAfter[1], {});
             }
         };
-        this.plexPlayerCreateQueue = async (movieID, plex) => {
-            const url = `${plex.getBasicURL()}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
+        this.plexPlayerCreateQueue = async (key, plex, type, shuffle = false, repeat = false, continuous = false) => {
+            const url = `${plex.getBasicURL()}/playQueues?type=${type}&shuffle=${shuffle ? '1' : '0'}&repeat=${repeat ? '1' : '0'}&continuous=${continuous ? '1' : '0'}&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library${key}`;
             const plexResponse = await axios({
                 method: 'post',
                 url,
@@ -19637,7 +19641,7 @@ class PlayController {
             if (lodash.isObject(entity) && !lodash.isNil(entity.plex)) {
                 plex = entity.plex;
             }
-            const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID, this.plex);
+            const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(`/library/metadata/${movieID}`, this.plex, 'video');
             let url = plex.getBasicURL();
             url += `/player/playback/playMedia`;
             url += `?type=video`;
@@ -19750,6 +19754,22 @@ class PlayController {
             }
             else {
                 throw Error(`Plex type ${type} is not supported in Kodi.`);
+            }
+        };
+        this.playViaVLCTelnet = async (entityName, data, type) => {
+            switch (type) {
+                case 'track':
+                    this.hass.callService('media_player', 'play_media', {
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        entity_id: entityName,
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        media_content_type: 'music',
+                        // eslint-disable-next-line @typescript-eslint/camelcase
+                        media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${data.Media[0].Part[0].key}`)
+                    });
+                    break;
+                default:
+                    console.error(`Type ${type} is not supported on entity ${entityName}.`);
             }
         };
         this.playViaCast = (entityName, mediaLink, contentType = 'video') => {
@@ -19966,11 +19986,11 @@ class PlayController {
                     const entities = this.exportEntity(value, key);
                     lodash.forEach(entities, entity => {
                         if (lodash.includes(this.supported[entity.key], data.type)) {
-                            // todo: load info in this.entityStates otherwise this will never work for input selects and templates
                             if ((entity.key === 'kodi' && this.isKodiSupported(entity.value)) ||
                                 (entity.key === 'androidtv' && this.isAndroidTVSupported(entity.value)) ||
                                 (entity.key === 'plexPlayer' && this.isPlexPlayerSupported(entity.value)) ||
-                                (entity.key === 'cast' && this.isCastSupported(entity.value))) {
+                                (entity.key === 'cast' && this.isCastSupported(entity.value)) ||
+                                (entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value))) {
                                 service = { key: entity.key, value: entity.value };
                                 return false;
                             }
@@ -20125,6 +20145,12 @@ class PlayController {
                     (!lodash.isEqual(this.runBefore, false) && hasKodiMediaSearchInstalled));
             }
             return false;
+        };
+        this.isVLCTelnetSupported = (entityName) => {
+            return ((this.entityStates[entityName] &&
+                !lodash.isNil(this.entityStates[entityName].attributes) &&
+                this.entityStates[entityName].state !== 'unavailable') ||
+                !lodash.isEqual(this.runBefore, false));
         };
         this.isCastSupported = (entityName) => {
             return ((this.entityStates[entityName] &&
@@ -20396,7 +20422,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                             lodash.isEqual(entityRegistry.platform, 'kodi') ||
                             lodash.isEqual(entityRegistry.platform, 'androidtv') ||
                             lodash.isEqual(entityRegistry.platform, 'input_select') ||
-                            lodash.isEqual(entityRegistry.platform, 'input_text')) {
+                            lodash.isEqual(entityRegistry.platform, 'input_text') ||
+                            lodash.isEqual(entityRegistry.platform, 'vlc_telnet')) {
                             const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
                             entities.appendChild(addDropdownItem(entityName));
                             addedEntityStrings.push(entityName);
@@ -22038,11 +22065,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     realEntityString = entityString.split(' | ')[3];
                     isPlexPlayer = true;
                 }
+                else if (lodash.isPlainObject(entityString)) {
+                    realEntityString = entityString[Object.keys(entityString)[0]];
+                }
                 else if (lodash.startsWith(entityString, 'androidtv | ') ||
                     lodash.startsWith(entityString, 'kodi | ') ||
                     lodash.startsWith(entityString, 'cast | ') ||
                     lodash.startsWith(entityString, 'input_select | ') ||
-                    lodash.startsWith(entityString, 'input_text | ')) {
+                    lodash.startsWith(entityString, 'input_text | ') ||
+                    lodash.startsWith(entityString, 'vlc_telnet | ')) {
                     // eslint-disable-next-line prefer-destructuring
                     realEntityString = entityString.split(' | ')[1];
                     isPlexPlayer = false;
@@ -22093,7 +22124,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                     }
                                     entityObj.inputText.push(entityInRegister.entity_id);
                                     break;
-                                // pass
+                                case 'vlc_telnet':
+                                    if (lodash.isNil(entityObj.vlcTelnet)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.vlcTelnet = [];
+                                    }
+                                    entityObj.vlcTelnet.push(entityInRegister.entity_id);
+                                    break;
+                                default:
+                                    console.error(`Entity ${entityInRegister.entity_id} is not supported.`);
                             }
                         }
                     });
