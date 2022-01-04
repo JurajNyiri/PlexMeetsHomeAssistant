@@ -157,7 +157,7 @@ class PlayController {
 				await this.playViaKodi(entity.value, data, data.type);
 				break;
 			case 'vlcTelnet':
-				await this.playViaVLCTelnet(entity.value, data.Media[0].Part[0].key, data.type);
+				await this.playViaVLCTelnet(entity.value, data, data.type);
 				break;
 			case 'androidtv':
 				if (_.isEqual(data.type, 'epg')) {
@@ -281,8 +281,19 @@ class PlayController {
 		}
 	};
 
-	private plexPlayerCreateQueue = async (movieID: number, plex: Plex): Promise<Record<string, number>> => {
-		const url = `${plex.getBasicURL()}/playQueues?type=video&shuffle=0&repeat=0&continuous=1&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library/library/metadata/${movieID}`;
+	private plexPlayerCreateQueue = async (
+		key: string,
+		plex: Plex,
+		type: string,
+		shuffle = false,
+		repeat = false,
+		continuous = false
+	): Promise<Record<string, number>> => {
+		const url = `${plex.getBasicURL()}/playQueues?type=${type}&shuffle=${shuffle ? '1' : '0'}&repeat=${
+			repeat ? '1' : '0'
+		}&continuous=${
+			continuous ? '1' : '0'
+		}&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library${key}`;
 
 		const plexResponse = await axios({
 			method: 'post',
@@ -308,7 +319,11 @@ class PlayController {
 		if (_.isObject(entity) && !_.isNil(entity.plex)) {
 			plex = entity.plex;
 		}
-		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(movieID, this.plex);
+		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(
+			`/library/metadata/${movieID}`,
+			this.plex,
+			'video'
+		);
 
 		let url = plex.getBasicURL();
 		url += `/player/playback/playMedia`;
@@ -425,7 +440,7 @@ class PlayController {
 		}
 	};
 
-	private playViaVLCTelnet = async (entityName: string, mediaLink: string, type: string): Promise<void> => {
+	private playViaVLCTelnet = async (entityName: string, data: Record<string, any>, type: string): Promise<void> => {
 		switch (type) {
 			case 'track':
 				this.hass.callService('media_player', 'play_media', {
@@ -434,7 +449,7 @@ class PlayController {
 					// eslint-disable-next-line @typescript-eslint/camelcase
 					media_content_type: 'music',
 					// eslint-disable-next-line @typescript-eslint/camelcase
-					media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+					media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${data.Media[0].Part[0].key}`)
 				});
 				break;
 			default:
