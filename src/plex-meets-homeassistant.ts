@@ -295,6 +295,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				// eslint-disable-next-line prefer-destructuring
 				realEntityString = entityString.split(' | ')[3];
 				isPlexPlayer = true;
+			} else if (_.isPlainObject(entityString)) {
+				realEntityString = entityString[(Object.keys(entityString) as Record<string, any>)[0]];
 			} else if (
 				_.startsWith(entityString, 'androidtv | ') ||
 				_.startsWith(entityString, 'kodi | ') ||

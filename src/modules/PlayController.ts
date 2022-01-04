@@ -156,6 +156,9 @@ class PlayController {
 			case 'kodi':
 				await this.playViaKodi(entity.value, data, data.type);
 				break;
+			case 'vlcTelnet':
+				await this.playViaVLCTelnet(entity.value, data.Media[0].Part[0].key, data.type);
+				break;
 			case 'androidtv':
 				if (_.isEqual(data.type, 'epg')) {
 					const session = `${Math.floor(Date.now() / 1000)}`;
@@ -422,6 +425,23 @@ class PlayController {
 		}
 	};
 
+	private playViaVLCTelnet = async (entityName: string, mediaLink: string, type: string): Promise<void> => {
+		switch (type) {
+			case 'track':
+				this.hass.callService('media_player', 'play_media', {
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					entity_id: entityName,
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					media_content_type: 'music',
+					// eslint-disable-next-line @typescript-eslint/camelcase
+					media_content_id: this.plex.authorizeURL(`${this.plex.getBasicURL()}${mediaLink}`)
+				});
+				break;
+			default:
+				console.error(`Type ${type} is not supported on entity ${entityName}.`);
+		}
+	};
+
 	private playViaCast = (entityName: string, mediaLink: string, contentType = 'video'): void => {
 		if (_.isEqual(contentType, 'video')) {
 			this.hass.callService('media_player', 'play_media', {
@@ -654,12 +674,12 @@ class PlayController {
 
 				_.forEach(entities, entity => {
 					if (_.includes(this.supported[entity.key], data.type)) {
-						// todo: load info in this.entityStates otherwise this will never work for input selects and templates
 						if (
 							(entity.key === 'kodi' && this.isKodiSupported(entity.value)) ||
 							(entity.key === 'androidtv' && this.isAndroidTVSupported(entity.value)) ||
 							(entity.key === 'plexPlayer' && this.isPlexPlayerSupported(entity.value)) ||
-							(entity.key === 'cast' && this.isCastSupported(entity.value))
+							(entity.key === 'cast' && this.isCastSupported(entity.value)) ||
+							(entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value))
 						) {
 							service = { key: entity.key, value: entity.value };
 							return false;
@@ -839,6 +859,15 @@ class PlayController {
 			);
 		}
 		return false;
+	};
+
+	private isVLCTelnetSupported = (entityName: string): boolean => {
+		return (
+			(this.entityStates[entityName] &&
+				!_.isNil(this.entityStates[entityName].attributes) &&
+				this.entityStates[entityName].state !== 'unavailable') ||
+			!_.isEqual(this.runBefore, false)
+		);
 	};
 
 	private isCastSupported = (entityName: string): boolean => {
