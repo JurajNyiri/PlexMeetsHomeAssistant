@@ -20396,7 +20396,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                             lodash.isEqual(entityRegistry.platform, 'kodi') ||
                             lodash.isEqual(entityRegistry.platform, 'androidtv') ||
                             lodash.isEqual(entityRegistry.platform, 'input_select') ||
-                            lodash.isEqual(entityRegistry.platform, 'input_text')) {
+                            lodash.isEqual(entityRegistry.platform, 'input_text') ||
+                            lodash.isEqual(entityRegistry.platform, 'vlc_telnet')) {
                             const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
                             entities.appendChild(addDropdownItem(entityName));
                             addedEntityStrings.push(entityName);
