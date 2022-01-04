@@ -185,76 +185,56 @@ class PlayController {
 					try {
 						switch (processData.type) {
 							case 'artist':
-								await this.playViaCastPlex(
-									entity.value,
-									'MUSIC',
-									`plex://${JSON.stringify({
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: libraryName,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										artist_name: processData.title,
-										shuffle: this.shuffle ? 1 : 0
-									})}`
-								);
+								await this.playViaCastPlex(entity.value, 'MUSIC', {
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: libraryName,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									artist_name: processData.title,
+									shuffle: this.shuffle ? 1 : 0
+								});
 								break;
 							case 'album':
-								await this.playViaCastPlex(
-									entity.value,
-									'MUSIC',
-									`plex://${JSON.stringify({
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: libraryName,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										artist_name: processData.parentTitle,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										album_name: processData.title,
-										shuffle: this.shuffle ? 1 : 0
-									})}`
-								);
+								await this.playViaCastPlex(entity.value, 'MUSIC', {
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: libraryName,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									artist_name: processData.parentTitle,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									album_name: processData.title,
+									shuffle: this.shuffle ? 1 : 0
+								});
 								break;
 							case 'track':
-								await this.playViaCastPlex(
-									entity.value,
-									'MUSIC',
-									`plex://${JSON.stringify({
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: libraryName,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										artist_name: processData.grandparentTitle,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										album_name: processData.parentTitle,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										track_name: processData.title,
-										shuffle: this.shuffle ? 1 : 0
-									})}`
-								);
+								await this.playViaCastPlex(entity.value, 'MUSIC', {
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: libraryName,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									artist_name: processData.grandparentTitle,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									album_name: processData.parentTitle,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									track_name: processData.title,
+									shuffle: this.shuffle ? 1 : 0
+								});
 								break;
 							case 'movie':
-								await this.playViaCastPlex(
-									entity.value,
-									'movie',
-									`plex://${JSON.stringify({
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: libraryName,
-										title: processData.title
-									})}`
-								);
+								await this.playViaCastPlex(entity.value, 'movie', {
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: libraryName,
+									title: processData.title
+								});
 								break;
 							case 'episode':
-								await this.playViaCastPlex(
-									entity.value,
-									'EPISODE',
-									`plex://${JSON.stringify({
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										library_name: libraryName,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										show_name: processData.grandparentTitle,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										season_number: processData.parentIndex,
-										// eslint-disable-next-line @typescript-eslint/camelcase
-										episode_number: processData.index
-									})}`
-								);
+								await this.playViaCastPlex(entity.value, 'EPISODE', {
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									library_name: libraryName,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									show_name: processData.grandparentTitle,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									season_number: processData.parentIndex,
+									// eslint-disable-next-line @typescript-eslint/camelcase
+									episode_number: processData.index
+								});
 								break;
 							default:
 								if (!_.isNil(processData.Media)) {
@@ -498,14 +478,20 @@ class PlayController {
 		}
 	};
 
-	private playViaCastPlex = (entityName: string, contentType: string, mediaLink: string): Promise<void> => {
+	private playViaCastPlex = (entityName: string, contentType: string, payload: Record<string, any>): any => {
+		const friendlyServerName = _.get(this.plex, 'serverInfo.friendlyName');
+		const plexPayload = _.clone(payload);
+		if (friendlyServerName) {
+			// eslint-disable-next-line @typescript-eslint/camelcase
+			plexPayload.plex_server = friendlyServerName;
+		}
 		return this.hass.callService('media_player', 'play_media', {
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			entity_id: entityName,
 			// eslint-disable-next-line @typescript-eslint/camelcase
 			media_content_type: contentType,
 			// eslint-disable-next-line @typescript-eslint/camelcase
-			media_content_id: mediaLink
+			media_content_id: `plex://${JSON.stringify(plexPayload)}`
 		});
 	};
 
