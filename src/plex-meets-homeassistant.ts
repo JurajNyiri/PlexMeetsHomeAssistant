@@ -353,11 +353,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 								entityObj.inputText.push(entityInRegister.entity_id);
 								break;
 							case 'vlc_telnet':
-								if (_.isNil(entityObj.inputText)) {
+								if (_.isNil(entityObj.vlcTelnet)) {
 									// eslint-disable-next-line no-param-reassign
-									entityObj.inputText = [];
+									entityObj.vlcTelnet = [];
 								}
-								entityObj.inputText.push(entityInRegister.entity_id);
+								entityObj.vlcTelnet.push(entityInRegister.entity_id);
 								break;
 							default:
 								console.error(`Entity ${entityInRegister.entity_id} is not supported.`);
