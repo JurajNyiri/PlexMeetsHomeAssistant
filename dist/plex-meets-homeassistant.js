@@ -17208,7 +17208,8 @@ const supported = {
     androidtv: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
     cast: ['movie', 'episode', 'artist', 'album', 'track'],
-    vlcTelnet: ['track']
+    vlcTelnet: ['track'],
+    sonos: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'] // Experimental
 };
 
 var bind = function bind(fn, thisArg) {
@@ -19526,6 +19527,7 @@ class PlayController {
                     await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
                     break;
                 case 'cast':
+                case 'sonos':
                     if (lodash.isEqual(data.type, 'epg')) {
                         const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
                         const streamURL = await this.plex.tune(data.channelIdentifier, session);
@@ -19996,7 +19998,8 @@ class PlayController {
                                 (entity.key === 'androidtv' && this.isAndroidTVSupported(entity.value)) ||
                                 (entity.key === 'plexPlayer' && this.isPlexPlayerSupported(entity.value)) ||
                                 (entity.key === 'cast' && this.isCastSupported(entity.value)) ||
-                                (entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value))) {
+                                (entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value)) ||
+                                (entity.key === 'sonos' && this.isSonosSupported(entity.value))) {
                                 service = { key: entity.key, value: entity.value };
                                 return false;
                             }
@@ -20153,6 +20156,12 @@ class PlayController {
             return false;
         };
         this.isVLCTelnetSupported = (entityName) => {
+            return ((this.entityStates[entityName] &&
+                !lodash.isNil(this.entityStates[entityName].attributes) &&
+                this.entityStates[entityName].state !== 'unavailable') ||
+                !lodash.isEqual(this.runBefore, false));
+        };
+        this.isSonosSupported = (entityName) => {
             return ((this.entityStates[entityName] &&
                 !lodash.isNil(this.entityStates[entityName].attributes) &&
                 this.entityStates[entityName].state !== 'unavailable') ||
@@ -20429,7 +20438,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
                             lodash.isEqual(entityRegistry.platform, 'androidtv') ||
                             lodash.isEqual(entityRegistry.platform, 'input_select') ||
                             lodash.isEqual(entityRegistry.platform, 'input_text') ||
-                            lodash.isEqual(entityRegistry.platform, 'vlc_telnet')) {
+                            lodash.isEqual(entityRegistry.platform, 'vlc_telnet') ||
+                            lodash.isEqual(entityRegistry.platform, 'sonos')) {
                             const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
                             entities.appendChild(addDropdownItem(entityName));
                             addedEntityStrings.push(entityName);
@@ -22079,7 +22089,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     lodash.startsWith(entityString, 'cast | ') ||
                     lodash.startsWith(entityString, 'input_select | ') ||
                     lodash.startsWith(entityString, 'input_text | ') ||
-                    lodash.startsWith(entityString, 'vlc_telnet | ')) {
+                    lodash.startsWith(entityString, 'vlc_telnet | ') ||
+                    lodash.startsWith(entityString, 'sonos | ')) {
                     // eslint-disable-next-line prefer-destructuring
                     realEntityString = entityString.split(' | ')[1];
                     isPlexPlayer = false;
@@ -22136,6 +22147,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         entityObj.vlcTelnet = [];
                                     }
                                     entityObj.vlcTelnet.push(entityInRegister.entity_id);
+                                    break;
+                                case 'sonos':
+                                    if (lodash.isNil(entityObj.sonos)) {
+                                        // eslint-disable-next-line no-param-reassign
+                                        entityObj.sonos = [];
+                                    }
+                                    entityObj.sonos.push(entityInRegister.entity_id);
                                     break;
                                 default:
                                     console.error(`Entity ${entityInRegister.entity_id} is not supported.`);

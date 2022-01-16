@@ -174,6 +174,7 @@ class PlayController {
 				await this.playViaPlexPlayer(entity.value, processData.key.split('/')[3]);
 				break;
 			case 'cast':
+			case 'sonos':
 				if (_.isEqual(data.type, 'epg')) {
 					const session = `PlexMeetsHomeAssistant-${Math.floor(Date.now() / 1000)}`;
 					const streamURL = await this.plex.tune(data.channelIdentifier, session);
@@ -680,7 +681,8 @@ class PlayController {
 							(entity.key === 'androidtv' && this.isAndroidTVSupported(entity.value)) ||
 							(entity.key === 'plexPlayer' && this.isPlexPlayerSupported(entity.value)) ||
 							(entity.key === 'cast' && this.isCastSupported(entity.value)) ||
-							(entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value))
+							(entity.key === 'vlcTelnet' && this.isVLCTelnetSupported(entity.value)) ||
+							(entity.key === 'sonos' && this.isSonosSupported(entity.value))
 						) {
 							service = { key: entity.key, value: entity.value };
 							return false;
@@ -863,6 +865,15 @@ class PlayController {
 	};
 
 	private isVLCTelnetSupported = (entityName: string): boolean => {
+		return (
+			(this.entityStates[entityName] &&
+				!_.isNil(this.entityStates[entityName].attributes) &&
+				this.entityStates[entityName].state !== 'unavailable') ||
+			!_.isEqual(this.runBefore, false)
+		);
+	};
+
+	private isSonosSupported = (entityName: string): boolean => {
 		return (
 			(this.entityStates[entityName] &&
 				!_.isNil(this.entityStates[entityName].attributes) &&
