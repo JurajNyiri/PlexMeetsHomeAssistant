@@ -355,13 +355,13 @@ Play button is only visible if all the conditions inside Availability section of
 
 ✅ Shared Plex servers
 
-? Movies
+❌ Movies
 
-? Show
+❌ Show
 
-? Season
+❌ Season
 
-? Episodes
+❌ Episodes
 
 ✅ Artists
 
@@ -369,7 +369,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ✅ Tracks
 
-? Live TV
+❌ Live TV
 
 ### All other plex clients
 

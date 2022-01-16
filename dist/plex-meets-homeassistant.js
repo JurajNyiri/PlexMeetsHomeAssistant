@@ -17209,7 +17209,7 @@ const supported = {
     plexPlayer: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'],
     cast: ['movie', 'episode', 'artist', 'album', 'track'],
     vlcTelnet: ['track'],
-    sonos: ['movie', 'show', 'season', 'episode', 'clip', 'track', 'artist', 'album'] // Experimental
+    sonos: ['track', 'artist', 'album']
 };
 
 var bind = function bind(fn, thisArg) {
