@@ -26,6 +26,7 @@ You can also use Live TV library by specifying its name, usually "Live TV & DVR"
 - **plexPlayer**: Name or machine ID of your plex client. Use this if you do not have devices above. See [detailed instructions](#all-other-plex-clients). It is required to use detailed declaration with "plexPlayer:" property.
 - **cast**: Entity id of your media_player configured via [Google Cast](https://www.home-assistant.io/integrations/cast/). See [detailed instructions](#google-cast). It is also possible to use short declaration with cast.
 - **vlcTelnet**: Entity id of your media_player configured via [VLC media player Telnet](https://www.home-assistant.io/integrations/vlc_telnet/). See [detailed instructions](#vlc-media-player-telnet). It is also possible to use short declaration with vlcTelnet.
+- **sonos**: Entity id of your media_player configured via [Sonos](https://www.home-assistant.io/integrations/sonos/). See [detailed instructions](#sonos). It is also possible to use short declaration with sonos.
 - **input_select**: Entity id of input select you wish to use for selecting media player to play on. State of this entity needs to be entity ID of media player of `androidtv`, `kodi` or `cast`. You can also use this with `plexPlayer`, in that case, provide name or machine ID of your plex client. You can also provide the same string as displayed in entities selection in UI editor for the card (beginning with `plexPlayer |`).
 - **input_text**: Entity id of input text you wish to use for selecting media player to play on. State of this entity needs to be entity ID of media player of `androidtv`, `kodi` or `cast`. You can also use this with `plexPlayer`, in that case, provide name or machine ID of your plex client. You can also provide the same string as displayed in entities selection in UI editor for the card (beginning with `plexPlayer |`).
 
@@ -98,6 +99,7 @@ entity:
   - media_player.bedroom_tv # created by cast integration
   - media_player.kodi_123456qwe789rty # created by kodi integration
   - media_player.vlc_telnet # created by VLC Telnet integration
+  - media_player.sonos # created by Sonos integration
 ```
 
 Example of card configuration using detailed definitions:
@@ -119,6 +121,7 @@ entity:
   plexPlayer: 192.168.13.38
   cast: media_player.bedroom_tv
   vlcTelnet: media_player.vlc_telnet
+  sonos: media_player.sonos
 ```
 
 Complex example using detailed definitions, lists and shared plex server for plexPlayer:
@@ -141,6 +144,8 @@ playTrailer: muted
 entity:
   vlcTelnet:
     - media_player.vlc_telnet
+  sonos:
+    - media_player.sonos
   kodi:
     - media_player.kodi_bedroom
     - media_player.kodi_living_room
@@ -298,7 +303,7 @@ Play button is only visible if all the conditions inside Availability section of
 
 ### VLC media player Telnet
 
-**Difficulty to setup**: Very easy
+**Difficulty to setup**: Moderate
 
 **Steps**:
 
@@ -325,6 +330,42 @@ Play button is only visible if all the conditions inside Availability section of
 ❌ Artists
 
 ❌ Albums
+
+✅ Tracks
+
+❌ Live TV
+
+### Sonos
+
+**Difficulty to setup**: Easy
+
+**Steps**:
+
+- Have Plex Pass
+- Set up [Sonos](https://www.home-assistant.io/integrations/sonos/) in Home Assistant.
+- Set up [Plex](https://www.home-assistant.io/integrations/plex/) in Home Assistant.
+- Use entity_id of media_player provided by Sonos integration in card, example: `cast: media_player.sonos`.
+- Save card configuration and make sure the entity is not `unavailable`, if you see play buttons on music configuration was successful.
+
+**Availability**:
+
+- Media player entity cannot be `unavailable`
+
+**Supported**:
+
+✅ Shared Plex servers
+
+❌ Movies
+
+❌ Show
+
+❌ Season
+
+❌ Episodes
+
+✅ Artists
+
+✅ Albums
 
 ✅ Tracks
 

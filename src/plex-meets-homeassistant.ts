@@ -303,7 +303,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				_.startsWith(entityString, 'cast | ') ||
 				_.startsWith(entityString, 'input_select | ') ||
 				_.startsWith(entityString, 'input_text | ') ||
-				_.startsWith(entityString, 'vlc_telnet | ')
+				_.startsWith(entityString, 'vlc_telnet | ') ||
+				_.startsWith(entityString, 'sonos | ')
 			) {
 				// eslint-disable-next-line prefer-destructuring
 				realEntityString = entityString.split(' | ')[1];
@@ -360,6 +361,13 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 									entityObj.vlcTelnet = [];
 								}
 								entityObj.vlcTelnet.push(entityInRegister.entity_id);
+								break;
+							case 'sonos':
+								if (_.isNil(entityObj.sonos)) {
+									// eslint-disable-next-line no-param-reassign
+									entityObj.sonos = [];
+								}
+								entityObj.sonos.push(entityInRegister.entity_id);
 								break;
 							default:
 								console.error(`Entity ${entityInRegister.entity_id} is not supported.`);
