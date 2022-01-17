@@ -600,8 +600,26 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderMovieElems = (): void => {
-		if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
+		let renderMore =
+			(!this.maxCount || this.renderedItems < this.maxCount) &&
+			(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+			(!this.maxRows || this.renderedRows <= this.maxRows);
+		if (
+			this.data[this.config.libraryName] &&
+			this.renderedItems < this.data[this.config.libraryName].length &&
+			renderMore
+		) {
 			let count = 0;
+			let maxRenderedItems = this.data[this.config.libraryName].length;
+			let itemsPerRow = this.data[this.config.libraryName].length;
+			if (this.maxCount) {
+				maxRenderedItems = this.maxCount;
+				itemsPerRow = maxRenderedItems;
+				if (this.maxRows) {
+					itemsPerRow = Math.round(maxRenderedItems / this.maxRows);
+				}
+				console.log(itemsPerRow);
+			}
 			// eslint-disable-next-line consistent-return
 			const searchValues = _.split(this.searchValue, ' ');
 			// eslint-disable-next-line consistent-return
@@ -612,11 +630,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.columnsCount = 0;
 			const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
-				if (
-					(!this.maxCount || this.renderedItems < this.maxCount) &&
-					(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
-					(!this.maxRows || this.renderedRows <= this.maxRows)
-				) {
+				if (renderMore) {
+					renderMore =
+						(!this.maxCount || this.renderedItems < this.maxCount) &&
+						(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+						(!this.maxRows || this.renderedRows <= this.maxRows);
 					const movieElem = this.getMovieElement(movieData, hasEpisodesResult);
 					let shouldRender = false;
 					if (this.looseSearch) {
