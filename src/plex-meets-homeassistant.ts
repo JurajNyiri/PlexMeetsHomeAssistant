@@ -192,7 +192,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.renderedItems > 0 &&
 			this.renderedItems < this.data[this.config.libraryName].length &&
 			(!this.maxCount || this.renderedItems < this.maxCount) &&
-			(!this.maxRows || this.renderedRows < this.config.maxRows)
+			(!this.maxRows || this.renderedRows < this.config.maxRows) &&
+			_.isEmpty(this.searchValue)
 		) {
 			this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
 			this.renderMovieElems();
@@ -600,23 +601,28 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderMovieElems = (): void => {
+		console.log('renderMovieElems');
 		const renderElements = (
 			render: boolean,
 			hasEpisodesResult: any,
 			searchValues: Array<string>,
 			itemsPerRow: number
 		): Record<string, any> => {
+			console.log('renderElements');
+			const origRenderedRows = this.renderedRows;
+			const origRenderedItems = this.renderedItems;
+			const origColumnsCount = this.columnsCount;
+
 			const loadAdditionalRowsCount = 2; // todo: make this configurable
 			let lastRowTop = 0;
-			this.renderedRows = 0;
-			this.renderedItems = 0;
-			this.columnsCount = 0;
 			this.contentContainer.style.width = '';
 			let containerWidth = 0;
 			let renderMore =
 				(!this.maxCount || this.renderedItems < this.maxCount) &&
 				(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
 				(!this.maxRows || this.renderedRows <= this.maxRows);
+
+			let count = 0;
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				renderMore =
 					(!this.maxCount || this.renderedItems < this.maxCount) &&
@@ -650,24 +656,33 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					) {
 						shouldRender = true;
 					}
-					if (shouldRender) {
-						if (render) {
-							this.contentContainer.appendChild(movieElem);
-						}
-						if (this.useHorizontalScroll) {
-							if (this.renderedItems > 0 && this.renderedItems % itemsPerRow === 0) {
-								this.renderedRows += 1;
-								movieElem.style.clear = 'both';
-							}
-							const marginRight = 10;
-							if (this.renderedRows < 2 || !this.maxRows || this.maxRows < 2) {
-								containerWidth += parseFloat(movieElem.style.width) + marginRight;
-							}
-						}
 
-						this.renderedItems += 1;
+					if (shouldRender) {
+						count += 1; // keeps track of already rendered items for progressive scroll
+						if (count > this.renderedItems) {
+							if (render) {
+								this.contentContainer.appendChild(movieElem);
+							}
+							if (this.useHorizontalScroll) {
+								if (this.renderedItems > 0 && this.renderedItems % itemsPerRow === 0) {
+									this.renderedRows += 1;
+									movieElem.style.clear = 'both';
+								}
+								const marginRight = 10;
+								if (this.renderedRows < 2 || !this.maxRows || this.maxRows < 2) {
+									containerWidth += parseFloat(movieElem.style.width) + marginRight;
+								}
+							}
+
+							this.renderedItems += 1;
+						}
 					}
-					if (shouldRender && lastRowTop !== movieElem.getBoundingClientRect().top && !this.useHorizontalScroll) {
+					if (
+						render &&
+						shouldRender &&
+						lastRowTop !== movieElem.getBoundingClientRect().top &&
+						!this.useHorizontalScroll
+					) {
 						this.renderedRows += 1;
 						if (lastRowTop !== 0 && this.columnsCount === 0) {
 							this.columnsCount = this.renderedItems - 1;
@@ -675,15 +690,22 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						lastRowTop = movieElem.getBoundingClientRect().top;
 						if (!isScrolledIntoView(movieElem) && !this.maxRenderCount && this.renderedItems > 0) {
 							this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
+							console.log(`1: this.maxRenderCount = ${this.maxRenderCount}`);
 						}
 					}
 					if (this.maxRows && this.renderedRows > this.maxRows && !this.useHorizontalScroll) {
 						movieElem.remove();
 					}
+
 					return true;
 				}
 				return false;
 			});
+			if (!render) {
+				this.renderedRows = origRenderedRows;
+				this.renderedItems = origRenderedItems;
+				this.columnsCount = origColumnsCount;
+			}
 			if (render && containerWidth > 0) {
 				this.contentContainer.style.width = `${containerWidth}px`;
 			}
