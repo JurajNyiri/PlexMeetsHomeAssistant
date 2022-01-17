@@ -191,7 +191,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
 			this.renderedItems > 0 &&
 			this.renderedItems < this.data[this.config.libraryName].length &&
-			(!this.maxRows || this.renderedRows < this.config.maxRows)
+			(!this.maxCount || this.renderedItems < this.maxCount) &&
+			(!this.maxRows || this.renderedRows < this.config.maxRows) &&
+			_.isEmpty(this.searchValue)
 		) {
 			this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
 			this.renderMovieElems();
@@ -272,7 +274,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}
 			}
-
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {
@@ -600,23 +601,32 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderMovieElems = (): void => {
-		if (this.data[this.config.libraryName] && this.renderedItems < this.data[this.config.libraryName].length) {
-			let count = 0;
-			// eslint-disable-next-line consistent-return
-			const searchValues = _.split(this.searchValue, ' ');
-			// eslint-disable-next-line consistent-return
-			let lastRowTop = 0;
+		const renderElements = (
+			render: boolean,
+			hasEpisodesResult: any,
+			searchValues: Array<string>,
+			itemsPerRow: number
+		): Record<string, any> => {
+			const origRenderedRows = this.renderedRows;
+			const origRenderedItems = this.renderedItems;
+			const origColumnsCount = this.columnsCount;
 
 			const loadAdditionalRowsCount = 2; // todo: make this configurable
-			this.renderedRows = 0;
-			this.columnsCount = 0;
-			const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
+			let lastRowTop = 0;
+			this.contentContainer.style.width = '';
+			let containerWidth = 0;
+			let renderMore =
+				(!this.maxCount || this.renderedItems < this.maxCount) &&
+				(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+				(!this.maxRows || this.renderedRows <= this.maxRows);
+
+			let count = 0;
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
-				if (
+				renderMore =
 					(!this.maxCount || this.renderedItems < this.maxCount) &&
 					(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
-					(!this.maxRows || this.renderedRows <= this.maxRows)
-				) {
+					(!this.maxRows || this.renderedRows <= this.maxRows);
+				if (renderMore) {
 					const movieElem = this.getMovieElement(movieData, hasEpisodesResult);
 					let shouldRender = false;
 					if (this.looseSearch) {
@@ -644,25 +654,33 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					) {
 						shouldRender = true;
 					}
+
 					if (shouldRender) {
-						count += 1;
+						count += 1; // keeps track of already rendered items for progressive scroll
 						if (count > this.renderedItems) {
-							this.contentContainer.appendChild(movieElem);
+							if (render) {
+								this.contentContainer.appendChild(movieElem);
+							}
 							if (this.useHorizontalScroll) {
+								if (this.renderedItems > 0 && this.renderedItems % itemsPerRow === 0) {
+									this.renderedRows += 1;
+									movieElem.style.clear = 'both';
+								}
 								const marginRight = 10;
-								if (_.isEmpty(this.contentContainer.style.width)) {
-									this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
-								} else {
-									this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-										parseFloat(movieElem.style.width) +
-										marginRight}px`;
+								if (this.renderedRows < 2 || !this.maxRows || this.maxRows < 2) {
+									containerWidth += parseFloat(movieElem.style.width) + marginRight;
 								}
 							}
 
 							this.renderedItems += 1;
 						}
 					}
-					if (shouldRender && lastRowTop !== movieElem.getBoundingClientRect().top && !this.useHorizontalScroll) {
+					if (
+						render &&
+						shouldRender &&
+						lastRowTop !== movieElem.getBoundingClientRect().top &&
+						!this.useHorizontalScroll
+					) {
 						this.renderedRows += 1;
 						if (lastRowTop !== 0 && this.columnsCount === 0) {
 							this.columnsCount = this.renderedItems - 1;
@@ -675,10 +693,54 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					if (this.maxRows && this.renderedRows > this.maxRows && !this.useHorizontalScroll) {
 						movieElem.remove();
 					}
+
 					return true;
 				}
 				return false;
 			});
+			const returnObj = {
+				renderedItems: this.renderedItems
+			};
+			if (!render) {
+				this.renderedRows = origRenderedRows;
+				this.renderedItems = origRenderedItems;
+				this.columnsCount = origColumnsCount;
+			}
+			if (render && containerWidth > 0) {
+				this.contentContainer.style.width = `${containerWidth}px`;
+			}
+			return returnObj;
+		};
+
+		const renderMore =
+			(!this.maxCount || this.renderedItems < this.maxCount) &&
+			(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+			(!this.maxRows || this.renderedRows <= this.maxRows);
+		if (
+			this.data[this.config.libraryName] &&
+			this.renderedItems < this.data[this.config.libraryName].length &&
+			renderMore
+		) {
+			let maxRenderedItems = this.data[this.config.libraryName].length;
+			let itemsPerRow = this.data[this.config.libraryName].length;
+			if (this.maxCount) {
+				maxRenderedItems = this.maxCount;
+			}
+			itemsPerRow = maxRenderedItems;
+			if (this.maxRows) {
+				itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
+			}
+			const searchValues = _.split(this.searchValue, ' ');
+
+			const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
+
+			const { renderedItems } = renderElements(false, hasEpisodesResult, searchValues, itemsPerRow);
+			itemsPerRow = renderedItems;
+			if (this.maxRows) {
+				itemsPerRow = Math.ceil(renderedItems / this.maxRows);
+			}
+
+			renderElements(true, hasEpisodesResult, searchValues, itemsPerRow);
 		}
 
 		const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
@@ -715,6 +777,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		this.renderedItems = 0;
+		this.renderedRows = 0;
 		// this.columnsCount = 0;
 
 		const spinner = document.createElement('div');
@@ -989,11 +1052,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		// todo: figure out why interval is needed here and do it properly
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
+
 			for (let i = 0; i < this.movieElems.length; i += 1) {
 				if (this.movieElems[i].offsetLeft === 0) {
 					break;
 				} else {
-					this.resizeHandler();
 					clearInterval(setLeftOffsetsInterval);
 				}
 			}
