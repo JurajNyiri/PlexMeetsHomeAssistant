@@ -22384,11 +22384,10 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 let itemsPerRow = this.data[this.config.libraryName].length;
                 if (this.maxCount) {
                     maxRenderedItems = this.maxCount;
-                    itemsPerRow = maxRenderedItems;
-                    if (this.maxRows) {
-                        itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
-                    }
-                    console.log(itemsPerRow);
+                }
+                itemsPerRow = maxRenderedItems;
+                if (this.maxRows) {
+                    itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
                 }
                 // eslint-disable-next-line consistent-return
                 const searchValues = lodash.split(this.searchValue, ' ');
