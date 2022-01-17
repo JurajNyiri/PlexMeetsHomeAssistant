@@ -698,6 +698,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 				return false;
 			});
+			const returnObj = {
+				renderedItems: this.renderedItems
+			};
 			if (!render) {
 				this.renderedRows = origRenderedRows;
 				this.renderedItems = origRenderedItems;
@@ -706,9 +709,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (render && containerWidth > 0) {
 				this.contentContainer.style.width = `${containerWidth}px`;
 			}
-			return {
-				renderedItems: this.renderedItems
-			};
+			return returnObj;
 		};
 
 		const renderMore =
