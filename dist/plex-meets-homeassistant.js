@@ -22429,7 +22429,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                         movieElem.style.clear = 'both';
                                     }
                                     const marginRight = 10;
-                                    if (this.renderedRows < 2 || !this.maxRows || this.maxRows < 2) {
+                                    if (this.renderedRows === 1 || !this.maxRows || this.maxRows < 2) {
                                         containerWidth += parseFloat(movieElem.style.width) + marginRight;
                                     }
                                 }
