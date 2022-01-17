@@ -21978,7 +21978,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.contentBGHeight = 0;
         this.initialDataLoaded = false;
         this.renderNewElementsIfNeeded = () => {
-            console.log('renderNewElementsIfNeeded');
             const loadAdditionalRowsCount = 2; // todo: make this configurable
             const height = getHeight(this.content);
             if (!this.detailsShown &&
@@ -22375,29 +22374,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return searchContainer;
         };
         this.renderMovieElems = () => {
-            let renderMore = (!this.maxCount || this.renderedItems < this.maxCount) &&
-                (!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
-                (!this.maxRows || this.renderedRows <= this.maxRows);
-            if (this.data[this.config.libraryName] &&
-                this.renderedItems < this.data[this.config.libraryName].length &&
-                renderMore) {
-                let maxRenderedItems = this.data[this.config.libraryName].length;
-                let itemsPerRow = this.data[this.config.libraryName].length;
-                if (this.maxCount) {
-                    maxRenderedItems = this.maxCount;
-                }
-                itemsPerRow = maxRenderedItems;
-                if (this.maxRows) {
-                    itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
-                }
-                // eslint-disable-next-line consistent-return
-                const searchValues = lodash.split(this.searchValue, ' ');
-                // eslint-disable-next-line consistent-return
-                let lastRowTop = 0;
+            const renderElements = (render, hasEpisodesResult, searchValues, itemsPerRow) => {
                 const loadAdditionalRowsCount = 2; // todo: make this configurable
+                let lastRowTop = 0;
                 this.renderedRows = 0;
+                this.renderedItems = 0;
                 this.columnsCount = 0;
-                const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
+                this.contentContainer.style.width = '';
+                let containerWidth = 0;
+                let renderMore = (!this.maxCount || this.renderedItems < this.maxCount) &&
+                    (!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+                    (!this.maxRows || this.renderedRows <= this.maxRows);
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
                     renderMore =
                         (!this.maxCount || this.renderedItems < this.maxCount) &&
@@ -22429,7 +22416,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             shouldRender = true;
                         }
                         if (shouldRender) {
-                            this.contentContainer.appendChild(movieElem);
+                            if (render) {
+                                this.contentContainer.appendChild(movieElem);
+                            }
                             if (this.useHorizontalScroll) {
                                 if (this.renderedItems > 0 && this.renderedItems % itemsPerRow === 0) {
                                     this.renderedRows += 1;
@@ -22437,14 +22426,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                 }
                                 const marginRight = 10;
                                 if (this.renderedRows === 1 || !this.maxRows || this.maxRows < 2) {
-                                    if (lodash.isEmpty(this.contentContainer.style.width)) {
-                                        this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
-                                    }
-                                    else {
-                                        this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-                                            parseFloat(movieElem.style.width) +
-                                            marginRight}px`;
-                                    }
+                                    containerWidth += parseFloat(movieElem.style.width) + marginRight;
                                 }
                             }
                             this.renderedItems += 1;
@@ -22466,6 +22448,36 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                     return false;
                 });
+                if (render) {
+                    this.contentContainer.style.width = `${containerWidth}px`;
+                }
+                return {
+                    renderedItems: this.renderedItems
+                };
+            };
+            const renderMore = (!this.maxCount || this.renderedItems < this.maxCount) &&
+                (!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+                (!this.maxRows || this.renderedRows <= this.maxRows);
+            if (this.data[this.config.libraryName] &&
+                this.renderedItems < this.data[this.config.libraryName].length &&
+                renderMore) {
+                let maxRenderedItems = this.data[this.config.libraryName].length;
+                let itemsPerRow = this.data[this.config.libraryName].length;
+                if (this.maxCount) {
+                    maxRenderedItems = this.maxCount;
+                }
+                itemsPerRow = maxRenderedItems;
+                if (this.maxRows) {
+                    itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
+                }
+                const searchValues = lodash.split(this.searchValue, ' ');
+                const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
+                const { renderedItems } = renderElements(false, hasEpisodesResult, searchValues, itemsPerRow);
+                itemsPerRow = renderedItems;
+                if (this.maxRows) {
+                    itemsPerRow = Math.ceil(renderedItems / this.maxRows);
+                }
+                renderElements(true, hasEpisodesResult, searchValues, itemsPerRow);
             }
             const contentbg = this.getElementsByClassName('contentbg')[0];
             this.contentBGHeight = getHeight(contentbg);

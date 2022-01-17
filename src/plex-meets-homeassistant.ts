@@ -184,7 +184,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	}
 
 	renderNewElementsIfNeeded = (): void => {
-		console.log('renderNewElementsIfNeeded');
 		const loadAdditionalRowsCount = 2; // todo: make this configurable
 		const height = getHeight(this.content);
 		if (
@@ -601,33 +600,23 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	};
 
 	renderMovieElems = (): void => {
-		let renderMore =
-			(!this.maxCount || this.renderedItems < this.maxCount) &&
-			(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
-			(!this.maxRows || this.renderedRows <= this.maxRows);
-		if (
-			this.data[this.config.libraryName] &&
-			this.renderedItems < this.data[this.config.libraryName].length &&
-			renderMore
-		) {
-			let maxRenderedItems = this.data[this.config.libraryName].length;
-			let itemsPerRow = this.data[this.config.libraryName].length;
-			if (this.maxCount) {
-				maxRenderedItems = this.maxCount;
-			}
-			itemsPerRow = maxRenderedItems;
-			if (this.maxRows) {
-				itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
-			}
-			// eslint-disable-next-line consistent-return
-			const searchValues = _.split(this.searchValue, ' ');
-			// eslint-disable-next-line consistent-return
-			let lastRowTop = 0;
-
+		const renderElements = (
+			render: boolean,
+			hasEpisodesResult: any,
+			searchValues: Array<string>,
+			itemsPerRow: number
+		): Record<string, any> => {
 			const loadAdditionalRowsCount = 2; // todo: make this configurable
+			let lastRowTop = 0;
 			this.renderedRows = 0;
+			this.renderedItems = 0;
 			this.columnsCount = 0;
-			const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
+			this.contentContainer.style.width = '';
+			let containerWidth = 0;
+			let renderMore =
+				(!this.maxCount || this.renderedItems < this.maxCount) &&
+				(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+				(!this.maxRows || this.renderedRows <= this.maxRows);
 			_.forEach(this.data[this.config.libraryName], (movieData: Record<string, any>) => {
 				renderMore =
 					(!this.maxCount || this.renderedItems < this.maxCount) &&
@@ -662,7 +651,9 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 						shouldRender = true;
 					}
 					if (shouldRender) {
-						this.contentContainer.appendChild(movieElem);
+						if (render) {
+							this.contentContainer.appendChild(movieElem);
+						}
 						if (this.useHorizontalScroll) {
 							if (this.renderedItems > 0 && this.renderedItems % itemsPerRow === 0) {
 								this.renderedRows += 1;
@@ -670,13 +661,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 							}
 							const marginRight = 10;
 							if (this.renderedRows === 1 || !this.maxRows || this.maxRows < 2) {
-								if (_.isEmpty(this.contentContainer.style.width)) {
-									this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
-								} else {
-									this.contentContainer.style.width = `${parseFloat(this.contentContainer.style.width) +
-										parseFloat(movieElem.style.width) +
-										marginRight}px`;
-								}
+								containerWidth += parseFloat(movieElem.style.width) + marginRight;
 							}
 						}
 
@@ -699,6 +684,43 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				}
 				return false;
 			});
+			if (render) {
+				this.contentContainer.style.width = `${containerWidth}px`;
+			}
+			return {
+				renderedItems: this.renderedItems
+			};
+		};
+
+		const renderMore =
+			(!this.maxCount || this.renderedItems < this.maxCount) &&
+			(!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+			(!this.maxRows || this.renderedRows <= this.maxRows);
+		if (
+			this.data[this.config.libraryName] &&
+			this.renderedItems < this.data[this.config.libraryName].length &&
+			renderMore
+		) {
+			let maxRenderedItems = this.data[this.config.libraryName].length;
+			let itemsPerRow = this.data[this.config.libraryName].length;
+			if (this.maxCount) {
+				maxRenderedItems = this.maxCount;
+			}
+			itemsPerRow = maxRenderedItems;
+			if (this.maxRows) {
+				itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
+			}
+			const searchValues = _.split(this.searchValue, ' ');
+
+			const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
+
+			const { renderedItems } = renderElements(false, hasEpisodesResult, searchValues, itemsPerRow);
+			itemsPerRow = renderedItems;
+			if (this.maxRows) {
+				itemsPerRow = Math.ceil(renderedItems / this.maxRows);
+			}
+
+			renderElements(true, hasEpisodesResult, searchValues, itemsPerRow);
 		}
 
 		const contentbg = this.getElementsByClassName('contentbg')[0] as HTMLElement;
