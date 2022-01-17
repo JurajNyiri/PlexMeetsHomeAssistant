@@ -22435,7 +22435,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                     movieElem.style.clear = 'both';
                                 }
                                 const marginRight = 10;
-                                if (this.renderedRows === 1) {
+                                if (this.renderedRows === 1 || !this.maxRows || this.maxRows < 2) {
                                     if (lodash.isEmpty(this.contentContainer.style.width)) {
                                         this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
                                     }
