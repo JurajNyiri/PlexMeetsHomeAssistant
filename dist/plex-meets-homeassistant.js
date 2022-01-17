@@ -22380,14 +22380,15 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.data[this.config.libraryName] &&
                 this.renderedItems < this.data[this.config.libraryName].length &&
                 renderMore) {
-                let count = 0;
                 let maxRenderedItems = this.data[this.config.libraryName].length;
-                this.data[this.config.libraryName].length;
+                let itemsPerRow = this.data[this.config.libraryName].length;
                 if (this.maxCount) {
                     maxRenderedItems = this.maxCount;
+                    itemsPerRow = maxRenderedItems;
                     if (this.maxRows) {
-                        Math.round(maxRenderedItems / this.maxRows);
+                        itemsPerRow = Math.ceil(maxRenderedItems / this.maxRows);
                     }
+                    console.log(itemsPerRow);
                 }
                 // eslint-disable-next-line consistent-return
                 const searchValues = lodash.split(this.searchValue, ' ');
@@ -22398,11 +22399,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.columnsCount = 0;
                 const hasEpisodesResult = hasEpisodes(this.data[this.config.libraryName]);
                 lodash.forEach(this.data[this.config.libraryName], (movieData) => {
+                    renderMore =
+                        (!this.maxCount || this.renderedItems < this.maxCount) &&
+                            (!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
+                            (!this.maxRows || this.renderedRows <= this.maxRows);
                     if (renderMore) {
-                        renderMore =
-                            (!this.maxCount || this.renderedItems < this.maxCount) &&
-                                (!this.maxRenderCount || this.renderedItems < this.maxRenderCount) &&
-                                (!this.maxRows || this.renderedRows <= this.maxRows);
                         const movieElem = this.getMovieElement(movieData, hasEpisodesResult);
                         let shouldRender = false;
                         if (this.looseSearch) {
@@ -22428,11 +22429,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             shouldRender = true;
                         }
                         if (shouldRender) {
-                            count += 1;
-                            if (count > this.renderedItems) {
-                                this.contentContainer.appendChild(movieElem);
-                                if (this.useHorizontalScroll) {
-                                    const marginRight = 10;
+                            this.contentContainer.appendChild(movieElem);
+                            if (this.useHorizontalScroll) {
+                                if (this.renderedItems > 0 && this.renderedItems % itemsPerRow === 0) {
+                                    this.renderedRows += 1;
+                                    movieElem.style.clear = 'both';
+                                }
+                                const marginRight = 10;
+                                if (this.renderedRows === 1) {
                                     if (lodash.isEmpty(this.contentContainer.style.width)) {
                                         this.contentContainer.style.width = `${parseFloat(movieElem.style.width) + marginRight}px`;
                                     }
@@ -22442,8 +22446,8 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                                             marginRight}px`;
                                     }
                                 }
-                                this.renderedItems += 1;
                             }
+                            this.renderedItems += 1;
                         }
                         if (shouldRender && lastRowTop !== movieElem.getBoundingClientRect().top && !this.useHorizontalScroll) {
                             this.renderedRows += 1;
