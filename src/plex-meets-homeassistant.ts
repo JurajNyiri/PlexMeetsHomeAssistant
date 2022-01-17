@@ -184,6 +184,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 	}
 
 	renderNewElementsIfNeeded = (): void => {
+		console.log('renderNewElementsIfNeeded');
 		const loadAdditionalRowsCount = 2; // todo: make this configurable
 		const height = getHeight(this.content);
 		if (
@@ -273,7 +274,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 					}
 				}
 			}
-
 			this.renderNewElementsIfNeeded();
 		});
 		window.addEventListener('resize', () => {
@@ -735,6 +735,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		}
 
 		this.renderedItems = 0;
+		this.renderedRows = 0;
 		// this.columnsCount = 0;
 
 		const spinner = document.createElement('div');
@@ -1009,11 +1010,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		// todo: figure out why interval is needed here and do it properly
 		const setLeftOffsetsInterval = setInterval(() => {
 			this.movieElems = this.getElementsByClassName('movieElem');
+
 			for (let i = 0; i < this.movieElems.length; i += 1) {
 				if (this.movieElems[i].offsetLeft === 0) {
 					break;
 				} else {
-					this.resizeHandler();
 					clearInterval(setLeftOffsetsInterval);
 				}
 			}

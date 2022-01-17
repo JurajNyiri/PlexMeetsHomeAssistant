@@ -21978,6 +21978,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
         this.contentBGHeight = 0;
         this.initialDataLoaded = false;
         this.renderNewElementsIfNeeded = () => {
+            console.log('renderNewElementsIfNeeded');
             const loadAdditionalRowsCount = 2; // todo: make this configurable
             const height = getHeight(this.content);
             if (!this.detailsShown &&
@@ -22497,6 +22498,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 }
             }
             this.renderedItems = 0;
+            this.renderedRows = 0;
             // this.columnsCount = 0;
             const spinner = document.createElement('div');
             spinner.style.display = 'flex';
@@ -22746,7 +22748,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                         break;
                     }
                     else {
-                        this.resizeHandler();
                         clearInterval(setLeftOffsetsInterval);
                     }
                 }
