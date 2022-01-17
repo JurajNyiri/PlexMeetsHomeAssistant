@@ -22375,9 +22375,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             return searchContainer;
         };
         this.renderMovieElems = () => {
-            console.log('renderMovieElems');
             const renderElements = (render, hasEpisodesResult, searchValues, itemsPerRow) => {
-                console.log('renderElements');
                 const origRenderedRows = this.renderedRows;
                 const origRenderedItems = this.renderedItems;
                 const origColumnsCount = this.columnsCount;
@@ -22449,7 +22447,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                             lastRowTop = movieElem.getBoundingClientRect().top;
                             if (!isScrolledIntoView(movieElem) && !this.maxRenderCount && this.renderedItems > 0) {
                                 this.maxRenderCount = this.renderedItems - 1 + this.columnsCount * loadAdditionalRowsCount;
-                                console.log(`1: this.maxRenderCount = ${this.maxRenderCount}`);
                             }
                         }
                         if (this.maxRows && this.renderedRows > this.maxRows && !this.useHorizontalScroll) {
