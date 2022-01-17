@@ -21984,6 +21984,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
                 this.renderedItems > 0 &&
                 this.renderedItems < this.data[this.config.libraryName].length &&
+                (!this.maxCount || this.renderedItems < this.maxCount) &&
                 (!this.maxRows || this.renderedRows < this.config.maxRows)) {
                 this.maxRenderCount = this.renderedItems + this.columnsCount * (loadAdditionalRowsCount * 2);
                 this.renderMovieElems();
@@ -22381,14 +22382,12 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 renderMore) {
                 let count = 0;
                 let maxRenderedItems = this.data[this.config.libraryName].length;
-                let itemsPerRow = this.data[this.config.libraryName].length;
+                this.data[this.config.libraryName].length;
                 if (this.maxCount) {
                     maxRenderedItems = this.maxCount;
-                    itemsPerRow = maxRenderedItems;
                     if (this.maxRows) {
-                        itemsPerRow = Math.round(maxRenderedItems / this.maxRows);
+                        Math.round(maxRenderedItems / this.maxRows);
                     }
-                    console.log(itemsPerRow);
                 }
                 // eslint-disable-next-line consistent-return
                 const searchValues = lodash.split(this.searchValue, ' ');
