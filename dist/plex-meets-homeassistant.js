@@ -22448,7 +22448,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                     return false;
                 });
-                if (render) {
+                if (render && containerWidth > 0) {
                     this.contentContainer.style.width = `${containerWidth}px`;
                 }
                 return {
