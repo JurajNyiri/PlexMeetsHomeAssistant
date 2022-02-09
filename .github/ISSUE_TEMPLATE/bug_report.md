@@ -41,5 +41,8 @@ Replace this text with version of card you are using.
 **Plex Version**
 Replace this text with version of Plex you are using.
 
+**Device information**
+Information about device you are using to display the card. Also include browser / app information.
+
 **Additional context**
 Add any other context about the problem here.
