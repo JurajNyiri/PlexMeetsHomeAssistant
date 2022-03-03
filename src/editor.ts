@@ -26,13 +26,13 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	maxRows: any = document.createElement('paper-input');
 
-	displayTitleMain: any = document.createElement('paper-dropdown-menu');
+	displayTitleMain: any = document.createElement('select');
 
-	displaySubtitleMain: any = document.createElement('paper-dropdown-menu');
+	displaySubtitleMain: any = document.createElement('select');
 
-	useHorizontalScroll: any = document.createElement('paper-dropdown-menu');
+	useHorizontalScroll: any = document.createElement('select');
 
-	useShuffle: any = document.createElement('paper-dropdown-menu');
+	useShuffle: any = document.createElement('select');
 
 	minWidth: any = document.createElement('paper-input');
 
@@ -52,27 +52,29 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	cardTitle: any = document.createElement('paper-input');
 
-	libraryName: any = document.createElement('paper-dropdown-menu');
+	libraryName: any = document.createElement('select');
 
-	protocol: any = document.createElement('paper-dropdown-menu');
+	protocol: any = document.createElement('select');
 
 	tabs: any = document.createElement('paper-tabs');
 
-	sort: any = document.createElement('paper-dropdown-menu');
+	sort: any = document.createElement('select');
 
-	displayType: any = document.createElement('paper-dropdown-menu');
+	displayTypeData: Record<string, any> = {};
 
-	sortOrder: any = document.createElement('paper-dropdown-menu');
+	displayType: any = document.createElement('select');
 
-	playTrailer: any = document.createElement('paper-dropdown-menu');
+	sortOrder: any = document.createElement('select');
 
-	showExtras: any = document.createElement('paper-dropdown-menu');
+	playTrailer: any = document.createElement('select');
 
-	showSearch: any = document.createElement('paper-dropdown-menu');
+	showExtras: any = document.createElement('select');
 
-	runBefore: any = document.createElement('paper-dropdown-menu');
+	showSearch: any = document.createElement('select');
 
-	runAfter: any = document.createElement('paper-dropdown-menu');
+	runBefore: any = document.createElement('select');
+
+	runAfter: any = document.createElement('select');
 
 	entitiesSection: any = document.createElement('div');
 
@@ -118,6 +120,19 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		return event;
 	};
 
+	generateTitle = (titleText: string): any => {
+		const title = document.createElement('h4');
+		title.innerText = titleText;
+		title.style.marginBottom = '0';
+		title.style.marginTop = '0';
+		title.style.paddingTop = '0';
+		title.style.paddingBottom = '0';
+		title.style.color = 'rgb(225, 225, 225)';
+		title.style.fontWeight = '300';
+		title.style.fontSize = '12px';
+		return title;
+	};
+
 	valueUpdated = (): void => {
 		const originalConfig = _.clone(this.config);
 		this.config.protocol = this.protocol.value;
@@ -143,7 +158,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 					this.config.sort = ``;
 				}
 
-				this.config.displayType = this.displayType.value;
+				this.config.displayType = this.displayTypeData[this.displayType.value];
 
 				if (_.isEmpty(this.maxCount.value)) {
 					this.config.maxCount = '';
@@ -275,9 +290,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				// eslint-disable-next-line no-param-reassign
 				text = value;
 			}
-			const libraryItem: any = document.createElement('paper-item');
+			const libraryItem: any = document.createElement('option');
 			libraryItem.innerHTML = text.replace(/ /g, '&nbsp;');
 			libraryItem.label = value;
+			libraryItem.value = value;
 			if (disabled) {
 				libraryItem.disabled = true;
 			}
@@ -285,10 +301,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		};
 		const createEntitiesDropdown = (selected: string, changeHandler: Function): HTMLElement | false => {
 			if (this.entitiesRegistry) {
-				const entitiesDropDown: any = document.createElement('paper-dropdown-menu');
-				const entities: any = document.createElement('paper-listbox');
+				const container: any = document.createElement('div');
+				const entitiesDropDown: any = document.createElement('select');
 
-				entities.appendChild(addDropdownItem(''));
+				entitiesDropDown.appendChild(addDropdownItem(''));
 				const addedEntityStrings: Array<string> = [];
 				_.forEach(this.entitiesRegistry, entityRegistry => {
 					if (
@@ -301,34 +317,36 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 						_.isEqual(entityRegistry.platform, 'sonos')
 					) {
 						const entityName = `${entityRegistry.platform} | ${entityRegistry.entity_id}`;
-						entities.appendChild(addDropdownItem(entityName));
+						entitiesDropDown.appendChild(addDropdownItem(entityName));
 						addedEntityStrings.push(entityName);
 					}
 				});
 				_.forEach(this.clients, value => {
 					const entityName = `plexPlayer | ${value.name} | ${value.address} | ${value.machineIdentifier}`;
-					entities.appendChild(addDropdownItem(entityName));
+					entitiesDropDown.appendChild(addDropdownItem(entityName));
 					addedEntityStrings.push(entityName);
 				});
 
 				if (_.isArray(this.config.entity)) {
 					_.forEach(this.config.entity, value => {
 						if (!_.includes(addedEntityStrings, value)) {
-							entities.appendChild(addDropdownItem(value));
+							entitiesDropDown.appendChild(addDropdownItem(value));
 							addedEntityStrings.push(value);
 						}
 					});
 				}
 
-				entities.slot = 'dropdown-content';
 				entitiesDropDown.label = 'Entity';
 				entitiesDropDown.value = selected;
-				entitiesDropDown.appendChild(entities);
 				entitiesDropDown.style.width = '100%';
+				entitiesDropDown.style.height = '40px';
 				entitiesDropDown.className = 'entitiesDropDown';
-				entitiesDropDown.addEventListener('value-changed', changeHandler);
+				entitiesDropDown.addEventListener('change', changeHandler);
 				this.entities.push(entitiesDropDown);
-				return entitiesDropDown;
+				container.appendChild(this.generateTitle('Entity'));
+				container.appendChild(entitiesDropDown);
+
+				return container;
 			}
 			return false;
 		};
@@ -351,19 +369,17 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		plexTitle.style.padding = '0px';
 		this.content.appendChild(plexTitle);
 
+		this.content.appendChild(this.generateTitle('Plex Protocol'));
 		this.protocol.innerHTML = '';
-		const protocolItems: any = document.createElement('paper-listbox');
 		// eslint-disable-next-line no-restricted-globals
 		const pageProtocol = location.protocol;
 		if (_.isEqual(pageProtocol, 'http:')) {
-			protocolItems.appendChild(addDropdownItem('http'));
+			this.protocol.appendChild(addDropdownItem('http'));
 		}
-		protocolItems.appendChild(addDropdownItem('https'));
-		protocolItems.slot = 'dropdown-content';
-		this.protocol.label = 'Plex Protocol';
-		this.protocol.appendChild(protocolItems);
+		this.protocol.appendChild(addDropdownItem('https'));
 		this.protocol.style.width = '100%';
-		this.protocol.addEventListener('value-changed', this.valueUpdated);
+		this.protocol.style.height = '40px';
+		this.protocol.addEventListener('change', this.valueUpdated);
 		if (_.isEmpty(this.config.protocol)) {
 			if (_.isEqual(pageProtocol, 'http:')) {
 				this.protocol.value = 'http';
@@ -396,20 +412,17 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.token.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.token);
 
+		this.content.appendChild(this.generateTitle('Plex Library'));
 		this.libraryName.innerHTML = '';
-		const libraryItems: any = document.createElement('paper-listbox');
-
-		libraryItems.appendChild(addDropdownItem('Smart Libraries', '', true));
-		libraryItems.appendChild(addDropdownItem('Continue Watching'));
-		libraryItems.appendChild(addDropdownItem('Deck'));
-		libraryItems.appendChild(addDropdownItem('Recently Added'));
-		libraryItems.appendChild(addDropdownItem('Watch Next'));
-		libraryItems.slot = 'dropdown-content';
-		this.libraryName.label = 'Plex Library';
+		this.libraryName.appendChild(addDropdownItem('Smart Libraries', '', true));
+		this.libraryName.appendChild(addDropdownItem('Continue Watching'));
+		this.libraryName.appendChild(addDropdownItem('Deck'));
+		this.libraryName.appendChild(addDropdownItem('Recently Added'));
+		this.libraryName.appendChild(addDropdownItem('Watch Next'));
 		this.libraryName.disabled = true;
-		this.libraryName.appendChild(libraryItems);
 		this.libraryName.style.width = '100%';
-		this.libraryName.addEventListener('value-changed', this.valueUpdated);
+		this.libraryName.style.height = '40px';
+		this.libraryName.addEventListener('change', this.valueUpdated);
 
 		const warningLibrary = document.createElement('div');
 		warningLibrary.style.color = 'red';
@@ -430,15 +443,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.sections = await this.plex.getSections();
 		_.forEach(this.sections, section => {
 			if (_.isEqual(section.title, this.config.libraryName) && _.isEqual(section.type, 'artist')) {
+				this.content.appendChild(this.generateTitle('Use shuffle when playing'));
 				this.useShuffle.innerHTML = '';
-				const useShuffleItems: any = document.createElement('paper-listbox');
-				useShuffleItems.appendChild(addDropdownItem('Yes'));
-				useShuffleItems.appendChild(addDropdownItem('No'));
-				useShuffleItems.slot = 'dropdown-content';
+				this.useShuffle.appendChild(addDropdownItem('Yes'));
+				this.useShuffle.appendChild(addDropdownItem('No'));
+				this.useShuffle.slot = 'dropdown-content';
 				this.useShuffle.label = 'Use shuffle when playing';
-				this.useShuffle.appendChild(useShuffleItems);
 				this.useShuffle.style.width = '100%';
-				this.useShuffle.addEventListener('value-changed', this.valueUpdated);
+				this.useShuffle.style.height = '40px';
+				this.useShuffle.addEventListener('change', this.valueUpdated);
 				if (_.isEmpty(this.config.useShuffle)) {
 					this.useShuffle.value = 'No';
 				} else {
@@ -540,12 +553,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(viewTitle);
 
 		this.displayType.innerHTML = '';
-		const typeItems: any = document.createElement('paper-listbox');
-		typeItems.slot = 'dropdown-content';
-		this.displayType.label = 'Display Type (Optional)';
-		this.displayType.appendChild(typeItems);
 		this.displayType.style.width = '100%';
-		this.displayType.addEventListener('value-changed', this.valueUpdated);
+		this.displayType.style.height = '40px';
+		this.displayType.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.generateTitle('Display Type (Optional)'));
 		this.plexValidSection.appendChild(this.displayType);
 
 		this.cardTitle.label = 'Card title (Optional)';
@@ -560,14 +571,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.maxCount);
 
 		this.useHorizontalScroll.innerHTML = '';
-		const useHorizontalScrollItems: any = document.createElement('paper-listbox');
-		useHorizontalScrollItems.appendChild(addDropdownItem('Yes'));
-		useHorizontalScrollItems.appendChild(addDropdownItem('No'));
-		useHorizontalScrollItems.slot = 'dropdown-content';
-		this.useHorizontalScroll.label = 'Use horizontal scroll';
-		this.useHorizontalScroll.appendChild(useHorizontalScrollItems);
+		this.plexValidSection.appendChild(this.generateTitle('Use horizontal scroll'));
+		this.useHorizontalScroll.appendChild(addDropdownItem('Yes'));
+		this.useHorizontalScroll.appendChild(addDropdownItem('No'));
 		this.useHorizontalScroll.style.width = '100%';
-		this.useHorizontalScroll.addEventListener('value-changed', this.valueUpdated);
+		this.useHorizontalScroll.style.height = '40px';
+		this.useHorizontalScroll.addEventListener('change', this.valueUpdated);
 		if (_.isEmpty(this.config.useHorizontalScroll)) {
 			this.useHorizontalScroll.value = 'No';
 		} else {
@@ -583,23 +592,19 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 		this.sort.innerHTML = '';
 
-		const sortItems: any = document.createElement('paper-listbox');
-		sortItems.slot = 'dropdown-content';
-		this.sort.label = 'Sort';
-		this.sort.appendChild(sortItems);
 		this.sort.style.width = '100%';
-		this.sort.addEventListener('value-changed', this.valueUpdated);
+		this.sort.style.height = '40px';
+		this.sort.addEventListener('change', this.valueUpdated);
+		this.plexValidSection.appendChild(this.generateTitle('Sort'));
 		this.plexValidSection.appendChild(this.sort);
 
 		this.sortOrder.innerHTML = '';
-		const sortOrderItems: any = document.createElement('paper-listbox');
-		sortOrderItems.appendChild(addDropdownItem('Ascending'));
-		sortOrderItems.appendChild(addDropdownItem('Descending'));
-		sortOrderItems.slot = 'dropdown-content';
-		this.sortOrder.label = 'Sort Order';
-		this.sortOrder.appendChild(sortOrderItems);
+		this.sortOrder.appendChild(addDropdownItem('Ascending'));
+		this.sortOrder.appendChild(addDropdownItem('Descending'));
+		this.plexValidSection.appendChild(this.generateTitle('Sort Order'));
 		this.sortOrder.style.width = '100%';
-		this.sortOrder.addEventListener('value-changed', this.valueUpdated);
+		this.sortOrder.style.height = '40px';
+		this.sortOrder.addEventListener('change', this.valueUpdated);
 		if (_.isEmpty(this.config.sort)) {
 			this.sortOrder.value = 'Ascending';
 		} else {
@@ -614,16 +619,14 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		}
 		this.plexValidSection.appendChild(this.sortOrder);
 
+		this.plexValidSection.appendChild(this.generateTitle('Play Trailer'));
 		this.playTrailer.innerHTML = '';
-		const playTrailerItems: any = document.createElement('paper-listbox');
-		playTrailerItems.appendChild(addDropdownItem('Yes'));
-		playTrailerItems.appendChild(addDropdownItem('Muted'));
-		playTrailerItems.appendChild(addDropdownItem('No'));
-		playTrailerItems.slot = 'dropdown-content';
-		this.playTrailer.label = 'Play Trailer';
-		this.playTrailer.appendChild(playTrailerItems);
+		this.playTrailer.appendChild(addDropdownItem('Yes'));
+		this.playTrailer.appendChild(addDropdownItem('Muted'));
+		this.playTrailer.appendChild(addDropdownItem('No'));
 		this.playTrailer.style.width = '100%';
-		this.playTrailer.addEventListener('value-changed', this.valueUpdated);
+		this.playTrailer.style.height = '40px';
+		this.playTrailer.addEventListener('change', this.valueUpdated);
 		let playTrailerValue = 'Yes';
 		if (_.isEqual(this.config.playTrailer, 'muted')) {
 			playTrailerValue = 'Muted';
@@ -634,14 +637,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.playTrailer);
 
 		this.showExtras.innerHTML = '';
-		const showExtrasItems: any = document.createElement('paper-listbox');
-		showExtrasItems.appendChild(addDropdownItem('Yes'));
-		showExtrasItems.appendChild(addDropdownItem('No'));
-		showExtrasItems.slot = 'dropdown-content';
-		this.showExtras.label = 'Show Extras';
-		this.showExtras.appendChild(showExtrasItems);
+		this.showExtras.appendChild(addDropdownItem('Yes'));
+		this.showExtras.appendChild(addDropdownItem('No'));
+		this.plexValidSection.appendChild(this.generateTitle('Show Extras'));
 		this.showExtras.style.width = '100%';
-		this.showExtras.addEventListener('value-changed', this.valueUpdated);
+		this.showExtras.style.height = '40px';
+		this.showExtras.addEventListener('change', this.valueUpdated);
 		let showExtrasValue = 'Yes';
 		if (!this.config.showExtras) {
 			showExtrasValue = 'No';
@@ -650,14 +651,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.showExtras);
 
 		this.showSearch.innerHTML = '';
-		const showSearchItems: any = document.createElement('paper-listbox');
-		showSearchItems.appendChild(addDropdownItem('Yes'));
-		showSearchItems.appendChild(addDropdownItem('No'));
-		showSearchItems.slot = 'dropdown-content';
-		this.showSearch.label = 'Show Search';
-		this.showSearch.appendChild(showSearchItems);
+		this.showSearch.appendChild(addDropdownItem('Yes'));
+		this.showSearch.appendChild(addDropdownItem('No'));
+		this.plexValidSection.appendChild(this.generateTitle('Show Search'));
 		this.showSearch.style.width = '100%';
-		this.showSearch.addEventListener('value-changed', this.valueUpdated);
+		this.showSearch.style.height = '40px';
+		this.showSearch.addEventListener('change', this.valueUpdated);
 		let showSearchValue = 'Yes';
 		if (!this.config.showSearch) {
 			showSearchValue = 'No';
@@ -666,30 +665,26 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.showSearch);
 
 		this.runBefore.innerHTML = '';
-		const runBeforeItems: any = document.createElement('paper-listbox');
-		runBeforeItems.appendChild(addDropdownItem(''));
+		this.runBefore.appendChild(addDropdownItem(''));
 		_.forEach(this.scriptEntities, entity => {
-			runBeforeItems.appendChild(addDropdownItem(entity));
+			this.runBefore.appendChild(addDropdownItem(entity));
 		});
-		runBeforeItems.slot = 'dropdown-content';
-		this.runBefore.label = 'Script to execute before starting the media (Optional)';
-		this.runBefore.appendChild(runBeforeItems);
+		this.plexValidSection.appendChild(this.generateTitle('Script to execute before starting the media (Optional)'));
 		this.runBefore.style.width = '100%';
-		this.runBefore.addEventListener('value-changed', this.valueUpdated);
+		this.runBefore.style.height = '40px';
+		this.runBefore.addEventListener('change', this.valueUpdated);
 		this.runBefore.value = this.config.runBefore;
 		this.plexValidSection.appendChild(this.runBefore);
 
 		this.runAfter.innerHTML = '';
-		const runAfterItems: any = document.createElement('paper-listbox');
-		runAfterItems.appendChild(addDropdownItem(''));
+		this.runAfter.appendChild(addDropdownItem(''));
 		_.forEach(this.scriptEntities, entity => {
-			runAfterItems.appendChild(addDropdownItem(entity));
+			this.runAfter.appendChild(addDropdownItem(entity));
 		});
-		runAfterItems.slot = 'dropdown-content';
-		this.runAfter.label = 'Script to execute after starting the media (Optional)';
-		this.runAfter.appendChild(runAfterItems);
+		this.plexValidSection.appendChild(this.generateTitle('Script to execute after starting the media (Optional)'));
 		this.runAfter.style.width = '100%';
-		this.runAfter.addEventListener('value-changed', this.valueUpdated);
+		this.runAfter.style.height = '40px';
+		this.runAfter.addEventListener('change', this.valueUpdated);
 		this.runAfter.value = this.config.runAfter;
 		this.plexValidSection.appendChild(this.runAfter);
 
@@ -725,14 +720,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.minEpisodeWidth);
 
 		this.displayTitleMain.innerHTML = '';
-		const displayTitleMainItems: any = document.createElement('paper-listbox');
-		displayTitleMainItems.appendChild(addDropdownItem('Yes'));
-		displayTitleMainItems.appendChild(addDropdownItem('No'));
-		displayTitleMainItems.slot = 'dropdown-content';
-		this.displayTitleMain.label = 'Display title under poster';
-		this.displayTitleMain.appendChild(displayTitleMainItems);
+		this.displayTitleMain.appendChild(addDropdownItem('Yes'));
+		this.displayTitleMain.appendChild(addDropdownItem('No'));
+		this.plexValidSection.appendChild(this.generateTitle('Display title under poster'));
 		this.displayTitleMain.style.width = '100%';
-		this.displayTitleMain.addEventListener('value-changed', this.valueUpdated);
+		this.displayTitleMain.style.height = '40px';
+		this.displayTitleMain.addEventListener('change', this.valueUpdated);
 		if (_.isEmpty(this.config.displayTitleMain)) {
 			this.displayTitleMain.value = 'Yes';
 		} else {
@@ -747,14 +740,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.fontSize1);
 
 		this.displaySubtitleMain.innerHTML = '';
-		const displaySubtitleMainItems: any = document.createElement('paper-listbox');
-		displaySubtitleMainItems.appendChild(addDropdownItem('Yes'));
-		displaySubtitleMainItems.appendChild(addDropdownItem('No'));
-		displaySubtitleMainItems.slot = 'dropdown-content';
-		this.displaySubtitleMain.label = 'Display sub-title under poster';
-		this.displaySubtitleMain.appendChild(displaySubtitleMainItems);
+		this.displaySubtitleMain.appendChild(addDropdownItem('Yes'));
+		this.displaySubtitleMain.appendChild(addDropdownItem('No'));
+		this.plexValidSection.appendChild(this.generateTitle('Display sub-title under poster'));
 		this.displaySubtitleMain.style.width = '100%';
-		this.displaySubtitleMain.addEventListener('value-changed', this.valueUpdated);
+		this.displaySubtitleMain.style.height = '40px';
+		this.displaySubtitleMain.addEventListener('change', this.valueUpdated);
 		if (_.isEmpty(this.config.displaySubtitleMain)) {
 			this.displaySubtitleMain.value = 'Yes';
 		} else {
@@ -782,29 +773,29 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.fontSize4);
 
 		if (!_.isEmpty(this.livetv)) {
-			libraryItems.appendChild(addDropdownItem('Live TV', '', true));
+			this.libraryName.appendChild(addDropdownItem('Live TV', '', true));
 			_.forEach(_.keys(this.livetv), (livetv: string) => {
 				if (_.isEqual(this.config.libraryName, livetv)) {
 					warningLibrary.innerHTML = `Warning: ${this.config.libraryName} play action currently only supported with Kodi.<br/>You might also need custom build of kodi-media-sensors, see <a href="https://github.com/JurajNyiri/PlexMeetsHomeAssistant/blob/main/DETAILED_CONFIGURATION.md#kodi" target="_blank">detailed configuration</a> for more information.`;
 				}
-				libraryItems.appendChild(addDropdownItem(livetv));
+				this.libraryName.appendChild(addDropdownItem(livetv));
 			});
 		}
 		if (!_.isEmpty(this.sections)) {
-			libraryItems.appendChild(addDropdownItem('Libraries', '', true));
+			this.libraryName.appendChild(addDropdownItem('Libraries', '', true));
 			_.forEach(this.sections, (section: Record<string, any>) => {
-				libraryItems.appendChild(addDropdownItem(section.title));
+				this.libraryName.appendChild(addDropdownItem(section.title));
 			});
 			if (!_.isEmpty(this.collections)) {
-				libraryItems.appendChild(addDropdownItem('Collections', '', true));
+				this.libraryName.appendChild(addDropdownItem('Collections', '', true));
 				_.forEach(this.collections, (collection: Record<string, any>) => {
-					libraryItems.appendChild(addDropdownItem(collection.title));
+					this.libraryName.appendChild(addDropdownItem(collection.title));
 				});
 			}
 			if (!_.isEmpty(this.playlists)) {
-				libraryItems.appendChild(addDropdownItem('Playlists', '', true));
+				this.libraryName.appendChild(addDropdownItem('Playlists', '', true));
 				_.forEach(this.playlists, (playlist: Record<string, any>) => {
-					libraryItems.appendChild(addDropdownItem(playlist.title));
+					this.libraryName.appendChild(addDropdownItem(playlist.title));
 				});
 			}
 
@@ -824,7 +815,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				const types = _.get(libraryData, '[0].Meta.Type');
 				if (!_.isNil(types) && types.length > 1) {
 					let addedTypes = 0;
-					typeItems.appendChild(addDropdownItem('', ''));
+					this.displayType.appendChild(addDropdownItem('', ''));
 					let typeAvailable = false;
 					_.forEach(types, (sectionType: Record<string, any>) => {
 						if (
@@ -840,7 +831,8 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 							if (_.isEqual(key, this.config.displayType)) {
 								typeAvailable = true;
 							}
-							typeItems.appendChild(addDropdownItem(key, sectionType.title));
+							this.displayTypeData[sectionType.title] = key;
+							this.displayType.appendChild(addDropdownItem(sectionType.title));
 							addedTypes += 1;
 						}
 					});
@@ -850,7 +842,11 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 						if (_.isEmpty(this.config.displayType) || !typeAvailable) {
 							this.displayType.value = '';
 						} else {
-							this.displayType.value = this.config.displayType;
+							_.forEach(this.displayTypeData, (value, key) => {
+								if (_.isEqual(value, this.config.displayType)) {
+									this.displayType.value = key;
+								}
+							});
 						}
 					} else {
 						this.displayType.style.display = 'none';
@@ -875,7 +871,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 				const sortFields = _.get(libraryData, `[0].Meta.Type[${displayTypeIndex}].Sort`);
 				if (!_.isNil(sortFields) && sortFields.length > 0 && this.config.displayType !== 'folder') {
 					_.forEach(sortFields, (sortField: Record<string, any>) => {
-						sortItems.appendChild(addDropdownItem(sortField.key));
+						this.sort.appendChild(addDropdownItem(sortField.key));
 					});
 					this.sort.style.display = 'block';
 					this.sortOrder.style.display = 'block';
