@@ -12,7 +12,7 @@ More images [at the end of the readme](https://github.com/JurajNyiri/PlexMeetsHo
 
 ## Important notice
 
-**If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection.**
+**If you are using Home Assistant via HTTPS, you need to specify port `https` for Plex and have Plex available on https connection with a valid and working certificate.**
 
 ## Installation
 
