@@ -22499,8 +22499,6 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 this.searchInputElem.style.display = 'none';
             }
             if (this.card) {
-                // Todo: figure why 10.3 works
-                const marginRight = 10.3; // needs to be equal to .container margin right
                 const getAreaSize = () => {
                     if (this.card) {
                         return (this.card.getBoundingClientRect().width -
@@ -22512,9 +22510,17 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                 const areaSize = getAreaSize();
                 const postersInRow = Math.floor(areaSize / this.minWidth);
                 if (areaSize > 0) {
+                    const episodesInRow = Math.floor(areaSize / this.minEpisodeWidth);
+                    // Todo: remove this hack and calculate properly // needs to be equal to .container margin right
+                    let marginRight = 11;
+                    if (postersInRow > 7) {
+                        marginRight = 10.3;
+                    }
+                    else if (postersInRow > 3) {
+                        marginRight = 10.7;
+                    }
                     CSS_STYLE.width = areaSize / postersInRow - marginRight;
                     CSS_STYLE.height = CSS_STYLE.width * CSS_STYLE.ratio;
-                    const episodesInRow = Math.floor(areaSize / this.minEpisodeWidth);
                     CSS_STYLE.episodeWidth = Math.floor(areaSize / episodesInRow - marginRight);
                     CSS_STYLE.episodeHeight = Math.round(CSS_STYLE.episodeWidth * CSS_STYLE.episodeRatio);
                     // hack to make sure cards width is always calculated properly, todo solve better in the future
