@@ -171,6 +171,25 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 
 	initialDataLoaded = false;
 
+	static querySelectorAllShadows = (selector: any, el = document.body) => {
+		// recurse on childShadows
+		const childShadows = Array.from(el.querySelectorAll('*'))
+			.map(el2 => el2.shadowRoot)
+			.filter(Boolean);
+
+		// console.log('[querySelectorAllShadows]', selector, el, `(${childShadows.length} shadowRoots)`);
+
+		const childResults: any = childShadows.map((child: any) =>
+			PlexMeetsHomeAssistant.querySelectorAllShadows(selector, child)
+		);
+
+		// fuse all results into singular, flat array
+		const result = Array.from(el.querySelectorAll(selector));
+		return (result.concat(childResults) as any).flat();
+	};
+
+	haWindow = PlexMeetsHomeAssistant.querySelectorAllShadows('hui-view')[0];
+
 	set hass(hass: HomeAssistant) {
 		this.hassObj = hass;
 
@@ -188,7 +207,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		const height = getHeight(this.content);
 		if (
 			!this.detailsShown &&
-			window.innerHeight + window.scrollY > height + getOffset(this.content).top - 300 &&
+			window.innerHeight + this.haWindow.scrollTop > height - 300 &&
 			this.renderedItems > 0 &&
 			this.renderedItems < this.data[this.config.libraryName].length &&
 			(!this.maxCount || this.renderedItems < this.maxCount) &&
@@ -236,7 +255,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
 		}
 
-		window.addEventListener('scroll', () => {
+		window.addEventListener('wheel', () => {
 			// todo: improve performance by calculating this when needed only
 			if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this) && this.isVisible) {
 				const seasonContainers = this.getElementsByClassName('seasonContainer') as HTMLCollectionOf<HTMLElement>;
