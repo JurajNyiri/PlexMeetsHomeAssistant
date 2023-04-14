@@ -22020,7 +22020,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
             if (this.hassObj) {
                 this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
             }
-            window.addEventListener('wheel', () => {
+            const scrollListener = () => {
                 // todo: improve performance by calculating this when needed only
                 if (this.detailsShown && this.activeMovieElem && !isVideoFullScreen(this) && this.isVisible) {
                     const seasonContainers = this.getElementsByClassName('seasonContainer');
@@ -22060,7 +22060,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
                     }
                 }
                 this.renderNewElementsIfNeeded();
-            });
+            };
+            this.haWindow.addEventListener('scroll', scrollListener);
+            // window.addEventListener('scroll', scrollListener);
+            // window.addEventListener('wheel', scrollListener);
+            // window.addEventListener('touchmove', scrollListener);
             window.addEventListener('resize', () => {
                 this.resizeHandler();
             });
