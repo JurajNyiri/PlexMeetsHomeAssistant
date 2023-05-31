@@ -142,10 +142,6 @@ runAfter: script.movie_time
 showExtras: true
 playTrailer: muted
 entity:
-  vlcTelnet:
-    - media_player.vlc_telnet
-  sonos:
-    - media_player.sonos
   kodi:
     - media_player.kodi_bedroom
     - media_player.kodi_living_room
