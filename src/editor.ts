@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import { HomeAssistant } from 'custom-card-helpers';
 import Plex from './modules/Plex';
-import { fetchEntityRegistry, createTextElement } from './modules/utils';
+import { fetchEntityRegistry, createTextElement, setTextElementValue } from './modules/utils';
 
 class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	content: any;
@@ -394,25 +394,24 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.ip.style.width = '100%';
 		this.ip.style.marginTop = '10px';
 		this.ip.style.marginBottom = '10px';
-
 		this.ip.label = 'Plex IP Address / Hostname';
 		if (this.config.ip) {
-			this.ip.value = this.config.ip.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+			setTextElementValue(this.ip, this.config.ip.replace(/^https?:\/\//i, '').replace(/\/$/, ''));
 		} else {
-			this.ip.value = this.config.ip;
+			setTextElementValue(this.ip, this.config.ip);
 		}
 
 		this.ip.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.ip);
 
 		this.port.label = 'Plex Port (Optional)';
-		this.port.value = this.config.port;
+		setTextElementValue(this.port, this.config.port);
 		this.port.type = 'number';
 		this.port.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.port);
 
 		this.token.label = 'Plex Token';
-		this.token.value = this.config.token;
+		setTextElementValue(this.token, this.token.value);
 		this.token.addEventListener('change', this.valueUpdated);
 		this.content.appendChild(this.token);
 
@@ -565,12 +564,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.displayType);
 
 		this.cardTitle.label = 'Card title (Optional)';
-		this.cardTitle.value = this.config.title;
+		setTextElementValue(this.cardTitle, this.config.title);
 		this.cardTitle.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.cardTitle);
 
 		this.maxCount.label = 'Maximum number of items to display (Optional)';
-		this.maxCount.value = this.config.maxCount;
+		setTextElementValue(this.maxCount, this.config.maxCount);
 		this.maxCount.type = 'number';
 		this.maxCount.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.maxCount);
@@ -590,7 +589,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(this.useHorizontalScroll);
 
 		this.maxRows.label = 'Maximum number of rows to display (Optional)';
-		this.maxRows.value = this.config.maxRows;
+		setTextElementValue(this.maxRows, this.config.maxRows);
 		this.maxRows.type = 'number';
 		this.maxRows.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.maxRows);
@@ -678,7 +677,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.runBefore.style.width = '100%';
 		this.runBefore.style.height = '40px';
 		this.runBefore.addEventListener('change', this.valueUpdated);
-		this.runBefore.value = this.config.runBefore;
+		setTextElementValue(this.runBefore, this.config.runBefore);
 		this.plexValidSection.appendChild(this.runBefore);
 
 		this.runAfter.innerHTML = '';
@@ -690,7 +689,7 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.runAfter.style.width = '100%';
 		this.runAfter.style.height = '40px';
 		this.runAfter.addEventListener('change', this.valueUpdated);
-		this.runAfter.value = this.config.runAfter;
+		setTextElementValue(this.runAfter, this.config.runAfter);
 		this.plexValidSection.appendChild(this.runAfter);
 
 		const styleTitle = document.createElement('h2');
@@ -701,25 +700,25 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		this.plexValidSection.appendChild(styleTitle);
 
 		this.minWidth.label = 'Minimum width of the card (Optional)';
-		this.minWidth.value = this.config.minWidth;
+		setTextElementValue(this.minWidth, this.config.minWidth);
 		this.minWidth.type = 'number';
 		this.minWidth.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minWidth);
 
 		this.minExpandedWidth.label = 'Expanded width of the card (Optional)';
-		this.minExpandedWidth.value = this.config.minExpandedWidth;
+		setTextElementValue(this.minExpandedWidth, this.config.minExpandedWidth);
 		this.minExpandedWidth.type = 'number';
 		this.minExpandedWidth.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minExpandedWidth);
 
 		this.minExpandedHeight.label = 'Expanded height of the card (Optional)';
-		this.minExpandedHeight.value = this.config.minExpandedHeight;
+		setTextElementValue(this.minExpandedHeight, this.config.minExpandedHeight);
 		this.minExpandedHeight.type = 'number';
 		this.minExpandedHeight.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minExpandedHeight);
 
 		this.minEpisodeWidth.label = 'Minimum width of the episode card (Optional)';
-		this.minEpisodeWidth.value = this.config.minEpisodeWidth;
+		setTextElementValue(this.minEpisodeWidth, this.config.minEpisodeWidth);
 		this.minEpisodeWidth.type = 'number';
 		this.minEpisodeWidth.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.minEpisodeWidth);
@@ -734,12 +733,12 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		if (_.isEmpty(this.config.displayTitleMain)) {
 			this.displayTitleMain.value = 'Yes';
 		} else {
-			this.displayTitleMain.value = this.config.displayTitleMain;
+			setTextElementValue(this.displayTitleMain, this.config.displayTitleMain);
 		}
 		this.plexValidSection.appendChild(this.displayTitleMain);
 
 		this.fontSize1.label = 'Font size used in titles under cards (Optional)';
-		this.fontSize1.value = this.config.fontSize1;
+		setTextElementValue(this.fontSize1, this.config.fontSize1);
 		this.fontSize1.type = 'number';
 		this.fontSize1.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize1);
@@ -754,25 +753,25 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 		if (_.isEmpty(this.config.displaySubtitleMain)) {
 			this.displaySubtitleMain.value = 'Yes';
 		} else {
-			this.displaySubtitleMain.value = this.config.displaySubtitleMain;
+			setTextElementValue(this.displaySubtitleMain, this.config.displaySubtitleMain);
 		}
 		this.plexValidSection.appendChild(this.displaySubtitleMain);
 
 		this.fontSize2.label = 'Font size used in sub-titles under cards (Optional)';
-		this.fontSize2.value = this.config.fontSize2;
+		setTextElementValue(this.fontSize2, this.config.fontSize2);
 		this.fontSize2.type = 'number';
 		this.fontSize2.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize2);
 
 		this.fontSize3.label = 'Font size used in title of the opened content (Optional)';
-		this.fontSize3.value = this.config.fontSize3;
+		setTextElementValue(this.fontSize3, this.config.fontSize3);
 		this.fontSize3.type = 'number';
 		this.fontSize3.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize3);
 
 		this.fontSize4.label =
 			'Font size used in sub-titles, to-view count and description of the opened content (Optional)';
-		this.fontSize4.value = this.config.fontSize4;
+		setTextElementValue(this.fontSize4, this.config.fontSize4);
 		this.fontSize4.type = 'number';
 		this.fontSize4.addEventListener('change', this.valueUpdated);
 		this.plexValidSection.appendChild(this.fontSize4);

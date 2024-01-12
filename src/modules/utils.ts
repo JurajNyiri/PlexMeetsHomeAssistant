@@ -28,6 +28,14 @@ const createTextElement = () => {
 	return textElem;
 }
 
+const setTextElementValue = (element: any, value: String | undefined) => {
+	if (value !== undefined) {
+		element.value = value;
+	} else {
+		element.value = ''
+	}
+}
+
 const fetchEntityRegistry = (conn: Connection): Promise<Array<Record<string, any>>> =>
 	conn.sendMessagePromise({
 		type: 'config/entity_registry/list'
@@ -397,5 +405,6 @@ export {
 	waitUntilState,
 	getState,
 	createTrackView,
-	createTextElement
+	createTextElement,
+	setTextElementValue
 };
