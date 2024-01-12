@@ -620,7 +620,7 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 			if (!_.isEqual(this.searchInputElem.value, this.searchValue)) {
 				this.searchValue = this.searchInputElem.value;
 				this.renderPage();
-				this.focus();
+				// this.focus(); //causes issues on iphone/safari and looks like is no longer needed
 			}
 		});
 
