@@ -19,6 +19,15 @@ const escapeHtml = (unsafe: any): string => {
 	return '';
 };
 
+const createTextElement = () => {
+	const textElem = document.createElement('ha-textfield');
+
+	textElem.style.width = "100%"
+	textElem.style.marginTop = "10px"
+	textElem.style.marginBottom = "10px"
+	return textElem;
+}
+
 const fetchEntityRegistry = (conn: Connection): Promise<Array<Record<string, any>>> =>
 	conn.sendMessagePromise({
 		type: 'config/entity_registry/list'
@@ -275,8 +284,7 @@ const createEpisodesView = (
 	episodeContainer.className = 'episodeContainer';
 	episodeContainer.style.width = `${CSS_STYLE.episodeWidth}px`;
 	const episodeThumbURL = plex.authorizeURL(
-		`${plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${
-			CSS_STYLE.episodeHeight
+		`${plex.getBasicURL()}/photo/:/transcode?width=${CSS_STYLE.episodeWidth}&height=${CSS_STYLE.episodeHeight
 		}&minSize=1&upscale=1&url=${data.thumb}`
 	);
 
@@ -388,5 +396,6 @@ export {
 	fetchEntityRegistry,
 	waitUntilState,
 	getState,
-	createTrackView
+	createTrackView,
+	createTextElement
 };

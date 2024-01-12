@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import { HomeAssistant } from 'custom-card-helpers';
 import Plex from './modules/Plex';
-import { fetchEntityRegistry } from './modules/utils';
+import { fetchEntityRegistry, createTextElement } from './modules/utils';
 
 class PlexMeetsHomeAssistantEditor extends HTMLElement {
 	content: any;
@@ -16,15 +16,15 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	config: Record<string, any> = {};
 
-	ip: any = document.createElement('paper-input');
+	ip: any = createTextElement();
 
-	token: any = document.createElement('paper-input');
+	token: any = createTextElement();
 
-	port: any = document.createElement('paper-input');
+	port: any = createTextElement();
 
-	maxCount: any = document.createElement('paper-input');
+	maxCount: any = createTextElement();
 
-	maxRows: any = document.createElement('paper-input');
+	maxRows: any = createTextElement();
 
 	displayTitleMain: any = document.createElement('select');
 
@@ -34,23 +34,23 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 
 	useShuffle: any = document.createElement('select');
 
-	minWidth: any = document.createElement('paper-input');
+	minWidth: any = createTextElement();
 
-	minEpisodeWidth: any = document.createElement('paper-input');
+	minEpisodeWidth: any = createTextElement();
 
-	minExpandedWidth: any = document.createElement('paper-input');
+	minExpandedWidth: any = createTextElement();
 
-	minExpandedHeight: any = document.createElement('paper-input');
+	minExpandedHeight: any = createTextElement();
 
-	fontSize1: any = document.createElement('paper-input');
+	fontSize1: any = createTextElement();
 
-	fontSize2: any = document.createElement('paper-input');
+	fontSize2: any = createTextElement();
 
-	fontSize3: any = document.createElement('paper-input');
+	fontSize3: any = createTextElement();
 
-	fontSize4: any = document.createElement('paper-input');
+	fontSize4: any = createTextElement();
 
-	cardTitle: any = document.createElement('paper-input');
+	cardTitle: any = createTextElement();
 
 	libraryName: any = document.createElement('select');
 
@@ -390,6 +390,10 @@ class PlexMeetsHomeAssistantEditor extends HTMLElement {
 			this.protocol.value = this.config.protocol;
 		}
 		this.content.appendChild(this.protocol);
+
+		this.ip.style.width = '100%';
+		this.ip.style.marginTop = '10px';
+		this.ip.style.marginBottom = '10px';
 
 		this.ip.label = 'Plex IP Address / Hostname';
 		if (this.config.ip) {
