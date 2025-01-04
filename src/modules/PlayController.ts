@@ -270,11 +270,9 @@ class PlayController {
 		repeat = false,
 		continuous = false
 	): Promise<Record<string, number>> => {
-		const url = `${plex.getBasicURL()}/playQueues?type=${type}&shuffle=${shuffle ? '1' : '0'}&repeat=${
-			repeat ? '1' : '0'
-		}&continuous=${
-			continuous ? '1' : '0'
-		}&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library${key}`;
+		const url = `${plex.getBasicURL()}/playQueues?type=${type}&shuffle=${shuffle ? '1' : '0'}&repeat=${repeat ? '1' : '0'
+			}&continuous=${continuous ? '1' : '0'
+			}&own=1&uri=server://${await plex.getServerID()}/com.plexapp.plugins.library${key}`;
 
 		const plexResponse = await axios({
 			method: 'post',
@@ -303,7 +301,8 @@ class PlayController {
 		const { playQueueID, playQueueSelectedMetadataItemID } = await this.plexPlayerCreateQueue(
 			`/library/metadata/${movieID}`,
 			this.plex,
-			'video'
+			'video',
+			this.shuffle
 		);
 
 		let url = plex.getBasicURL();
