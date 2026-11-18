@@ -134,6 +134,18 @@ class PlayController {
 		return foundResult;
 	};
 
+	private getOnDeckEpisodeKey = async (ratingKey: string | number): Promise<string | false> => {
+		try {
+			const url = this.plex.authorizeURL(`${this.plex.getBasicURL()}/library/metadata/${ratingKey}?includeOnDeck=1`);
+			const response = await axios.get(url, { timeout: this.plex.requestTimeout });
+			const onDeck = _.get(response, 'data.MediaContainer.Metadata[0].OnDeck.Metadata');
+			const key = _.get(_.isArray(onDeck) ? onDeck[0] : onDeck, 'key');
+			return _.isString(key) && !_.isEmpty(key) ? key : false;
+		} catch (err) {
+			return false;
+		}
+	};
+
 	play = async (data: Record<string, any>, instantPlay = false): Promise<void> => {
 		if (_.isArray(this.runBefore)) {
 			const entityID = `${this.runBefore[0]}.${this.runBefore[1]}`;
@@ -166,7 +178,14 @@ class PlayController {
 
 					await this.playViaAndroidTV(entity.value, streamLink, instantPlay, provider);
 				} else {
-					await this.playViaAndroidTV(entity.value, processData.key, instantPlay, provider);
+					let { key } = processData;
+					if (_.isEqual(data.type, 'show')) {
+						// Send the show's on-deck episode instead of the show itself. Given a show,
+						// Plex for Android TV plays the next-up episode and then queues the whole
+						// show from S01E01. Falls back to the show if there is nothing on deck.
+						key = (await this.getOnDeckEpisodeKey(data.ratingKey)) || key;
+					}
+					await this.playViaAndroidTV(entity.value, key, instantPlay, provider);
 				}
 
 				break;
