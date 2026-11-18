@@ -209,9 +209,14 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 		if (scrollTop < window.scrollY) {
 			scrollTop = window.scrollY;
 		}
+		// The page scroll position says nothing when the card sits inside something that
+		// scrolls on its own (a browser_mod popup, a dialog, a scrolling stack), so also
+		// check where the bottom of the list actually is on screen.
+		const contentRect = this.content ? this.content.getBoundingClientRect() : undefined;
+		const bottomNearViewport = !!contentRect && contentRect.height > 0 && contentRect.bottom < window.innerHeight + 600;
 		if (
 			!this.detailsShown &&
-			window.innerHeight + scrollTop > height - 300 &&
+			(window.innerHeight + scrollTop > height - 300 || bottomNearViewport) &&
 			this.renderedItems > 0 &&
 			this.renderedItems < this.data[this.config.libraryName].length &&
 			(!this.maxCount || this.renderedItems < this.maxCount) &&
@@ -254,6 +259,11 @@ class PlexMeetsHomeAssistant extends HTMLElement {
 				this.renderPage();
 			}
 			this.isVisible = isVisibleNow;
+			// Scroll events from a scrolling parent inside another shadow root never reach
+			// the card, so keep topping up the list from here as well.
+			if (isVisibleNow && this.content) {
+				this.renderNewElementsIfNeeded();
+			}
 		}, 100);
 		if (this.hassObj) {
 			this.entityRegistry = await fetchEntityRegistry(this.hassObj.connection);
